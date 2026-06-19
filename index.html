@@ -691,14 +691,54 @@ svg.tck{width:16px;height:16px;}
 <link rel="icon" type="image/png" href="icons/wd-app-icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+/* 항상 최신 버전 유지 - 캐시 무효화 */
+(function(){
+  if(!sessionStorage.getItem('wd_fresh')){
+    sessionStorage.setItem('wd_fresh','1');
+    location.reload(true);
+  } else {
+    sessionStorage.removeItem('wd_fresh');
+  }
+})();
+</script>
+<script>
 /* ── WD kit_ 저장형 1단계: Supabase 연결 (publishable/anon key · RLS 보호) ──
    ⚠ 아래 2줄만 사라님이 검수 시 실제 값과 대조하세요. service_role 키는 절대 금지. */
-const SUPABASE_URL = "https://pqsxpijdprvitxbqcooa.supabase.co";
-const SUPABASE_KEY = "sb_publishable_w0vIgh27tEdRL4Dd8wUpZQ_95BoLM_i";
+const WD_AGENTS = {
+  hyungmin: { name:"형민", url:"https://zkgvcxyrrtdnsxukihdv.supabase.co", key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprZ3ZjeHlycnRkbnN4dWtpaGR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4MDYwNjksImV4cCI6MjA5NzM4MjA2OX0.k7PiwHPX0gy62WnhfA5Q6JsD06duYdSQOsODWxLA02w" },
+  jiyoung:  { name:"지영", url:"https://kqnsrkebmalstepbghjf.supabase.co", key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxbnNya2VibWFsc3RlcGJnaGpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4MDYxMjksImV4cCI6MjA5NzM4MjEyOX0.Pm05SkjvQiOM6nlKF3pyHtbwqSwo1roWqAQfXCEf5Kc" },
+  sara:     { name:"윤경", url:"https://tiwgzmmizmkbvbyfgmyw.supabase.co", key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpd2d6bW1pem1rYnZieWZnbXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4MjE5ODIsImV4cCI6MjA5NzM5Nzk4Mn0.4c5iuLkZ37a46dB6vA6jN8vTwOV_kS1-4IHPcrB2aTM" }
+};
 var sb = null;
-try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); }
-catch(e){ console.error('Supabase init 실패:', e); }
-window._currentUser=''; window._currentRole=''; window._currentUid='';
+function getAgentByEmail(e){ e=(e||'').toLowerCase(); if(e.indexOf('hyungmin')>-1||e.indexOf('hyung')>-1) return 'hyungmin'; if(e.indexOf('jiyoung')>-1) return 'jiyoung'; return 'sara'; }
+function initSupabase(k){ var c=WD_AGENTS[k]||WD_AGENTS.sara; sb=window.supabase.createClient(c.url,c.key); window._agentKey=k; }
+async function fetchAgentCustomers(k){ var c=WD_AGENTS[k]; if(!c) return []; var t=window.supabase.createClient(c.url,c.key); var r=await t.from('kit_customers').select('*').order('created_at',{ascending:false}); if(r.error) return []; return (r.data||[]).map(function(x){return Object.assign({},x,{_agentName:c.name});}); }
+/* 자체 아이디/비번 로그인 구조 */
+window._currentUser=''; window._currentRole=''; window._currentUid=''; window._currentAgentKey='';
+async function wdLogin(uid,pw){
+  for(var k of Object.keys(WD_AGENTS)){
+    var c=WD_AGENTS[k]; var tmp=window.supabase.createClient(c.url,c.key);
+    var res=await tmp.from('kit_profiles').select('*').eq('uid',uid).maybeSingle();
+    if(!res.error&&res.data){
+      if(res.data.pw!==pw) return {error:'비밀번호가 맞지 않습니다'};
+      initSupabase(k);
+      window._currentUid=uid; window._currentRole=res.data.role;
+      window._currentUser=res.data.name; window._currentAgentKey=k; _currentUser=res.data.name;
+      return {data:res.data};
+    }
+  }
+  return {error:'아이디를 찾을 수 없습니다'};
+}
+async function wdChangePw(uid,oldPw,newPw){
+  var k=window._currentAgentKey; if(!k) return {error:'로그인 필요'};
+  var c=WD_AGENTS[k]; var tmp=window.supabase.createClient(c.url,c.key);
+  var chk=await tmp.from('kit_profiles').select('pw').eq('uid',uid).single();
+  if(chk.error||!chk.data) return {error:'계정을 찾을 수 없습니다'};
+  if(chk.data.pw!==oldPw) return {error:'현재 비밀번호가 맞지 않습니다'};
+  var upd=await tmp.from('kit_profiles').update({pw:newPw}).eq('uid',uid);
+  if(upd.error) return {error:upd.error.message};
+  return {data:'ok'};
+}
 </script>
 </head>
 <body>
@@ -1713,17 +1753,13 @@ function csCopyQ(){ if(!_csCur){showToast('카드를 먼저 선택하세요');re
    계정은 정적 배열. 비밀번호 변경 기능은 이번 버전 제외. */
 var _currentUser = '';
 async function appLogin(){
-  var email=(document.getElementById('login-id').value||'').trim();
+  var uid=(document.getElementById('login-id').value||'').trim();
   var pw=(document.getElementById('login-pw').value||'').trim();
-  if(!email||!pw){ showToast('이메일과 비밀번호를 입력해 주세요'); return; }
-  if(!sb){ showToast('서버 연결이 준비되지 않았습니다'); return; }
+  if(!uid||!pw){ showToast('아이디와 비밀번호를 입력해 주세요'); return; }
   showToast('로그인 중...');
-  var res=await sb.auth.signInWithPassword({email:email, password:pw});
-  if(res.error){ showToast('이메일 또는 비밀번호가 맞지 않습니다'); return; }
-  var uid=res.data.user.id;
-  var pr=await sb.from('kit_profiles').select('name,role').eq('id',uid).single();
-  if(pr.error||!pr.data){ showToast('계정 권한 정보를 찾을 수 없습니다'); await sb.auth.signOut(); return; }
-  window._currentUid=uid; window._currentRole=pr.data.role; window._currentUser=pr.data.name; _currentUser=pr.data.name;
+  var res=await wdLogin(uid,pw);
+  if(res.error){ showToast(res.error); return; }
+  var pr=res.data;
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-screen').style.display='block';
   var ht=document.getElementById('hero-title'), hs=document.getElementById('hero-sub');
@@ -1745,18 +1781,48 @@ function applyRoleUI(){
 }
 async function loadProfiles(){
   if(!sb) return;
-  var res=await sb.from('kit_profiles').select('id,name');
+  var res=await sb.from('kit_profiles').select('uid,name');
   if(res.error){ console.error('담당자 목록 로드 실패', res.error); return; }
   _PROFILES=res.data||[];
-  var optSel='<option value="">담당자 선택</option>'+_PROFILES.map(function(p){return '<option value="'+p.id+'">'+psEsc(p.name)+'</option>';}).join('');
+  var optSel='<option value="">담당자 선택</option>'+_PROFILES.map(function(p){return '<option value="'+p.uid+'">'+psEsc(p.name)+'</option>';}).join('');
   ['ps_owner','qc_owner','hq_owner'].forEach(function(id){ var s=document.getElementById(id); if(s) s.innerHTML=optSel; });
   var f=document.getElementById('ps_filter');
-  if(f){ f.innerHTML='<option value="">전체 고객</option>'+_PROFILES.map(function(p){return '<option value="'+p.id+'">'+psEsc(p.name)+' 고객</option>';}).join(''); }
+  if(f){ f.innerHTML='<option value="">전체 고객</option>'+_PROFILES.map(function(p){return '<option value="'+p.uid+'">'+psEsc(p.name)+' 고객</option>';}).join(''); }
 }
-function profName(uid){ for(var i=0;i<_PROFILES.length;i++){ if(_PROFILES[i].id===uid) return _PROFILES[i].name; } return ''; }
+function profName(uid){ for(var i=0;i<_PROFILES.length;i++){ if(_PROFILES[i].uid===uid) return _PROFILES[i].name; } return ''; }
+function openChangePw(){
+  closePwModal();
+  var el=document.createElement('div');
+  el.id='pw-modal';
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
+  el.innerHTML='<div style="background:#fff;border-radius:16px;padding:28px 24px;width:320px;max-width:90vw;">'
+    +'<div style="font-weight:700;font-size:16px;margin-bottom:16px;color:#4A3F7A;">비밀번호 변경</div>'
+    +'<input id="pw-old" type="password" placeholder="현재 비밀번호" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;margin-bottom:10px;box-sizing:border-box;">'
+    +'<input id="pw-new1" type="password" placeholder="새 비밀번호 (4자 이상)" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;margin-bottom:10px;box-sizing:border-box;">'
+    +'<input id="pw-new2" type="password" placeholder="새 비밀번호 확인" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;margin-bottom:16px;box-sizing:border-box;">'
+    +'<div style="display:flex;gap:8px;">'
+    +'<button id="pw-cancel-btn" style="flex:1;padding:10px;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;background:#f8fafc;">취소</button>'
+    +'<button id="pw-confirm-btn" style="flex:1;padding:10px;border:none;border-radius:8px;cursor:pointer;background:#4A3F7A;color:#fff;font-weight:700;">변경</button>'
+    +'</div></div>';
+  document.body.appendChild(el);
+  document.getElementById('pw-cancel-btn').addEventListener('click', closePwModal);
+  document.getElementById('pw-confirm-btn').addEventListener('click', doChangePw);
+}
+function closePwModal(){ var m=document.getElementById('pw-modal'); if(m) m.remove(); }
+async function doChangePw(){
+  var o=(document.getElementById('pw-old').value||'').trim();
+  var n1=(document.getElementById('pw-new1').value||'').trim();
+  var n2=(document.getElementById('pw-new2').value||'').trim();
+  if(!o||!n1||!n2){ showToast('모두 입력해 주세요'); return; }
+  if(n1!==n2){ showToast('새 비밀번호가 일치하지 않습니다'); return; }
+  if(n1.length<4){ showToast('비밀번호는 4자 이상이어야 합니다'); return; }
+  var res=await wdChangePw(window._currentUid,o,n1);
+  if(res.error){ showToast(res.error); return; }
+  closePwModal();
+  showToast('비밀번호가 변경되었습니다');
+}
 async function appLogout(){
-  if(sb) await sb.auth.signOut();
-  window._currentUid=''; window._currentRole=''; window._currentUser=''; _currentUser='';
+  window._currentUid=''; window._currentRole=''; window._currentUser=''; window._currentAgentKey=''; _currentUser=''; sb=null;
   document.getElementById('app-screen').style.display='none';
   document.getElementById('login-screen').style.display='block';
   showToast('로그아웃되었습니다');
@@ -1798,7 +1864,15 @@ async function psRender(){
   var box=document.getElementById('ps_list'); if(!box) return;
   if(!sb){ box.innerHTML='<div class="ps-empty">서버 연결이 준비되지 않았습니다.</div>'; return; }
   if(!_PROFILES.length){ await loadProfiles(); }
-  var res=await sb.from('kit_customers').select('*').order('created_at',{ascending:false});
+  var res;
+  if(window._currentRole==='admin'){
+    var all=[];
+    for(var _k of Object.keys(WD_AGENTS)){ var _r=await fetchAgentCustomers(_k); all=all.concat(_r); }
+    all.sort(function(a,b){return a.created_at<b.created_at?1:-1;});
+    res={data:all,error:null};
+  } else {
+    res=await sb.from('kit_customers').select('*').order('created_at',{ascending:false});
+  }
   if(res.error){ box.innerHTML='<div class="ps-empty">불러오기 실패: '+psEsc(res.error.message)+'</div>'; return; }
   _CUSTOMERS=res.data||[];
   var q=psVal('ps_search').toLowerCase();
