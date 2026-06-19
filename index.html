@@ -4,14 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>WD 우리동네 보험관리 키트</title>
+<title>WD WAVE 설계사 워크키트</title>
 <!--
   ════════════════════════════════════════════════════════════
-  WD 우리동네 보험관리 키트 v1.14 (로그인·고객관리 저장형 / 1단계)
-  · Supabase Auth 이메일 로그인 + kit_customers 저장 (publishable key + RLS)
-  · 고객관리: 본인 고객만 조회 / 관리자(최윤경)는 전체 조회 전용
-  · 상담·계약·기록센터 저장은 2단계 예정(이번 단계 미포함)
-  · 민감정보(주민번호 전체·계좌·증권번호·인증서·OTP·로그인정보)는 저장하지 않습니다.
+  WD WAVE 설계사 워크키트
+  · 상담 기준, 고객 전달 문장, 업무요청서, 보상사례, 빠른 메모, 업무링크를 제공하는 내부 업무 키트
+  · 고객관리와 계약관리는 본진/메가넷에서 진행합니다.
+  · 민감정보(주민번호·계좌·증권번호·인증서·OTP·로그인정보)는 저장하지 않습니다.
   ════════════════════════════════════════════════════════════
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -361,23 +360,59 @@ footer{text-align:center;font-size:11px;color:var(--muted);padding:14px 16px 40p
 .login-fld input{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;font-family:var(--sans);}
 .login-fld input:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px rgba(74,63,122,.1);}
 .login-btn{width:100%;background:linear-gradient(135deg,var(--purple),var(--navy));color:#fff;border:none;border-radius:11px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:var(--sans);margin-top:8px;}
+.login-save-id{display:flex;align-items:center;gap:7px;margin:2px 0 12px;font-size:12.5px;color:var(--muted);font-weight:600;cursor:pointer;user-select:none;}
+.login-save-id input{width:15px;height:15px;accent-color:var(--purple);cursor:pointer;}
 .login-hint{font-size:11px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.7;}
 /* ── v0.7 상담 시작 — 보험 기초 카드 ── */
 .basic-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-bottom:14px;}
-.basic-card{background:var(--tint);border:1.5px solid var(--tint-line);color:var(--purple);font-size:13px;font-weight:800;padding:12px 8px;border-radius:11px;cursor:pointer;font-family:var(--sans);transition:all .15s;}
-.basic-card:hover{border-color:var(--purple);}
-.basic-card.on{background:linear-gradient(135deg,var(--purple),var(--navy));color:#fff;border-color:var(--purple);}
+/* 하위 카드 기본: 회색 계열 / 선택 시만 파란색 */
+.basic-card{background:#F4F6FA;border:1.5px solid #DDE4F2;color:#344054;font-size:14px;font-weight:800;padding:13px 8px;border-radius:11px;cursor:pointer;font-family:var(--sans);transition:all .15s;text-align:center;}
+.basic-card:hover{border-color:#AFC0E8;background:#EEF3FF;color:#2448FF;}
+.basic-card.on{background:linear-gradient(135deg,#2448FF,#111B66);color:#fff;border-color:#2448FF;}
 .basic-box{background:#FAFBFE;border:1.5px solid var(--tint-line);border-radius:13px;padding:17px;}
 .basic-box.empty{color:#9AA1B4;text-align:center;padding:34px 18px;font-size:13px;}
 .basic-guide{background:var(--tint);border:1px solid var(--tint-line);border-radius:10px;padding:11px 13px;font-size:12px;color:#6B5320;line-height:1.65;margin-bottom:8px;}
 .basic-nb{background:var(--tint);border:1px solid var(--tint-line);border-radius:10px;padding:10px 13px;font-size:11.5px;color:var(--muted);line-height:1.6;margin-bottom:14px;}
 .bg-group{border:1.5px solid var(--tint-line);border-radius:12px;margin-bottom:9px;overflow:hidden;}
-.bg-head{width:100%;background:var(--tint);border:none;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;font-size:13.5px;font-weight:800;color:var(--purple);cursor:pointer;font-family:var(--sans);}
+/* 구분 헤더(보험구조/납입환급/담보별): 파란색 강조 유지 */
+.bg-head{width:100%;background:#EAF0FF;border:none;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;font-size:14.5px;font-weight:900;color:#2448FF;cursor:pointer;font-family:var(--sans);}
 .bg-arrow{transition:transform .2s;font-size:12px;}
 .bg-head.open .bg-arrow{transform:rotate(180deg);}
 .bg-body{display:none;padding:12px;}
 .bg-body.open{display:block;}
 .bg-body .basic-grid{margin-bottom:0;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));}
+/* 보험기초지식 노란 안내문 — 띄어쓰기·가독성 개선 */
+.basic-alert-yellow{background:#FFF3CD;border:1.5px solid #F2D58A;color:#5C4313;border-radius:12px;padding:14px 17px;font-size:14.5px;font-weight:700;line-height:1.75;letter-spacing:-0.2px;word-break:keep-all;white-space:normal;text-align:left;margin-bottom:10px;display:flex;align-items:flex-start;gap:9px;}
+.basic-alert-yellow svg{flex-shrink:0;margin-top:3px;}
+@media(max-width:600px){.basic-alert-yellow{font-size:13.5px;}.basic-card{font-size:13.5px;}.bg-head{font-size:14px;}}
+/* ── 설계의뢰 2타입 그리드 ── */
+.di-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:600px){.di-grid{grid-template-columns:1fr;}}
+/* ── 3번 상담가이드 전용 CSS ── */
+.cg-sec-h{display:flex;align-items:center;gap:7px;font-size:17px;font-weight:900;color:var(--ink);margin-bottom:12px;}
+.cg-sec-h svg{color:#2448FF;flex-shrink:0;}
+.cg-flow-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px;}
+@media(max-width:600px){.cg-flow-grid{grid-template-columns:1fr;}}
+.cg-flow-card{background:#F8FAFC;border:1.5px solid #E5E7EB;border-radius:14px;padding:16px 18px;}
+.cg-flow-label{font-size:14px;font-weight:900;color:#2448FF;margin-bottom:12px;padding-bottom:8px;border-bottom:1.5px solid #DDE4F2;}
+.cg-steps-list{display:flex;flex-direction:column;gap:7px;}
+.cg-step{display:flex;align-items:center;gap:9px;font-size:14.5px;color:#344054;font-weight:600;line-height:1.4;}
+.cg-num{width:22px;height:22px;background:#2448FF;color:#fff;border-radius:50%;font-size:11.5px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.cg-chk .lbl{font-size:14.5px;}
+/* 보험기초 설명 모달 */
+#basic_modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;align-items:center;justify-content:center;padding:16px;}
+#basic_modal.on{display:flex;}
+.basic-modal-card{background:var(--paper);border-radius:18px;width:min(860px,calc(100vw - 32px));max-height:calc(100vh - 120px);display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(34,41,73,.3);overflow:hidden;}
+.basic-modal-head{padding:18px 22px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.basic-modal-title{font-size:20px;font-weight:900;color:var(--purple);}
+.basic-modal-close{background:none;border:none;cursor:pointer;color:var(--muted);font-size:20px;line-height:1;padding:2px 6px;border-radius:6px;font-family:var(--sans);}
+.basic-modal-close:hover{background:var(--tint);}
+.basic-modal-body{padding:18px 22px;overflow-y:auto;flex:1;max-height:calc(100vh - 240px);font-size:14.5px;line-height:1.75;}
+.basic-modal-sec{margin-bottom:18px;}
+.basic-modal-sec-h{font-size:13px;font-weight:800;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+.basic-modal-sec-txt{font-size:14.5px;color:var(--ink);line-height:1.75;white-space:pre-wrap;}
+.basic-modal-foot{padding:12px 22px 18px;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;}
+@media(max-width:560px){.basic-modal-card{width:calc(100vw - 28px);max-height:calc(100vh - 80px);}.basic-modal-body{max-height:calc(100vh - 220px);font-size:14px;}.basic-modal-sec-txt{font-size:14px;}.basic-modal-title{font-size:17px;}}
 .bb-title{font-size:16px;font-weight:900;color:var(--ink);margin-bottom:13px;}
 .bb-sec{margin-bottom:13px;}
 .bb-h{font-size:11.5px;font-weight:800;color:var(--purple);margin-bottom:5px;}
@@ -754,6 +789,55 @@ async function wdChangePw(uid,oldPw,newPw){
 <body>
 
 <!-- ── 헤더 ── -->
+<!-- 보험기초 설명 팝업 모달 -->
+<div id="basic_modal" onclick="if(event.target===this)closeBasicModal()">
+  <div class="basic-modal-card">
+    <div class="basic-modal-head">
+      <div class="basic-modal-title" id="basic_modal_title"></div>
+      <button class="basic-modal-close" onclick="closeBasicModal()">✕</button>
+    </div>
+    <div class="basic-modal-body">
+      <div class="basic-modal-sec">
+        <div class="basic-modal-sec-h"><svg class="ei" viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 20l1-4.2A8.5 8.5 0 1 1 21 11.5"/></svg> 고객에게 쉽게 설명</div>
+        <div class="basic-modal-sec-txt" id="basic_modal_desc"></div>
+      </div>
+      <div class="basic-modal-sec">
+        <div class="basic-modal-sec-h"><svg class="ei" viewBox="0 0 24 24" style="width:14px;height:14px;"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 1 1 3.6 2.2c-.8.4-1.1.9-1.1 1.8"/><path d="M12 17h.01"/></svg> 설계사가 확인할 질문</div>
+        <div class="basic-modal-sec-txt" id="basic_modal_question"></div>
+      </div>
+    </div>
+    <div class="basic-modal-foot">
+      <button class="btn btn-p" onclick="csCopyDesc()"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 고객 설명문 복사</button>
+      <button class="btn btn-g" onclick="csCopyQ()"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 1 1 3.6 2.2c-.8.4-1.1.9-1.1 1.8"/><path d="M12 17h.01"/></svg> 추가 질문 복사</button>
+      <button class="btn btn-dark" onclick="closeBasicModal()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 상담가이드 진입 팝업 — 피해야 할 상담말 -->
+<div id="consult_warn_modal" onclick="if(event.target===this)closeConsultWarnModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9100;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--paper);border-radius:18px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(34,41,73,.3);overflow:hidden;">
+    <div style="padding:18px 20px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <div style="font-size:15px;font-weight:900;color:#C0392B;display:flex;align-items:center;gap:7px;"><svg class="ei" viewBox="0 0 24 24" style="width:17px;height:17px;color:#C0392B;"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg>피해야 할 상담 말</div>
+      <button onclick="closeConsultWarnModal()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted);line-height:1;">✕</button>
+    </div>
+    <div style="padding:16px 20px;">
+      <div style="font-size:13px;color:var(--muted);font-weight:600;margin-bottom:10px;">정보 받을 때 특히 조심하세요</div>
+      <ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;">
+        <li style="display:flex;align-items:flex-start;gap:8px;font-size:14px;color:#344054;line-height:1.55;"><span style="color:#C0392B;font-weight:900;flex-shrink:0;margin-top:1px;">✕</span>시작하자마자 직업·소득 등 개인정보부터 묻기</li>
+        <li style="display:flex;align-items:flex-start;gap:8px;font-size:14px;color:#344054;line-height:1.55;"><span style="color:#C0392B;font-weight:900;flex-shrink:0;margin-top:1px;">✕</span>상품 설명이나 보장 내용부터 꺼내기</li>
+        <li style="display:flex;align-items:flex-start;gap:8px;font-size:14px;color:#344054;line-height:1.55;"><span style="color:#C0392B;font-weight:900;flex-shrink:0;margin-top:1px;">✕</span>상담보다 판매 중심 분위기 만들기</li>
+        <li style="display:flex;align-items:flex-start;gap:8px;font-size:14px;color:#344054;line-height:1.55;"><span style="color:#C0392B;font-weight:900;flex-shrink:0;margin-top:1px;">✕</span>데이터 없이 이전 설계사 비판하기</li>
+        <li style="display:flex;align-items:flex-start;gap:8px;font-size:14px;color:#344054;line-height:1.55;"><span style="color:#C0392B;font-weight:900;flex-shrink:0;margin-top:1px;">✕</span>가족·지인이라고 억지로 권유하기</li>
+        <li style="display:flex;align-items:flex-start;gap:8px;font-size:14px;color:#344054;line-height:1.55;"><span style="color:#C0392B;font-weight:900;flex-shrink:0;margin-top:1px;">✕</span>부정 반응에 계속 설득하기</li>
+      </ul>
+    </div>
+    <div style="padding:12px 20px 18px;">
+      <button onclick="closeConsultWarnModal()" style="width:100%;background:linear-gradient(135deg,#2448FF,#111B66);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:var(--sans);">확인했습니다</button>
+    </div>
+  </div>
+</div>
+
 <div id="login-screen">
   <div class="login-card">
     <div class="login-brand">
@@ -762,6 +846,7 @@ async function wdChangePw(uid,oldPw,newPw){
     </div>
     <div class="login-fld"><label>아이디</label><input id="login-id" type="text" placeholder="예: 2026yk01" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pw').focus();"></div>
     <div class="login-fld"><label>비밀번호</label><input type="password" id="login-pw" placeholder="비밀번호" autocomplete="current-password" onkeydown="if(event.key==='Enter')appLogin()"></div>
+    <label class="login-save-id"><input type="checkbox" id="login-save-id"><span>아이디 저장</span></label>
     <button class="login-btn" onclick="appLogin()">로그인</button>
     <div class="login-hint">WD WAVE 소속 설계사 전용입니다.</div>
   </div>
@@ -772,22 +857,24 @@ async function wdChangePw(uid,oldPw,newPw){
   <div class="brand">
     <span class="mark">WD WAVE</span>
     <span class="bbar"></span>
-    <span class="sub">우리동네 보험관리 키트</span>
+    <span class="sub">설계사 워크키트</span>
   </div>
   <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="메뉴 열기"><span></span><span></span><span></span></button>
   <nav class="tabs" id="tabBar">
     <button class="tab on" data-t="home" onclick="showTab('home')"><svg viewBox="0 0 24 24" class="ti"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/></svg>홈</button>
-    <button class="tab" data-t="consult" onclick="showTab('consult')">상담 시작</button>
-    <button class="tab" data-t="prospect" onclick="showTab('prospect')">고객관리</button>
-    <button class="tab" data-t="policy" onclick="showTab('policy')">계약관리</button>
-    <button class="tab" data-t="worklog" onclick="showTab('worklog')">기록센터</button>
-    <button class="tab" data-t="design" onclick="showTab('design')">설계·계약</button>
-    <button class="tab" data-t="claim" onclick="showTab('claim')">청구·문제보고</button>
-    <!-- 보조도구에서 접근 (탭 숨김, 기능 유지) -->
+    <button class="tab" data-t="consult" onclick="showTab('consult')">보험업무가이드</button>
+    <button class="tab" data-t="guide" onclick="showTab('guide')">보상사례자료</button>
+    <button class="tab" data-t="salesbook" onclick="showTab('salesbook')">메가세일즈북</button>
+    <button class="tab" data-t="sicheck" onclick="showTab('sicheck')">시책정보</button>
+    <button class="tab" data-t="hub" onclick="showTab('hub')">업무링크허브</button>
+    <!-- 비노출 유지 뷰 (기존 코드 보존) -->
+    <button class="tab" data-t="worklog" onclick="showTab('worklog')" style="display:none;">빠른 메모</button>
+    <button class="tab" data-t="lib" onclick="showTab('lib')" style="display:none;">고객전달자료</button>
+    <button class="tab" data-t="design" onclick="showTab('design')" style="display:none;">업무요청서</button>
     <button class="tab" data-t="start" onclick="showTab('start')" style="display:none;">오늘 업무 시작</button>
-    <button class="tab" data-t="lib" onclick="showTab('lib')" style="display:none;">문장·프롬프트</button>
-    <button class="tab" data-t="hub" onclick="showTab('hub')" style="display:none;">전산·연락처</button>
-    <button class="tab" data-t="guide" onclick="showTab('guide')" style="display:none;">업무 가이드</button>
+    <button class="tab" data-t="claim" onclick="showTab('claim')" style="display:none;">청구·문제보고</button>
+    <button class="tab" data-t="prospect" onclick="showTab('prospect')" style="display:none;">고객관리</button>
+    <button class="tab" data-t="policy" onclick="showTab('policy')" style="display:none;">계약관리</button>
   </nav>
   <div class="top-right">
     <button class="bell" onclick="showToast('알림이 없습니다')" aria-label="알림"><svg viewBox="0 0 24 24" class="ti"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></button>
@@ -818,97 +905,124 @@ async function wdChangePw(uid,oldPw,newPw){
   <div class="home-main">
   <div class="dash-head">
     <div>
-      <h1 id="hero-title">어떤 보험 업무를 시작할까요?</h1>
-      <p id="hero-sub">고객과의 상담에서 필요한 정보를 선택하고, 체계적으로 기록하여 업무에 활용하세요.</p>
+      <h1 id="hero-title">WD WAVE 설계사 워크키트</h1>
+      <p id="hero-sub">상담 기준, 고객 전달 문장, 업무요청서, 보상사례, 빠른 메모, 업무 연결을 한 곳에서 정리하는 실전 키트입니다. 고객관리와 계약관리는 본진·메가넷에서 진행합니다.</p>
     </div>
   </div>
 
-  <div class="philosophy-card soft"><div class="ph-title">이 키트가 만들어진 이유</div><div class="ph-body">이 키트는 더 많이 팔기 위한 도구가 아닙니다.<br>초보 설계사가 고객 앞에서 덜 흔들리고, 확인할 것을 확인하며, 책임 있게 상담하도록 돕기 위해 만들었습니다.<br>고객을 관리하는 습관이 쌓일 때, 신뢰와 성과도 함께 자랍니다.</div></div>
+  <div class="philosophy-card soft" style="padding:24px 26px;margin-bottom:20px;">
+    <div class="ph-title" style="font-size:20px;font-weight:900;margin-bottom:10px;">이 키트가 만들어진 이유</div>
+    <div class="ph-body" style="font-size:15px;line-height:1.8;">이 워크키트는 WD WAVE 최윤경 지점장의 20여 년 현장 경험과 AI 정리를 바탕으로 만든 설계사 업무 자산입니다.<br>보험을 더 많이 판매하기 위한 도구가 아니라, 고객 앞에서 흔들리지 않고 확인할 것을 확인하며 책임 있게 상담하기 위해 만든 기준판입니다.<br><b>함께 배우고 함께 성장하기 위해 나누는 자료이니 외부 유출이나 무단 공유는 하지 말아주세요.</b></div>
+  </div>
+
+  <div class="philosophy-card" style="padding:24px 26px;margin-bottom:20px;">
+    <div class="ph-title" style="font-size:20px;font-weight:900;margin-bottom:10px;">만든 사람의 마음</div>
+    <div class="ph-body" style="font-size:15px;line-height:1.8;">WD WAVE는 보험을 판매보다 관리로 봅니다.<br>돈을 버는 일은 부끄러운 일이 아니지만, 고객을 책임지는 방식이어야 오래 갑니다.<br>이 키트는 정직하게 배우고, 기준을 지키며, 성장하려는 설계사를 돕기 위해 만들었습니다.</div>
+  </div>
+
   <div class="bcard-grid">
     <button class="bcard" onclick="showTab('consult')">
       <span class="bcard-ic"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-9 8.35 8.5 8.5 0 0 1-3.8-.9L3 20l1.05-4.2A8.5 8.5 0 1 1 21 11.5"/></svg></span>
       <div class="bcard-body">
-        <div class="bcard-top"><span class="bcard-nm">상담 시작</span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></div>
-        <div class="bcard-ds">고객과 상담을 진행하며 보장분석, 질문, 우려사항, 다음 행동까지 체계적으로 정리합니다.</div>
-        <div class="bcard-tags"><span>보장분석</span><span>질문정리</span><span>다음액션</span></div>
+        <div class="bcard-top"><span class="bcard-nm">보험업무가이드</span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></div>
+        <div class="bcard-ds">상담 흐름, 질문지, 체크리스트, 금지표현, 고객 반응별 응대법을 확인합니다.</div>
+        <div class="bcard-tags"><span>상담흐름</span><span>체크리스트</span><span>금지표현</span></div>
       </div>
     </button>
-    <button class="bcard" onclick="showTab('prospect')">
-      <span class="bcard-ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19v-.8a5.5 5.5 0 0 1 11 0v.8"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2a4.6 4.6 0 0 1 5 4.3v.5"/></svg></span>
+    <button class="bcard" onclick="showTab('guide')">
+      <span class="bcard-ic"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M19 18v3H6.5A2.5 2.5 0 0 1 4 18.5"/></svg></span>
       <div class="bcard-body">
-        <div class="bcard-top"><span class="bcard-nm">고객관리</span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></div>
-        <div class="bcard-ds">가망고객과 상담 전후 고객의 기본정보와 연락 흐름을 관리합니다.</div>
-        <div class="bcard-tags"><span>고객정보</span><span>상담이력</span><span>연락내역</span></div>
+        <div class="bcard-top"><span class="bcard-nm">보상사례자료</span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></div>
+        <div class="bcard-ds">대표 고유자산 보상사례를 확인하고, 비슷한 상담에서 활용할 문장을 찾습니다.</div>
+        <div class="bcard-tags"><span>보상사례</span><span>쟁점</span><span>약관연결</span></div>
       </div>
     </button>
-    <button class="bcard" onclick="showTab('policy')">
-      <span class="bcard-ic"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7"/><path d="M14 3v5h5"/><path d="M18 13.5 21 15v3.2c0 1.8-1.4 2.8-3 3.3-1.6-.5-3-1.5-3-3.3V15z"/></svg></span>
+    <button class="bcard" onclick="showTab('salesbook')">
+      <span class="bcard-ic"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
       <div class="bcard-body">
-        <div class="bcard-top"><span class="bcard-nm">계약관리</span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></div>
-        <div class="bcard-ds">내가 체결했거나 관리하는 고객의 가입계약과 주요 메모를 기록합니다.</div>
-        <div class="bcard-tags"><span>계약현황</span><span>보험료</span><span>갱신관리</span></div>
+        <div class="bcard-top"><span class="bcard-nm">메가세일즈북</span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></div>
+        <div class="bcard-ds">영업자료와 세일즈 콘텐츠를 준비 중입니다.</div>
+        <div class="bcard-tags"><span>준비중</span></div>
       </div>
     </button>
-    <button class="bcard" onclick="showTab('worklog')">
-      <span class="bcard-ic"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h11v16H6a2 2 0 0 0-2 2z"/><path d="M17 3v18"/><path d="M9 8.5l3.5-1 1 3.5"/></svg></span>
+    <button class="bcard" onclick="showTab('sicheck')">
+      <span class="bcard-ic"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg></span>
       <div class="bcard-body">
-        <div class="bcard-top"><span class="bcard-nm">기록센터</span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></div>
-        <div class="bcard-ds">오늘의 할 일, 보험일기, 퀵메모를 빠르게 남기고 확인합니다.</div>
-        <div class="bcard-tags"><span>오늘 할 일</span><span>보험일기</span><span>퀵메모</span></div>
+        <div class="bcard-top"><span class="bcard-nm">시책정보</span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></div>
+        <div class="bcard-ds">보험사 시책과 주요 안내를 준비 중입니다.</div>
+        <div class="bcard-tags"><span>준비중</span></div>
+      </div>
+    </button>
+    <button class="bcard" onclick="showTab('hub')">
+      <span class="bcard-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18"/></svg></span>
+      <div class="bcard-body">
+        <div class="bcard-top"><span class="bcard-nm">업무링크허브</span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></div>
+        <div class="bcard-ds">메가넷, 구글 업무도구, 보험사 전산, 약관자료실로 바로 이동합니다.</div>
+        <div class="bcard-tags"><span>메가넷</span><span>구글도구</span><span>약관자료</span></div>
+      </div>
+    </button>
+    <!-- 빠른 메모 — 비노출 (코드 보존) -->
+    <button class="bcard" onclick="showTab('worklog')" style="display:none;">
+      <span class="bcard-ic"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></span>
+      <div class="bcard-body">
+        <div class="bcard-top"><span class="bcard-nm">빠른 메모</span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></div>
+        <div class="bcard-ds">들은 말, 할 일, 아이디어, 톡 초안을 빠르게 남기고 구글킵·캘린더로 연결합니다.</div>
+        <div class="bcard-tags"><span>들은말</span><span>구글킵복사</span><span>임시메모</span></div>
+      </div>
+    </button>
+    <!-- 고객전달자료 — 비노출 -->
+    <button class="bcard" onclick="showTab('lib')" style="display:none;">
+      <span class="bcard-ic"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-9 8.35 8.5 8.5 0 0 1-3.8-.9L3 20l1.05-4.2A8.5 8.5 0 1 1 21 11.5"/><path d="M8 9.5h8M8 13h5"/></svg></span>
+      <div class="bcard-body">
+        <div class="bcard-top"><span class="bcard-nm">고객전달자료</span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></div>
+        <div class="bcard-ds">카톡·문자·이메일로 보낼 수 있는 문장을 상황별로 선택해 복사합니다.</div>
+        <div class="bcard-tags"><span>카톡문장</span><span>AI프롬프트</span><span>복사</span></div>
+      </div>
+    </button>
+    <!-- 업무요청서 — 비노출 -->
+    <button class="bcard" onclick="showTab('design')" style="display:none;">
+      <span class="bcard-ic"><svg viewBox="0 0 24 24"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/><path d="M14 6l3 3"/></svg></span>
+      <div class="bcard-body">
+        <div class="bcard-top"><span class="bcard-nm">업무요청서</span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></div>
+        <div class="bcard-ds">메가종합금융 총무·원수사 총무 요청문을 수신처 기준으로 만들고 복사합니다.</div>
+        <div class="bcard-tags"><span>메가총무</span><span>원수사총무</span><span>요청문복사</span></div>
       </div>
     </button>
   </div>
 
-  <div class="tools-h">업무 도구</div>
-  <div class="tools-row">
-    <button class="tool" onclick="showTab('lib')"><span class="tool-ic"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-9 8.35 8.5 8.5 0 0 1-3.8-.9L3 20l1.05-4.2A8.5 8.5 0 1 1 21 11.5"/><path d="M8 9.5h8M8 13h5"/></svg></span><span class="tool-tx"><span class="tool-nm">문장·프롬프트</span><span class="tool-ds">상담에 바로 쓰는 문장</span></span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></button>
-    <button class="tool" onclick="showTab('hub')"><span class="tool-ic"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="2.4"/><path d="M8.5 16a3.5 3.5 0 0 1 7 0"/></svg></span><span class="tool-tx"><span class="tool-nm">전산·연락처</span><span class="tool-ds">회사 전산 및 연락처 바로가기</span></span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></button>
-    <button class="tool" onclick="showTab('guide')"><span class="tool-ic"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M19 18v3H6.5A2.5 2.5 0 0 1 4 18.5"/></svg></span><span class="tool-tx"><span class="tool-nm">업무 가이드</span><span class="tool-ds">상황별 업무 절차 안내</span></span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></button>
-    <button class="tool" onclick="showTab('design')"><span class="tool-ic"><svg viewBox="0 0 24 24"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/><path d="M14 6l3 3"/></svg></span><span class="tool-tx"><span class="tool-nm">설계·계약</span><span class="tool-ds">보험 설계 및 계약 진행</span></span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></button>
-    <button class="tool" onclick="showTab('claim')"><span class="tool-ic"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v3M12 17h.01"/></svg></span><span class="tool-tx"><span class="tool-nm">청구·문제보고</span><span class="tool-ds">청구 문의와 문제 상황 정리</span></span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></button>
-  </div>
-
-  <div class="remind">
+  <!-- 꼭 기억하세요 — 비노출 -->
+  <div class="remind" style="display:none;">
     <div class="remind-h"><svg viewBox="0 0 24 24" class="ti"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg>꼭 기억하세요</div>
     <div class="remind-grid">
-      <span><svg viewBox="0 0 24 24" class="tck"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>고객관리 기록은 저장되며, 본인이 등록한 고객만 보입니다.</span>
-      <span><svg viewBox="0 0 24 24" class="tck"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>민감정보(주민번호·계좌·병력 등)는 임의로 저장하지 마세요.</span>
-      <span><svg viewBox="0 0 24 24" class="tck"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>모든 계약 내용은 약관과 보험사 정책을 반드시 확인하세요.</span>
-      <span><svg viewBox="0 0 24 24" class="tck"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>AI 프롬프트는 고객 발송 전 한 번 더 검토하면 안심돼요.</span>
+      <span><svg viewBox="0 0 24 24" class="tck"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>이 키트는 고객관리 앱이 아닙니다. 고객관리는 본진 시스템에서 진행합니다.</span>
+      <span><svg viewBox="0 0 24 24" class="tck"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>계약관리는 메가넷에서 진행합니다. 이 키트에서 계약을 저장하지 않습니다.</span>
+      <span><svg viewBox="0 0 24 24" class="tck"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>메모는 구글킵, 일정은 구글캘린더, 자료는 구글드라이브와 연결합니다.</span>
+      <span><svg viewBox="0 0 24 24" class="tck"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>개인정보와 민감정보(주민번호·계좌·병력 등)는 입력하지 않습니다.</span>
     </div>
   </div>
 
-
   <div class="notice-bar">
     <span class="ni"><svg viewBox="0 0 24 24"><path d="m3 11 17-6v14L3 13zM8 13v5a2 2 0 0 0 2 2"/></svg></span>
-    <div class="nt"><b>안내</b>현재 v1.14는 고객관리 저장형 1단계입니다. 고객등록과 고객조회는 저장되며, 상담·계약·기록센터 저장은 2단계에서 적용됩니다.</div>
+    <div class="nt"><b>WD WAVE 설계사 워크키트</b> · 상담 기준 · 고객 문장 · 업무요청 · 보상사례 · 빠른 메모 · 업무 연결</div>
   </div>
-
-  <div class="philosophy-card soft"><div class="ph-title">만든 사람의 마음</div><div class="ph-body">WD WAVE는 보험을 판매보다 관리로 봅니다.<br>돈을 버는 일은 부끄러운 일이 아니지만, 고객을 책임지는 방식이어야 오래 갑니다.<br>이 키트는 정직하게 배우고, 기록하고, 성장하려는 설계사를 돕기 위해 만들었습니다.</div></div>
 
   </div><!-- /home-main -->
 
   <aside class="home-side">
     <div class="sec-badge" style="justify-content:center;"><svg viewBox="0 0 24 24" class="ti"><path d="M12 3 4 6v6c0 5 3.5 7.5 8 9 4.5-1.5 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>보안 접속 상태 : 안전 <span class="dot"></span></div>
-    <div class="hq-card">
-      <div class="hq-h"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4.5 13H11l-1 9 8.5-11H12z"/></svg> 빠른 고객등록</div>
-      <div class="hq-sub">현장에서 고객을 바로 잡아두세요. 상세 입력은 [고객관리]에서.</div>
-      <div class="hq-f" id="hq_owner_wrap" style="display:none;"><label>담당자</label><select id="hq_owner"><option value="">담당자 선택</option></select></div>
-      <div class="hq-f"><label>고객명 *</label><input id="hq_name" placeholder="예: 김○○"></div>
-      <div class="hq-f"><label>전화번호</label><input id="hq_tel" placeholder="예: 010-0000-0000"></div>
-      <button class="hq-btn" onclick="hqAdd()">저장</button>
+    <!-- 오늘의 빠른 메모 — 비노출 -->
+    <div class="side-card" style="display:none;">
+      <div class="side-h"><span class="st">오늘의 빠른 메모</span><button class="more" onclick="showTab('worklog')">메모하기 →</button></div>
+      <div style="padding:10px 0;font-size:12px;color:var(--muted);line-height:1.7;">빠른 메모 탭에서 작성한 내용을<br>구글킵·캘린더로 복사해 보관하세요.</div>
     </div>
     <div class="side-card">
-      <div class="side-h"><span class="st">오늘의 할 일</span><button class="more" onclick="rcOpen('task')">더보기</button></div>
-      <div id="home-task-list"></div>
-    </div>
-    <div class="side-card">
-      <div class="side-h"><span class="st">오늘의 메모</span><button class="more" onclick="rcOpen('memo')">더보기</button></div>
-      <div id="home-memo-list"></div>
-    </div>
-    <div class="side-card">
-      <div class="side-h"><span class="st">최근 보험일기</span><button class="more" onclick="rcOpen('diary')">더보기</button></div>
-      <div id="home-diary-list"></div>
+      <div class="side-h"><span class="st">업무링크 바로가기</span></div>
+      <div style="display:flex;flex-direction:column;gap:7px;padding-top:6px;">
+        <button class="tool" style="padding:9px 12px;" onclick="window.open('https://www.megafs.net','_blank')"><span class="tool-tx"><span class="tool-nm" style="font-size:12.5px;">메가넷</span><span class="tool-ds">계약·업무지원</span></span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></button>
+        <button class="tool" style="padding:9px 12px;" onclick="window.open('https://keep.google.com','_blank')"><span class="tool-tx"><span class="tool-nm" style="font-size:12.5px;">구글킵</span><span class="tool-ds">메모 보관</span></span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></button>
+        <button class="tool" style="padding:9px 12px;" onclick="window.open('https://calendar.google.com','_blank')"><span class="tool-tx"><span class="tool-nm" style="font-size:12.5px;">구글캘린더</span><span class="tool-ds">일정 관리</span></span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></button>
+        <button class="tool" style="padding:9px 12px;" onclick="showTab('hub')"><span class="tool-tx"><span class="tool-nm" style="font-size:12.5px;">업무링크허브</span><span class="tool-ds">전체 링크 보기</span></span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></button>
+      </div>
     </div>
   </aside>
 
@@ -943,20 +1057,22 @@ async function wdChangePw(uid,oldPw,newPw){
 <!-- ════════ 3. 상담 진행판 ════════ -->
 <div class="view" id="view-consult">
   <div class="card">
-    <div class="sec-tag">상담 진행판</div>
-    <div class="sec-title">상담을 단계대로 진행합니다</div>
+    <div class="sec-tag">CONSULT GUIDE</div>
+    <div class="sec-title">보험업무가이드</div>
+    <div class="sec-sub">상담 흐름, 질문지, 체크리스트, 금지표현, 고객 반응별 응대법을 단계별로 확인합니다.</div>
     <div class="steps" id="steps-c">
-      <button class="step-btn on" onclick="goStep('c',1)"><span class="n">1</span>상황 선택</button>
-      <button class="step-btn" onclick="goStep('c',2)"><span class="n">2</span>정보 체크</button>
-      <button class="step-btn" onclick="goStep('c',3)"><span class="n">3</span>질문 확인</button>
-      <button class="step-btn" onclick="goStep('c',4)"><span class="n">4</span>안내문</button>
-      <button class="step-btn" onclick="goStep('c',5)"><span class="n">5</span>AI 프롬프트</button>
-      <button class="step-btn" onclick="goStep('c',6)"><span class="n">6</span>완료 체크</button>
+      <button class="step-btn on" onclick="goStep('c',1)"><span class="n">1</span>보험설계사마인드</button>
+      <button class="step-btn" onclick="goStep('c',2)"><span class="n">2</span>보험기초지식</button>
+      <button class="step-btn" onclick="goStep('c',3)"><span class="n">3</span>상담가이드</button>
+      <button class="step-btn" onclick="goStep('c',4)"><span class="n">4</span>설계의뢰</button>
+      <button class="step-btn" onclick="goStep('c',5)"><span class="n">5</span>업무요청방법</button>
+      <button class="step-btn" onclick="goStep('c',6)"><span class="n">6</span>설계취합·제안서</button>
+      <button class="step-btn" onclick="goStep('c',7)"><span class="n">7</span>계약진행방법</button>
     </div>
 
-    <!-- c1 -->
+    <!-- c1: 보험설계사마인드 -->
     <div class="step-pane on" id="c-1">
-      <div class="std">
+      <div class="std" style="margin-bottom:20px;">
         <div class="st"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m16 8-2 6-6 2 2-6z"/></svg> 상담 태도 기준 — 시작 전에 먼저 기억하세요</div>
         <ul>
           <li>상품 설명보다 <b>신뢰 형성</b>이 먼저입니다.</li>
@@ -966,18 +1082,81 @@ async function wdChangePw(uid,oldPw,newPw){
         </ul>
       </div>
 
-      <div class="philosophy-card"><div class="ph-title">상담 전 마음 기준</div><div class="ph-body">고객은 오늘 가입할 사람이기 전에, 자신의 상황을 맡길지 고민하는 사람입니다.<br>설계사는 설득하는 사람이 아니라, 놓친 부분을 함께 확인하고 책임 있게 안내하는 사람입니다.<br>확인하지 않은 말은 하지 않고, 모르는 것은 확인한 뒤 안내합니다.</div></div>
+      <div class="philosophy-card" style="margin-bottom:28px;"><div class="ph-title">상담 전 마음 기준</div><div class="ph-body">고객은 오늘 가입할 사람이기 전에, 자신의 상황을 맡길지 고민하는 사람입니다.<br>설계사는 설득하는 사람이 아니라, 놓친 부분을 함께 확인하고 책임 있게 안내하는 사람입니다.<br>확인하지 않은 말은 하지 않고, 모르는 것은 확인한 뒤 안내합니다.</div></div>
 
-      <div class="std-sub-h"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg> 고객 기본정보 <span style="font-weight:600;color:var(--muted);font-size:11px;">· 저장되지 않습니다</span></div>
-      <div class="frm">
-        <div class="fld"><label>고객명</label><input id="cs_name" placeholder="예: 김○○"></div>
-        <div class="fld"><label>전화번호</label><input id="cs_tel" placeholder="화면에서만 사용 · 저장 안 됨"></div>
-        <div class="fld"><label>상담 목적</label><input id="cs_purpose" placeholder="예: 보장점검 / 신규가입"></div>
-        <div class="fld full"><label>상담 메모</label><textarea id="cs_memo" placeholder="상담 중 메모 (화면에서만 사용)"></textarea></div>
+      <div class="std-sub-h"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg> 상담 중 피해야 할 표현</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div class="danger" style="margin:0;">
+          <div class="t"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg> 주의할 표현</div>
+          <ul>
+            <li>무조건 좋습니다</li>
+            <li>이게 제일 좋습니다</li>
+            <li>무조건 나옵니다</li>
+            <li>보험료는 절대 안 오릅니다</li>
+            <li>다 보장됩니다</li>
+            <li>걱정하지 마세요, 다 됩니다</li>
+          </ul>
+        </div>
+        <div class="std" style="margin:0;background:var(--tint);border:1px solid var(--tint-line);border-radius:10px;padding:11px 13px;">
+          <div class="st" style="color:var(--green);"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> 대신 이렇게</div>
+          <ul>
+            <li>고객님 상황에 맞는지 함께 확인해보겠습니다</li>
+            <li>약관 기준에 따라 달라질 수 있습니다</li>
+            <li>장단점을 비교해서 선택하시는 게 좋습니다</li>
+            <li>유지 가능성을 함께 봐야 합니다</li>
+          </ul>
+        </div>
       </div>
+    </div>
 
-      <div class="std-sub-h"><svg class="ei" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 10.8V4h6v6.8l2 3.2H7z"/></svg> 상담 유형</div>
-      <div class="pill-grid">
+    <!-- c2: 보험기초지식 -->
+    <div class="step-pane" id="c-2">
+      <div class="std-sub-h"><svg class="ei" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 1 2-2h12"/></svg> 보험 기초 상담 <span style="font-weight:600;color:var(--muted);font-size:11px;">· 카드를 누르면 팝업으로 설명이 열립니다</span></div>
+      <div class="basic-alert-yellow"><svg class="ei" viewBox="0 0 24 24" style="width:17px;height:17px;color:#B8860B;"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg><span>이 설명은 상담을 돕기 위한 기본 안내입니다.<br>실제 보장 여부, 지급 여부, 면책·감액기간, 해지환급금은 반드시 해당 상품의 <b>약관과 보험사 기준</b>을 확인해야 합니다.</span></div>
+      <div class="basic-alert-yellow"><svg class="ei" viewBox="0 0 24 24" style="width:17px;height:17px;color:#B8860B;"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M9 3v16"/></svg><span>약관 PDF는 <b>NotebookLM</b>에 넣어두고 활용하세요.<br>특정 담보의 보장 조건, 면책기간, 감액기간, 해지환급금을 확인할 때 도움이 됩니다.<br>단, 최종 판단은 원문 약관과 보험사 확인을 기준으로 합니다.</span></div>
+      <div id="basic_groups"></div>
+      <div class="basic-box" id="cs_box" style="margin-top:14px;text-align:center;color:var(--muted);font-size:13px;padding:14px;">카드를 누르면 설명이 팝업으로 열립니다.</div>
+    </div>
+
+    <!-- c3: 상담가이드 -->
+    <div class="step-pane" id="c-3">
+
+      <!-- ① 상담흐름 -->
+      <div class="cg-sec-h"><svg class="ei" viewBox="0 0 24 24" style="width:16px;height:16px;"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9.5h.01M15 9.5h.01"/></svg> 상담흐름</div>
+      <div class="cg-flow-grid">
+
+        <!-- 초면고객 -->
+        <div class="cg-flow-card">
+          <div class="cg-flow-label">초면고객</div>
+          <div class="cg-steps-list">
+            <div class="cg-step"><span class="cg-num">1</span><span>인사·소개</span></div>
+            <div class="cg-step"><span class="cg-num">2</span><span>가입경로 질문</span></div>
+            <div class="cg-step"><span class="cg-num">3</span><span>기존 관리 확인</span></div>
+            <div class="cg-step"><span class="cg-num">4</span><span>인정·칭찬</span></div>
+            <div class="cg-step"><span class="cg-num">5</span><span>상담 목적 제시</span></div>
+            <div class="cg-step"><span class="cg-num">6</span><span>실제 상담 전환</span></div>
+          </div>
+        </div>
+
+        <!-- 지인고객 -->
+        <div class="cg-flow-card">
+          <div class="cg-flow-label">지인고객</div>
+          <div class="cg-steps-list">
+            <div class="cg-step"><span class="cg-num">1</span><span>보험 시작한 이유</span></div>
+            <div class="cg-step"><span class="cg-num">2</span><span>보험 인식 전환</span></div>
+            <div class="cg-step"><span class="cg-num">3</span><span>고객 이익 제시</span></div>
+            <div class="cg-step"><span class="cg-num">4</span><span>부담 없는 점검 제안</span></div>
+            <div class="cg-step"><span class="cg-num">5</span><span>가입경로 확인</span></div>
+            <div class="cg-step"><span class="cg-num">6</span><span>기존 관리 확인</span></div>
+            <div class="cg-step"><span class="cg-num">7</span><span>보장분석 진행</span></div>
+          </div>
+        </div>
+
+      </div><!-- /cg-flow-grid -->
+
+      <!-- ② 상담유형선택 -->
+      <div class="cg-sec-h" style="margin-top:20px;"><svg class="ei" viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M12 17v5"/><path d="M9 10.8V4h6v6.8l2 3.2H7z"/></svg> 상담유형선택 <span style="font-size:12px;font-weight:600;color:var(--muted);">· 저장되지 않습니다</span></div>
+      <div class="pill-grid" style="margin-bottom:4px;">
         <button class="pill" onclick="pickPill(this,'c_sit')">신규가입</button>
         <button class="pill" onclick="pickPill(this,'c_sit')">기존보험 점검</button>
         <button class="pill" onclick="pickPill(this,'c_sit')">리모델링</button>
@@ -987,111 +1166,276 @@ async function wdChangePw(uid,oldPw,newPw){
       </div>
       <input type="hidden" id="c_sit">
 
-      <div class="std-sub-h"><svg class="ei" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 1 2-2h12"/></svg> 보험 기초 상담 <span style="font-weight:600;color:var(--muted);font-size:11px;">· 카테고리를 펼쳐 카드를 누르면 고객 설명문이 나옵니다</span></div>
-      <div class="basic-guide"><svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 이 설명은 상담을 돕기 위한 기본 안내입니다. 실제 보장 여부, 지급 여부, 면책·감액기간, 해지환급금은 반드시 해당 상품의 <b>약관과 보험사 기준</b>을 확인해야 합니다.</div>
-      <div class="basic-nb"><svg class="ei" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M9 3v16"/></svg> 약관 PDF는 <b>NotebookLM</b>에 넣어두고, 특정 담보의 보장 조건·면책기간·감액기간·해지환급금을 확인할 때 활용하면 좋습니다. 단, 최종 판단은 원문 약관과 보험사 확인을 기준으로 합니다.</div>
-      <div id="basic_groups"></div>
-      <div class="basic-box empty" id="cs_box" style="margin-top:14px;">위 카드를 누르면 고객 설명문과 확인 질문이 여기에 표시됩니다.</div>
-    </div>
-
-    <!-- c2 -->
-    <div class="step-pane" id="c-2">
-      <div class="warn"><div class="t"><svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 민감정보 금지</div><ul><li>주민번호·병력 상세·계좌정보는 입력하지 마세요. 이니셜·요약으로.</li></ul></div>
-      <div class="danger">
-        <div class="t"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg> 피해야 할 상담 말 — 정보 받을 때 특히 조심</div>
-        <ul>
-          <li>시작하자마자 직업·소득 등 개인정보부터 묻기</li>
-          <li>상품 설명이나 보장 내용부터 꺼내기</li>
-          <li>상담보다 판매 중심 분위기 만들기</li>
-          <li>데이터 없이 이전 설계사 비판하기</li>
-          <li>가족·지인이라고 억지로 권유하기</li>
-          <li>부정 반응에 계속 설득하기</li>
-        </ul>
-      </div>
-      <div class="frm">
-        <div class="fld"><label>고객 (이니셜)</label><input id="c_name" placeholder="예: 김○○"></div>
-        <div class="fld"><label>나이 / 성별</label><input id="c_age" placeholder="예: 40대 / 여"></div>
-        <div class="fld"><label>상담 유형</label><input id="c_type" placeholder="예: 신규 / 점검 / 리모델링"></div>
-        <div class="fld"><label>희망 보장</label><input id="c_want" placeholder="예: 암·뇌·심장"></div>
-        <div class="fld"><label>월 예산</label><input id="c_budget" placeholder="예: 10만원 내외"></div>
-        <div class="fld"><label>기존 보험 여부</label><input id="c_exist" placeholder="예: 있음 (점검 희망)"></div>
-        <div class="fld full"><label>고객이 걱정하는 부분</label><textarea id="c_worry" placeholder="고객이 말한 걱정을 그대로"></textarea></div>
-        <div class="fld full"><label>특이사항</label><textarea id="c_etc" placeholder="기억할 점"></textarea></div>
-      </div>
-    </div>
-
-    <!-- c3 -->
-    <div class="step-pane" id="c-3">
-      <div class="flow-wrap">
-        <div class="flow-h"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9.5h.01M15 9.5h.01"/></svg> 초면고객 상담 흐름</div>
-        <div class="flow">
-          <span class="fstep">인사·소개</span><span class="arr">›</span>
-          <span class="fstep">가입경로 질문</span><span class="arr">›</span>
-          <span class="fstep">기존 관리 확인</span><span class="arr">›</span>
-          <span class="fstep">인정·칭찬</span><span class="arr">›</span>
-          <span class="fstep">상담 목적 제시</span><span class="arr">›</span>
-          <span class="fstep">실제 상담 전환</span>
-        </div>
-      </div>
-      <div class="flow-wrap">
-        <div class="flow-h"><svg class="ei" viewBox="0 0 24 24"><path d="M9 17H7A5 5 0 0 1 7 7h1"/><path d="M15 7h2a5 5 0 0 1 0 10h-1"/><path d="M8 12h8"/></svg> 지인고객 상담 흐름</div>
-        <div class="flow">
-          <span class="fstep">보험 시작한 이유</span><span class="arr">›</span>
-          <span class="fstep">보험 인식 전환</span><span class="arr">›</span>
-          <span class="fstep">고객 이익 제시</span><span class="arr">›</span>
-          <span class="fstep">부담 없는 점검 제안</span><span class="arr">›</span>
-          <span class="fstep">가입경로 확인</span><span class="arr">›</span>
-          <span class="fstep">기존 관리 확인</span><span class="arr">›</span>
-          <span class="fstep">보장분석 진행</span>
-        </div>
-      </div>
-      <div class="sec-sub" style="margin:6px 0 12px;font-weight:800;color:var(--ink);">고객에게 이렇게 물어보세요.</div>
-      <ul class="q-list">
-        <li><b>·</b><span>현재 보험을 점검하고 싶으신 이유가 있으실까요?</span></li>
-        <li><b>·</b><span>가장 걱정되는 보장은 어떤 부분이세요?</span></li>
-        <li><b>·</b><span>기존 보험료가 부담되시나요?</span></li>
-        <li><b>·</b><span>매월 부담 없는 보험료 범위가 있으실까요?</span></li>
-        <li><b>·</b><span>최근 병원 진료나 약 복용 중인 내용이 있으실까요?</span></li>
-        <li><b>·</b><span>가족 중 걱정되는 질병이나 상황이 있으실까요?</span></li>
+      <!-- ③ 고객기본정보취득 -->
+      <div class="cg-sec-h" style="margin-top:20px;"><svg class="ei" viewBox="0 0 24 24" style="width:16px;height:16px;"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg> 고객기본정보취득 <span style="font-size:12px;font-weight:600;color:var(--muted);">· 체크만 / 저장 안 됨</span></div>
+      <ul class="chk-list cg-chk">
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">고객명 또는 이니셜</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">연락 가능 번호</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">나이 / 성별</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">직업 또는 하는 일</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">가족 구성 요약</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">상담 경로</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">기존 보험 가입 여부</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">상담 가능 시간대</span></li>
       </ul>
-      <div class="std-sub-h"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></svg> 가망고객 반응별 응대 기준</div>
+
+      <!-- ④ 상담상세정보항목 -->
+      <div class="cg-sec-h" style="margin-top:20px;"><svg class="ei" viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M9 17H7A5 5 0 0 1 7 7h1"/><path d="M15 7h2a5 5 0 0 1 0 10h-1"/><path d="M8 12h8"/></svg> 상담상세정보항목 <span style="font-size:12px;font-weight:600;color:var(--muted);">· 체크만 / 저장 안 됨</span></div>
+      <ul class="chk-list cg-chk">
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">상담 목적</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">고객이 가장 걱정하는 보장</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">보험료 부담 여부</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">희망 월 예산</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">기존 보험에서 불편한 점</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">가족 중 함께 점검이 필요한 사람</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">최근 병원 진료·검사·약 복용 여부</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">청구 경험 여부</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">리모델링 희망 여부</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">설계의뢰가 필요한지 여부</span></li>
+      </ul>
+
+      <!-- ⑤ 반응별 응대기준 -->
+      <div class="cg-sec-h" style="margin-top:20px;"><svg class="ei" viewBox="0 0 24 24" style="width:16px;height:16px;"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></svg> 반응별 응대기준</div>
       <div class="react pos"><div class="rt">긍정 반응</div><div class="rd">바로 상담으로 연결합니다.</div></div>
       <div class="react mid"><div class="rt">애매한 반응</div><div class="rd">관계를 유지하고, 적절한 타이밍에 다시 접촉합니다.</div></div>
-      <div class="react neg"><div class="rt">부정 반응</div><div class="rd">가볍게 공감하고 대화를 마무리합니다. (계속 설득 금지)</div></div>
+      <div class="react neg"><div class="rt">부정 반응</div><div class="rd">가볍게 공감하고 대화를 마무리합니다. 계속 설득하지 않습니다.</div></div>
+
+      <!-- hidden ID 유지 (_cInfo 참조 오류 방지) -->
+      <input type="hidden" id="c_name"><input type="hidden" id="c_age"><input type="hidden" id="c_type"><input type="hidden" id="c_want"><input type="hidden" id="c_budget"><input type="hidden" id="c_exist"><input type="hidden" id="c_worry"><input type="hidden" id="c_etc">
+      <input type="hidden" id="cs_name"><input type="hidden" id="cs_tel"><input type="hidden" id="cs_purpose"><input type="hidden" id="cs_memo">
     </div>
 
-    <!-- c4 -->
+    <!-- c4: 설계의뢰 -->
     <div class="step-pane" id="c-4">
-      <div class="sec-sub" style="margin-bottom:12px;">입력값으로 고객 안내 문장을 만듭니다.</div>
-      <div class="btn-row"><button class="btn btn-p" onclick="buildConsultMsg()"><svg class="ei" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> 안내문 만들기</button></div>
-      <div class="out-box empty" id="c_out">[안내문 만들기]를 누르면 여기에 문장이 생성됩니다.</div>
-      <button class="btn btn-g btn-block" onclick="copyOut('c_out','고객 안내문을 복사했습니다')"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 안내문 복사</button>
-    </div>
 
-    <!-- c5 -->
-    <div class="step-pane" id="c-5">
-      <div class="sec-sub" style="margin-bottom:12px;">입력값이 들어간 AI 프롬프트를 복사해 AI에 붙여넣으세요.</div>
-      <div class="btn-row">
-        <button class="btn btn-dark" onclick="copyPrompt('c_p1')">상담 정리</button>
-        <button class="btn btn-dark" onclick="copyPrompt('c_p2')">고객 메시지</button>
-        <button class="btn btn-dark" onclick="copyPrompt('c_p3')">금지표현 검사</button>
+      <!-- 상단 안내문 -->
+      <div class="std" style="margin-bottom:16px;">
+        <div class="st"><svg class="ei" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 1 2-2h12"/></svg> 설계의뢰 2가지 타입 안내</div>
+        <ul>
+          <li>설계의뢰는 <b>두 타입</b>으로 나뉩니다.</li>
+          <li><b>1) 고객등록한 경우</b> — 생년월일, 유형, 형태, 보험료, 병력 중심</li>
+          <li><b>2) 고객등록하지 않은 경우</b> — 주민번호, 전화번호, 주소 등 추가 필요</li>
+          <li>고객등록 여부에 따라 설계매니저에게 전달해야 하는 항목이 달라집니다.</li>
+          <li>이 화면에는 고객정보를 입력하지 말고, 아래 항목을 확인한 뒤 <b>정해진 업무채널</b>에서 전달하세요.</li>
+        </ul>
       </div>
-      <div class="prompt-box" id="c_ppv">위 버튼을 누르면 프롬프트가 복사되고, 미리보기가 여기 표시됩니다.</div>
+
+      <!-- 민감정보 주의 -->
+      <div class="warn" style="margin-bottom:18px;"><div class="t"><svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 민감정보 주의</div><ul><li>주민번호, 전화번호, 주소 등 민감정보는 이 화면에 입력하거나 저장하지 않습니다.</li><li>실제 전달은 회사에서 정한 업무채널 기준을 따르세요.</li></ul></div>
+
+      <!-- 2타입 카드 영역 -->
+      <div class="di-grid">
+
+        <!-- 타입1: 고객등록한 경우 -->
+        <div style="background:#F4F6FA;border:1.5px solid #DDE4F2;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:14px;font-weight:900;color:#2448FF;display:flex;align-items:center;gap:6px;border-bottom:1.5px solid #DDE4F2;padding-bottom:10px;">
+            <svg class="ei" viewBox="0 0 24 24" style="width:15px;height:15px;"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
+            고객등록한 경우
+          </div>
+          <pre style="margin:0;font-family:var(--sans);font-size:13.5px;color:#344054;line-height:1.85;white-space:pre-wrap;word-break:keep-all;">매니저님 안녕하세요. 000입니다.
+아래 건 설계 부탁드립니다.
+
+고객이름 :
+생년월일 :
+유형 : (간편/건강체)
+형태 : (갱신/비갱신)
+보험료 :
+병력 :
+기타특이사항 :
+
+감사합니다.</pre>
+          <button class="btn btn-p" style="width:100%;margin-top:4px;" onclick="copyText('매니저님 안녕하세요. 000입니다.\n아래 건 설계 부탁드립니다.\n\n고객이름 :\n생년월일 :\n유형 : (간편/건강체)\n형태 : (갱신/비갱신)\n보험료 :\n병력 :\n기타특이사항 :\n\n감사합니다.','고객등록한 경우 설계의뢰문을 복사했습니다')"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 고객등록한 경우 복사</button>
+        </div>
+
+        <!-- 타입2: 고객등록하지 않은 경우 -->
+        <div style="background:#F4F6FA;border:1.5px solid #DDE4F2;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:14px;font-weight:900;color:#2448FF;display:flex;align-items:center;gap:6px;border-bottom:1.5px solid #DDE4F2;padding-bottom:10px;">
+            <svg class="ei" viewBox="0 0 24 24" style="width:15px;height:15px;"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            고객등록하지 않은 경우
+          </div>
+          <pre style="margin:0;font-family:var(--sans);font-size:13.5px;color:#344054;line-height:1.85;white-space:pre-wrap;word-break:keep-all;">매니저님 안녕하세요. 000입니다.
+아래 건 설계 부탁드립니다.
+
+고객이름 :
+주민번호 :
+전화번호 :
+주소 :
+직업 :
+유형 : (간편/건강체)
+형태 : (갱신/비갱신)
+보험료 :
+병력 :
+기타특이사항 :
+
+감사합니다.</pre>
+          <button class="btn btn-p" style="width:100%;margin-top:4px;" onclick="copyText('매니저님 안녕하세요. 000입니다.\n아래 건 설계 부탁드립니다.\n\n고객이름 :\n주민번호 :\n전화번호 :\n주소 :\n직업 :\n유형 : (간편/건강체)\n형태 : (갱신/비갱신)\n보험료 :\n병력 :\n기타특이사항 :\n\n감사합니다.','고객등록하지 않은 경우 설계의뢰문을 복사했습니다')"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 고객등록 안 한 경우 복사</button>
+        </div>
+
+      </div><!-- /grid -->
+
+      <!-- di_* hidden ID 유지 — buildDesignInquiry() 함수 오류 방지 -->
+      <div style="display:none;">
+        <input type="hidden" id="di_name"><input type="hidden" id="di_age"><input type="hidden" id="di_job"><input type="hidden" id="di_type"><input type="hidden" id="di_want"><input type="hidden" id="di_budget"><input type="hidden" id="di_exist"><textarea id="di_notice" style="display:none;"></textarea><textarea id="di_req" style="display:none;"></textarea>
+        <div id="di_out"></div>
+      </div>
     </div>
 
-    <!-- c6 -->
-    <div class="step-pane" id="c-6">
-      <ul class="chk-list">
-        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">상담 내용 정리 완료</span></li>
-        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">고객에게 보낼 문장 확인 완료</span></li>
-        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">AI 프롬프트 복사 완료</span></li>
-        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">대표 보고 필요 여부 확인</span></li>
-        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">설계의뢰 필요 여부 확인</span></li>
-        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">민감정보 미기재 확인</span></li>
-      </ul>
-      <div class="btn-row" style="margin-top:8px;"><button class="btn btn-p btn-block" onclick="buildConsultReport()"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 상담 후 보고문 만들어 복사</button></div>
-      <div class="out-box empty" id="c_rep" style="margin-top:10px;">버튼을 누르면 보고문이 생성·복사됩니다.</div>
+    <!-- c5: 업무요청방법 -->
+    <div class="step-pane" id="c-5">
+
+      <!-- ① 기본원칙 강조 박스 -->
+      <div style="background:#FFFBEB;border:2px solid #F59E0B;border-radius:14px;padding:16px 18px;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <svg style="width:20px;height:20px;flex-shrink:0;fill:none;stroke:#D97706;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span style="font-size:15px;font-weight:900;color:#92400E;">업무요청 기본원칙</span>
+        </div>
+        <p style="font-size:14px;color:#78350F;line-height:1.7;margin:0 0 8px;">업무요청은 <b>카카오채널 또는 정해진 업무채널</b>로 진행합니다.</p>
+        <p style="font-size:14px;color:#92400E;font-weight:800;line-height:1.7;margin:0;">업무상 증거자료를 공유하기 위해 <u>개인 카카오톡은 지양합니다.</u></p>
+      </div>
+
+      <!-- ② 업무요청 순서 -->
+      <div class="std-sub-h"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg> 업무요청 순서</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0 20px;">
+        <div style="background:#F3F0FF;border:1.5px solid #C4B5FD;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;color:#5B21B6;display:flex;align-items:center;gap:7px;">
+          <span style="background:#7C3AED;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">1</span>고객이름
+        </div>
+        <span style="font-size:18px;color:#A78BFA;font-weight:700;">›</span>
+        <div style="background:#F3F0FF;border:1.5px solid #C4B5FD;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;color:#5B21B6;display:flex;align-items:center;gap:7px;">
+          <span style="background:#7C3AED;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">2</span>요청목적작성
+        </div>
+        <span style="font-size:18px;color:#A78BFA;font-weight:700;">›</span>
+        <div style="background:#F3F0FF;border:1.5px solid #C4B5FD;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;color:#5B21B6;display:flex;align-items:center;gap:7px;">
+          <span style="background:#7C3AED;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">3</span>요청상세내용
+        </div>
+        <span style="font-size:18px;color:#A78BFA;font-weight:700;">›</span>
+        <div style="background:#F0FDF4;border:1.5px solid #86EFAC;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;color:#166534;display:flex;align-items:center;gap:7px;">
+          <span style="background:#16A34A;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">4</span>전달
+        </div>
+      </div>
+
+      <!-- ③ 업무요청문 예시 + 복사 버튼 -->
+      <div class="std-sub-h"><svg class="ei" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> 업무요청문 예시</div>
+      <div style="background:#fff;border:1.5px solid #E5E7EB;border-radius:12px;padding:16px 18px;margin:10px 0 10px;white-space:pre-line;font-size:13.5px;line-height:1.85;color:#374151;font-family:var(--sans);" id="biz_template_box">안녕하세요 총무님, 000입니다.
+아래 업무 요청드립니다.
+
+고객이름:
+요청목적:
+상세내용:
+
+감사합니다.</div>
+      <div class="btn-row">
+        <button class="btn btn-g" onclick="copyBizTemplate()"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 업무요청문 복사</button>
+      </div>
+
     </div>
+
+    <!-- c6: 설계취합 및 설계제안서 -->
+    <div class="step-pane" id="c-6">
+
+      <!-- 안내문 -->
+      <div style="background:#F0F9FF;border:1.5px solid #BAE6FD;border-radius:12px;padding:13px 16px;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+        <svg style="width:18px;height:18px;flex-shrink:0;fill:none;stroke:#0369A1;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+        <span style="font-size:13px;color:#0C4A6E;font-weight:600;">교육 후 프롬프트와 세부 작성 기준을 추가할 예정입니다.</span>
+      </div>
+
+      <!-- 2카드 그리드 -->
+      <div class="di-grid">
+
+        <!-- 카드1: 설계취합방법 -->
+        <div style="background:#fff;border:1.5px solid #E5E7EB;border-radius:14px;padding:22px 20px;min-height:130px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <svg style="width:20px;height:20px;flex-shrink:0;fill:none;stroke:#7C3AED;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 1 2-2h12"/></svg>
+            <span style="font-size:16px;font-weight:900;color:#1F2937;">설계취합방법</span>
+          </div>
+          <span style="display:inline-block;background:#F3F0FF;color:#7C3AED;font-size:11.5px;font-weight:700;border-radius:20px;padding:3px 10px;width:fit-content;">교육 후 세부 기준 추가 예정</span>
+        </div>
+
+        <!-- 카드2: 설계제안서작성방법 -->
+        <div style="background:#fff;border:1.5px solid #E5E7EB;border-radius:14px;padding:22px 20px;min-height:130px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <svg style="width:20px;height:20px;flex-shrink:0;fill:none;stroke:#7C3AED;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+            <span style="font-size:16px;font-weight:900;color:#1F2937;">설계제안서작성방법</span>
+          </div>
+          <span style="display:inline-block;background:#F3F0FF;color:#7C3AED;font-size:11.5px;font-weight:700;border-radius:20px;padding:3px 10px;width:fit-content;">교육 후 프롬프트 추가 예정</span>
+        </div>
+
+      </div>
+
+      <!-- c_out: copyPrompt 함수 참조용 숨김 요소 유지 -->
+      <div id="c_out" style="display:none;"></div>
+      <div id="c_ppv" style="display:none;"></div>
+
+    </div>
+
+    <!-- c7: 계약진행방법 -->
+    <div class="step-pane" id="c-7">
+      <div class="di-grid">
+
+        <!-- 모바일계약 진행방법 -->
+        <div style="background:#fff;border:1.5px solid #E5E7EB;border-radius:14px;padding:20px 20px 22px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+            <svg style="width:20px;height:20px;flex-shrink:0;fill:none;stroke:#7C3AED;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
+            <span style="font-size:16px;font-weight:900;color:#1F2937;">모바일계약 진행방법</span>
+          </div>
+          <ol style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:11px;">
+            <li style="display:flex;gap:11px;align-items:flex-start;">
+              <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#7C3AED;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;">1</span>
+              <span style="font-size:13.5px;color:#374151;line-height:1.55;padding-top:2px;">설계매니저에게 해당 계약 전자서명 요청</span>
+            </li>
+            <li style="display:flex;gap:11px;align-items:flex-start;">
+              <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#7C3AED;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;">2</span>
+              <span style="font-size:13.5px;color:#374151;line-height:1.55;padding-top:2px;">매니저가 보내준 영업담당자 전자서명하기</span>
+            </li>
+            <li style="display:flex;gap:11px;align-items:flex-start;">
+              <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#7C3AED;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;">3</span>
+              <span style="font-size:13.5px;color:#374151;line-height:1.55;padding-top:2px;">고객 모바일계약 도와주기</span>
+            </li>
+            <li style="display:flex;gap:11px;align-items:flex-start;">
+              <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#7C3AED;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;">4</span>
+              <span style="font-size:13.5px;color:#374151;line-height:1.55;padding-top:2px;">체결완료 카톡 받으면 복사해서 총무에게 전달하기</span>
+            </li>
+            <li style="display:flex;gap:11px;align-items:flex-start;">
+              <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#7C3AED;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;">5</span>
+              <span style="font-size:13.5px;color:#374151;line-height:1.55;padding-top:2px;">고객 모니터링 도와주기</span>
+            </li>
+            <li style="display:flex;gap:11px;align-items:flex-start;">
+              <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#16A34A;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;">6</span>
+              <span style="font-size:13.5px;color:#374151;line-height:1.55;padding-top:2px;">계약 후 자료 전달해주기</span>
+            </li>
+          </ol>
+        </div>
+
+        <!-- 대면청약 진행방법 -->
+        <div style="background:#fff;border:1.5px solid #E5E7EB;border-radius:14px;padding:20px 20px 22px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+            <svg style="width:20px;height:20px;flex-shrink:0;fill:none;stroke:#7C3AED;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 1 2-2h12"/></svg>
+            <span style="font-size:16px;font-weight:900;color:#1F2937;">대면청약 진행방법</span>
+          </div>
+          <ol style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:11px;">
+            <li style="display:flex;gap:11px;align-items:flex-start;">
+              <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#7C3AED;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;">1</span>
+              <span style="font-size:13.5px;color:#374151;line-height:1.55;padding-top:2px;">청약서 출력 후 고객 미팅</span>
+            </li>
+            <li style="display:flex;gap:11px;align-items:flex-start;">
+              <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#7C3AED;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;">2</span>
+              <span style="font-size:13.5px;color:#374151;line-height:1.55;padding-top:2px;">청약서 서명 후 스캔하여 총무에게 전달</span>
+            </li>
+            <li style="display:flex;gap:11px;align-items:flex-start;">
+              <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#7C3AED;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;">3</span>
+              <span style="font-size:13.5px;color:#374151;line-height:1.55;padding-top:2px;">계약 반영되면 고객 모니터링 도와주기</span>
+            </li>
+            <li style="display:flex;gap:11px;align-items:flex-start;">
+              <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#16A34A;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;">4</span>
+              <span style="font-size:13.5px;color:#374151;line-height:1.55;padding-top:2px;">계약 후 자료 전달해주기</span>
+            </li>
+          </ol>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- c8: 계약후체크리스트 — 삭제됨(비노출) -->
+    <div class="step-pane" id="c-8" style="display:none!important;"></div>
 
     <div class="nav-row">
       <button class="btn btn-g" onclick="stepMove('c',-1)">← 이전</button>
@@ -1100,11 +1444,12 @@ async function wdChangePw(uid,oldPw,newPw){
   </div>
 </div>
 
-<!-- ════════ 4. 설계·계약 진행판 ════════ -->
+<!-- ════════ 4. 업무요청서 ════════ -->
 <div class="view" id="view-design">
   <div class="card">
-    <div class="sec-tag">설계·계약 진행판</div>
-    <div class="sec-title">설계의뢰와 계약을 안전하게</div>
+    <div class="sec-tag">WORK REQUEST</div>
+    <div class="sec-title">업무요청서</div>
+    <div class="sec-sub">메가종합금융 총무 · 원수사 총무 요청문을 수신처 기준으로 만들고 복사합니다. 계약 실행은 메가넷에서 합니다.</div>
     <div class="steps" id="steps-d">
       <button class="step-btn on" onclick="goStep('d',1)"><span class="n">1</span>상황 선택</button>
       <button class="step-btn" onclick="goStep('d',2)"><span class="n">2</span>설계 정보</button>
@@ -1144,7 +1489,7 @@ async function wdChangePw(uid,oldPw,newPw){
     </div>
 
     <div class="step-pane" id="d-3">
-      <div class="sec-sub" style="margin-bottom:12px;">매니저에게 보낼 설계의뢰 문장을 만듭니다.</div>
+      <div class="sec-sub" style="margin-bottom:12px;">메가종합금융 총무 또는 원수사 총무에게 보낼 요청문을 만듭니다.</div>
       <div class="btn-row"><button class="btn btn-p" onclick="buildDesignReq()"><svg class="ei" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> 의뢰문 만들기</button></div>
       <div class="out-box empty" id="d_out">[의뢰문 만들기]를 누르면 생성됩니다.</div>
       <button class="btn btn-g btn-block" onclick="copyOut('d_out','설계의뢰문을 복사했습니다')"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 의뢰문 복사</button>
@@ -1158,7 +1503,7 @@ async function wdChangePw(uid,oldPw,newPw){
         <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">주요 보장 확인</span></li>
         <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">고지사항 확인</span></li>
         <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">고객 최종 동의 확인</span></li>
-        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">대표 확인 필요 여부 확인</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">내부 확인 필요 여부 확인</span></li>
       </ul>
       <div class="warn"><div class="t"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg> 하면 안 되는 것</div><ul><li>승인 확정 표현 금지 · 보장 과장 금지 · 확인 전 청약 진행 금지 · 고지 누락 금지</li></ul></div>
     </div>
@@ -1168,7 +1513,7 @@ async function wdChangePw(uid,oldPw,newPw){
       <div class="btn-row">
         <button class="btn btn-dark" onclick="copyPrompt('d_p1')">설계의뢰 정리</button>
         <button class="btn btn-dark" onclick="copyPrompt('d_p2')">계약 전 리스크 점검</button>
-        <button class="btn btn-dark" onclick="copyPrompt('d_p3')">대표 보고</button>
+        <button class="btn btn-dark" onclick="copyPrompt('d_p3')">내부 보고</button>
       </div>
       <div class="prompt-box" id="d_ppv">버튼을 누르면 프롬프트가 복사되고 여기 표시됩니다.</div>
     </div>
@@ -1176,8 +1521,8 @@ async function wdChangePw(uid,oldPw,newPw){
     <div class="step-pane" id="d-6">
       <ul class="chk-list">
         <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">설계의뢰 문장 복사 완료</span></li>
-        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">매니저 전달 완료</span></li>
-        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">대표 확인 필요 여부 확인</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">업무채널 전달 완료</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">내부 확인 필요 여부 확인</span></li>
         <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">계약 전 확인 항목 점검 완료</span></li>
         <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">고객 안내 전 위험 표현 검사 완료</span></li>
       </ul>
@@ -1199,7 +1544,7 @@ async function wdChangePw(uid,oldPw,newPw){
       <button class="step-btn on" onclick="goStep('r',1)"><span class="n">1</span>상황 선택</button>
       <button class="step-btn" onclick="goStep('r',2)"><span class="n">2</span>사실 정리</button>
       <button class="step-btn" onclick="goStep('r',3)"><span class="n">3</span>고객 안내문</button>
-      <button class="step-btn" onclick="goStep('r',4)"><span class="n">4</span>대표 보고문</button>
+      <button class="step-btn" onclick="goStep('r',4)"><span class="n">4</span>내부 보고문</button>
       <button class="step-btn" onclick="goStep('r',5)"><span class="n">5</span>AI 프롬프트</button>
       <button class="step-btn" onclick="goStep('r',6)"><span class="n">6</span>완료 체크</button>
     </div>
@@ -1241,9 +1586,9 @@ async function wdChangePw(uid,oldPw,newPw){
 
     <div class="step-pane" id="r-4">
       <div class="sec-sub" style="margin-bottom:12px;">대표에게 보낼 보고문을 만듭니다.</div>
-      <div class="btn-row"><button class="btn btn-p" onclick="buildClaimReport()"><svg class="ei" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> 대표 보고문 만들기</button></div>
-      <div class="out-box empty" id="r_rep">[대표 보고문 만들기]를 누르면 생성됩니다.</div>
-      <button class="btn btn-g btn-block" onclick="copyOut('r_rep','대표 보고문을 복사했습니다')"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 보고문 복사</button>
+      <div class="btn-row"><button class="btn btn-p" onclick="buildClaimReport()"><svg class="ei" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> 내부 보고문 만들기</button></div>
+      <div class="out-box empty" id="r_rep">[내부 보고문 만들기]를 누르면 생성됩니다.</div>
+      <button class="btn btn-g btn-block" onclick="copyOut('r_rep','내부 보고문을 복사했습니다')"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 보고문 복사</button>
     </div>
 
     <div class="step-pane" id="r-5">
@@ -1258,10 +1603,10 @@ async function wdChangePw(uid,oldPw,newPw){
     <div class="step-pane" id="r-6">
       <ul class="chk-list">
         <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">고객 안내문 확인 완료</span></li>
-        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">대표 보고문 복사 완료</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">내부 보고문 복사 완료</span></li>
         <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">지급 단정 표현 없음</span></li>
         <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">문제 축소 보고 없음</span></li>
-        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">추가 안내 전 대표 확인 필요 여부 확인</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">추가 안내 전 내부 확인 필요 여부 확인</span></li>
       </ul>
     </div>
 
@@ -1272,13 +1617,13 @@ async function wdChangePw(uid,oldPw,newPw){
   </div>
 </div>
 
-<!-- ════════ 6. 문장·프롬프트 모음 ════════ -->
+<!-- ════════ 6. 고객전달자료 ════════ -->
 <div class="view" id="view-lib">
   <div class="card">
-    <div class="sec-tag">LIBRARY</div>
-    <div class="sec-title">문장 · 프롬프트 모음</div>
-    <div class="sec-sub">필요할 때 바로 복사해서 쓰세요.</div>
-    <div class="basic-guide" style="margin-top:12px;"><svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 보험 상담 문장은 반드시 <b>약관과 보험사 기준 확인</b>을 전제로 사용합니다. 약관 PDF는 <b>NotebookLM</b>에 넣어두고 담보별 보장 조건, 면책·감액기간, 해지환급금 등을 확인할 때 활용하면 좋습니다.</div>
+    <div class="sec-tag">CLIENT MATERIALS</div>
+    <div class="sec-title">고객전달자료</div>
+    <div class="sec-sub">카톡·문자·이메일로 보낼 수 있는 문장을 상황별로 선택해 복사합니다. 고객 발송 전 반드시 한 번 더 검토하세요.</div>
+    <div class="basic-guide" style="margin-top:12px;"><svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 복사 전 체크 — <b>지급 단정 표현 없음</b> · <b>민감정보 요청 없음</b> · <b>약관·보험사 확인 전 확정 표현 없음</b></div>
     <div class="philosophy-card"><div class="ph-title">AI는 정리를 돕고, 책임은 사람이 집니다</div><div class="ph-body">AI는 상담 내용을 정리하고 문장을 다듬는 데 도움을 줄 수 있습니다.<br>하지만 고객 앞에서 말하고, 확인하고, 책임지는 사람은 설계사입니다.<br>AI가 만든 문장도 고객에게 보내기 전 한 번 더 확인합니다.</div></div>
     <div class="cat-tabs" style="margin-top:16px;">
       <button class="cat-btn on" onclick="libCat('a',this)">고객용 문장</button>
@@ -1319,7 +1664,7 @@ async function wdChangePw(uid,oldPw,newPw){
 다음 일정:
 확인이 필요한 사항:</div></div>
       <div class="snip"><div class="sh"><div class="snm">설계의뢰</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">[설계의뢰]
-안녕하세요 매니저님, WD WAVE 소속 설계사입니다.
+안녕하세요, WD WAVE 소속 설계사입니다.
 아래 건 설계 부탁드립니다.
 
 고객:
@@ -1353,7 +1698,7 @@ async function wdChangePw(uid,oldPw,newPw){
 1. 지급 단정 2. 과장 3. 오해 가능 4. 개인정보 위험 5. 민원 가능
 문제가 있으면 안전한 문장으로 고쳐줘.
 안내문: [여기에 붙여넣기]</div></div>
-      <div class="snip"><div class="sh"><div class="snm">대표 보고 정리 프롬프트</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">아래 상황을 대표에게 보고하기 좋게 사실 중심으로 정리해줘.
+      <div class="snip"><div class="sh"><div class="snm">내부 보고 정리 프롬프트</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">아래 상황을 대표에게 보고하기 좋게 사실 중심으로 정리해줘.
 1. 발생일시 2. 고객 요청 3. 내가 안내한 내용 4. 현재 상태 5. 위험 요소 6. 즉시 필요한 판단 7. 다음에 할 말
 주의: 감정 표현 줄이고, 사실과 추측 구분, 임의 약속 금지.
 상황: [여기에 붙여넣기]</div></div>
@@ -1365,7 +1710,7 @@ async function wdChangePw(uid,oldPw,newPw){
 담보 설명: [여기에 붙여넣기]</div></div>
       <div class="snip"><div class="sh"><div class="snm">보험일기 정리 프롬프트</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">아래 보험일기 내용을 보고 1. 보험 이슈 2. 고객 감정 3. 상담 기회 4. 조심할 표현 5. 다음 행동 6. 고객에게 보낼 수 있는 부드러운 문장으로 정리해줘. 단, 영업 권유처럼 보이지 않게 해줘.
 보험일기: [여기에 붙여넣기]</div></div>
-      <div class="snip"><div class="sh"><div class="snm">대표 확인 요청 프롬프트</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">아래 내용을 대표에게 확인 요청하기 좋게 사실 중심으로 정리해줘. 고객이 한 말, 내가 이해한 내용, 확인이 필요한 질문을 구분해줘. 추측이나 확답은 하지 마.
+      <div class="snip"><div class="sh"><div class="snm">내부 확인 요청 프롬프트</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">아래 내용을 대표에게 확인 요청하기 좋게 사실 중심으로 정리해줘. 고객이 한 말, 내가 이해한 내용, 확인이 필요한 질문을 구분해줘. 추측이나 확답은 하지 마.
 내용: [여기에 붙여넣기]</div></div>
       <div class="snip"><div class="sh"><div class="snm">NotebookLM 약관 활용 안내 프롬프트</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">이 약관 PDF를 NotebookLM에 넣고 확인할 때 사용할 질문 목록을 만들어줘. 보장 조건, 면책기간, 감액기간, 지급 제한, 해지환급금, 고지 관련 유의사항을 확인할 수 있는 질문으로 정리해줘.</div></div>
       <div class="basic-nb" style="margin-top:6px;"><svg class="ei" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 10.8V4h6v6.8l2 3.2H7z"/></svg> 제안서 작성 프롬프트와 가입 후 안내서 프롬프트는 향후 <b>별도 교육</b>을 통해 제공됩니다. 현재 화면에서는 기본 상담, 약관 확인, 청구 안내, 위험표현 검사 중심으로 제공합니다.</div>
@@ -1386,13 +1731,59 @@ async function wdChangePw(uid,oldPw,newPw){
   </div>
 </div>
 
-<!-- ════════ 7. 전산·연락처 허브 ════════ -->
+<!-- ════════ 7. 업무링크허브 ════════ -->
 <div class="view" id="view-hub">
   <div class="card">
-    <div class="sec-tag">DIRECTORY</div>
-    <div class="sec-title">전산·연락처 허브</div>
-    <div class="sec-sub">보험사 전산·코드·매니저·홈페이지를 한 곳에서 찾습니다.</div>
-    <input class="hub-srch" id="hub-srch" style="margin-top:16px;" placeholder="보험사명, 매니저명, 업무명 검색" oninput="hubRender(this.value)">
+    <div class="sec-tag">LINK HUB</div>
+    <div class="sec-title">업무링크허브</div>
+    <div class="sec-sub">메가넷, 구글 업무도구, 개인 추가 링크, 보험사 전산·연락처를 한 곳에서 확인합니다.</div>
+
+    <!-- 메가종합금융 업무 바로가기 -->
+    <div class="std-sub-h" style="margin-top:24px;"><svg class="ei" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="2.4"/><path d="M8.5 16a3.5 3.5 0 0 1 7 0"/></svg> 메가종합금융 업무 바로가기</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+      <button class="btn btn-p" style="min-height:42px;font-size:13.5px;" onclick="window.open('https://mega.megafn.com/mega/Install/newLauncher.html','_blank')">메가넷 로그인/실행</button>
+      <button class="btn btn-g" style="min-height:42px;font-size:13.5px;" onclick="window.open('http://www.gasupport.co.kr/Gasys/mega/inc/pop_insuCon.asp','_blank')">메가 업무지원·보험사 연결</button>
+      <button class="btn btn-g" style="min-height:42px;font-size:13.5px;" onclick="window.open('https://mega.ohmymanager.com/index_real.html','_blank')">오마이매니저</button>
+      <button class="btn btn-g" style="min-height:42px;font-size:13.5px;" onclick="window.open('https://megasign.co.kr/','_blank')">메가싸인 (전자서명)</button>
+    </div>
+    <div class="basic-nb" style="margin-top:10px;"><svg class="ei" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 10.8V4h6v6.8l2 3.2H7z"/></svg> 계약관리·가입설계·업무알림방·업무채널은 메가넷 로그인 후 이용하세요. 이 키트에서 계정·비밀번호를 저장하지 않습니다.</div>
+
+    <!-- 업무채널 / 총무 요청 — 비노출 -->
+    <div style="display:none;">
+      <div class="std-sub-h" style="margin-top:18px;"><svg class="ei" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-9 8.35 8.5 8.5 0 0 1-3.8-.9L3 20l1.05-4.2A8.5 8.5 0 1 1 21 11.5"/></svg> 업무채널 / 총무 요청</div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:10px;">
+        <button class="btn btn-p" onclick="showTab('design')">메가종합금융 총무 요청문 만들기 →</button>
+        <button class="btn btn-g" onclick="showTab('design')">원수사 총무 요청문 만들기 →</button>
+      </div>
+      <div class="philosophy-card" style="margin-top:12px;"><div class="ph-title">업무채널 이용 안내</div><div class="ph-body">업무 요청은 워크키트에서 직접 처리하지 않습니다.<br>업무요청서에서 요청문을 만든 뒤 복사하고, 메가넷 로그인 후 업무채널 또는 업무알림방에서 메가종합금융 총무·원수사 총무에게 전달하세요.</div></div>
+    </div>
+
+    <!-- 약관·자료·WD 매뉴얼 — 비노출 -->
+    <div style="display:none;">
+      <div class="std-sub-h" style="margin-top:18px;"><svg class="ei" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M19 18v3H6.5A2.5 2.5 0 0 1 4 18.5"/></svg> 약관·자료·WD 매뉴얼</div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:10px;">
+        <button class="btn btn-g" onclick="window.open('https://notebooklm.google.com','_blank')">NotebookLM (약관분석)</button>
+        <button class="btn btn-g" onclick="window.open('https://drive.google.com','_blank')">보상사례 자료실</button>
+        <button class="btn btn-g" onclick="showToast('WD 매뉴얼 링크 준비 중입니다. 보상사례 자료 탭에서 확인하세요.')">WD 매뉴얼 자료실 (준비 중)</button>
+      </div>
+    </div>
+
+    <!-- 구글 업무도구 -->
+    <div class="std-sub-h" style="margin-top:28px;"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18"/></svg> 구글 업무도구</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+      <button class="btn btn-g" style="min-height:42px;font-size:13.5px;" onclick="window.open('https://keep.google.com','_blank')">구글킵 (메모)</button>
+      <button class="btn btn-g" style="min-height:42px;font-size:13.5px;" onclick="window.open('https://calendar.google.com','_blank')">구글캘린더 (일정)</button>
+      <button class="btn btn-g" style="min-height:42px;font-size:13.5px;" onclick="window.open('https://mail.google.com','_blank')">구글메일</button>
+      <button class="btn btn-g" style="min-height:42px;font-size:13.5px;" onclick="window.open('https://drive.google.com','_blank')">구글드라이브 (자료)</button>
+    </div>
+
+    <!-- 개인 추가 링크 (준비 중) -->
+    <div class="std-sub-h" style="margin-top:28px;"><svg class="ei" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> 개인 추가 링크 <span style="font-size:11px;font-weight:500;color:var(--muted);">· Supabase 저장 구조 검수 후 제공 예정</span></div>
+    <div class="basic-nb" style="margin-top:10px;"><svg class="ei" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 10.8V4h6v6.8l2 3.2H7z"/></svg> 개인 링크 추가·수정·삭제 기능은 Supabase 저장 구조 검수 후 적용합니다. 현재는 메가종합금융·구글 업무도구 링크를 이용하세요.</div>
+
+    <!-- 보험사 전산·연락처 (기존 HUB_DATA 렌더링 유지) -->
+    <div class="std-sub-h" style="margin-top:28px;"><svg class="ei" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="2.4"/><path d="M8.5 16a3.5 3.5 0 0 1 7 0"/></svg> 보험사 전산·연락처</div>
+    <input class="hub-srch" id="hub-srch" style="margin-top:12px;" placeholder="보험사명, 총무명, 업무명 검색" oninput="hubRender(this.value)">
     <div class="hub-filters">
       <button class="hub-fbtn on" onclick="hubFilter('all',this)">전체</button>
       <button class="hub-fbtn" onclick="hubFilter('life',this)">생명보험사</button>
@@ -1404,8 +1795,8 @@ async function wdChangePw(uid,oldPw,newPw){
   </div>
 </div>
 
-<!-- ════════ 8. 가망고객 대기판 ════════ -->
-<div class="view" id="view-prospect">
+<!-- ════════ 8. 가망고객 대기판: v3재구성에서 비노출 ════════ -->
+<div class="view" id="view-prospect" style="display:none!important;">
   <div class="cm-wrap">
     <div class="cm-head">
       <div class="cm-head-l">
@@ -1441,7 +1832,7 @@ async function wdChangePw(uid,oldPw,newPw){
               <div class="cm-f"><label>주소 요약</label><input id="ps_addr" placeholder="예: 서울 강남구 역삼동"></div>
               <div class="cm-f"><label>고객 상태</label><select id="ps_status"><option value="">선택</option><option>신규</option><option>상담중</option><option>계약</option><option>관리중</option><option>보류</option><option>종결</option></select></div>
               <div class="cm-f"><label>관심 상황</label><select id="ps_interest"><option value="">선택</option><option>신규가입</option><option>기존보험 점검</option><option>리모델링</option><option>보험료 부담</option><option>가족 보장</option><option>실손/청구 문의</option><option>숨은보험금/미청구보험</option><option>기타</option></select></div>
-              <div class="cm-f"><label>다음 행동</label><select id="ps_next"><option value="">선택</option><option>첫 연락하기</option><option>보장점검 제안</option><option>상담 약속 잡기</option><option>자료 확인 후 연락</option><option>대표 확인 후 연락</option><option>나중에 다시 연락</option></select></div>
+              <div class="cm-f"><label>다음 행동</label><select id="ps_next"><option value="">선택</option><option>첫 연락하기</option><option>보장점검 제안</option><option>상담 약속 잡기</option><option>자료 확인 후 연락</option><option>내부 확인 후 연락</option><option>나중에 다시 연락</option></select></div>
               <div class="cm-f"><label>다음 연락일</label><input type="date" id="ps_nextdate"></div>
               <div class="cm-f full"><label>메모</label><textarea id="ps_memo" placeholder="기억할 점을 입력하세요 (선택)"></textarea></div>
               <div class="cm-f chk"><label><input type="checkbox" id="ps_verify"> 고객 인증 필요</label></div>
@@ -1477,7 +1868,7 @@ async function wdChangePw(uid,oldPw,newPw){
             <div class="cm-f"><label>고객명 <span class="req">*</span></label><input id="qc_name" placeholder="예: 김○○"></div>
             <div class="cm-f"><label>전화번호</label><input id="qc_tel" placeholder="예: 010-0000-0000"></div>
             <div class="cm-f"><label>관심 상황</label><select id="qc_interest"><option value="">선택</option><option>신규가입</option><option>기존보험 점검</option><option>리모델링</option><option>보험료 부담</option><option>가족 보장</option><option>실손/청구 문의</option><option>숨은보험금/미청구보험</option><option>기타</option></select></div>
-            <div class="cm-f"><label>다음 행동</label><select id="qc_next"><option value="">선택</option><option>첫 연락하기</option><option>보장점검 제안</option><option>상담 약속 잡기</option><option>자료 확인 후 연락</option><option>대표 확인 후 연락</option><option>나중에 다시 연락</option></select></div>
+            <div class="cm-f"><label>다음 행동</label><select id="qc_next"><option value="">선택</option><option>첫 연락하기</option><option>보장점검 제안</option><option>상담 약속 잡기</option><option>자료 확인 후 연락</option><option>내부 확인 후 연락</option><option>나중에 다시 연락</option></select></div>
             <div class="cm-f"><label>메모</label><textarea id="qc_memo" placeholder="간단 메모"></textarea></div>
             <div class="cm-f chk"><label><input type="checkbox" id="qc_verify"> 고객 인증 필요</label></div>
             <div class="cm-f chk"><label><input type="checkbox" id="qc_insurer"> 원수사 전산 확인 필요</label></div>
@@ -1497,66 +1888,157 @@ async function wdChangePw(uid,oldPw,newPw){
 <!-- ════════ 9. 상황별 업무 가이드 ════════ -->
 <div class="view" id="view-guide">
   <div class="card">
-    <div class="sec-tag">HOW-TO GUIDE</div>
-    <div class="sec-title">상황별 업무 가이드</div>
-    <div class="sec-sub">자료를 대신 만들어드리는 곳이 아니라, 상황별로 자료를 <b>만드는 방법</b>을 안내하는 메뉴입니다. 카드를 누르면 단계와 체크포인트가 나옵니다.</div>
-    <div class="gd-grid" id="gd_grid" style="margin-top:16px;"></div>
-    <div class="gd-box empty" id="gd_box">위에서 상황을 선택하면 만드는 방법이 여기에 표시됩니다.</div>
+    <div class="sec-tag">COMPENSATION CASES</div>
+    <div class="sec-title">보상사례 자료</div>
+    <div class="sec-sub">대표 고유자산 보상사례를 확인하고, 비슷한 상담에서 활용할 문장을 찾습니다. 고객명·주민번호·증권번호 등 개인정보는 입력하지 않습니다.</div>
+    <div class="basic-guide" style="margin-top:12px;"><svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 이 자료는 <b>교육용 사례 구조</b>입니다. 실제 고객 데이터가 아니며 저장형 DB로 운영하지 않습니다. 추가 자료는 구글드라이브·NotebookLM으로 연결합니다.</div>
+
+    <div class="cat-tabs" style="margin-top:16px;">
+      <button class="cat-btn on" onclick="gcSwitch('cases',this)">사례 목록</button>
+      <button class="cat-btn" onclick="gcSwitch('guide',this)">업무 가이드</button>
+      <button class="cat-btn" onclick="gcSwitch('links',this)">자료 연결</button>
+      <button class="cat-btn" onclick="gcSwitch('manual',this)">WD 매뉴얼</button>
+    </div>
+
+    <!-- 보상사례 목록 -->
+    <div id="gc-cases" class="lib-pane">
+      <div class="philosophy-card" style="margin-top:14px;"><div class="ph-title">보상사례 활용 원칙</div><div class="ph-body">사례는 설계사가 배움을 위해 참고합니다.<br>고객에게 "이런 경우 다 나옵니다"처럼 단정하지 않습니다.<br>비슷한 상황이라도 약관·심사 결과에 따라 달라질 수 있음을 전제합니다.</div></div>
+      <div class="basic-nb" style="margin-top:14px;"><svg class="ei" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 10.8V4h6v6.8l2 3.2H7z"/></svg> 보상사례는 사라님(대표)이 직접 등록합니다. 현재 등록된 사례가 없으면 아래 자료 연결 탭에서 구글드라이브·NotebookLM을 확인하세요.</div>
+      <div id="gc-case-list" style="margin-top:14px;">
+        <div class="gd-box empty">등록된 보상사례가 없습니다. 대표님께 사례 자료를 요청하거나 [자료 연결] 탭에서 확인하세요.</div>
+      </div>
+    </div>
+
+    <!-- 업무가이드 (기존 GUIDE_DATA 재활용) -->
+    <div id="gc-guide" class="lib-pane" style="display:none;">
+      <div class="sec-sub" style="margin-top:14px;">상황별로 자료를 만드는 방법을 안내합니다. 카드를 누르면 단계와 체크포인트가 나옵니다.</div>
+      <div class="gd-grid" id="gd_grid" style="margin-top:16px;"></div>
+      <div class="gd-box empty" id="gd_box">위에서 상황을 선택하면 만드는 방법이 여기에 표시됩니다.</div>
+    </div>
+
+    <!-- 자료 연결 -->
+    <div id="gc-links" class="lib-pane" style="display:none;">
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;">
+        <button class="btn btn-p" onclick="window.open('https://notebooklm.google.com','_blank')"><svg class="ei" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M19 18v3H6.5A2.5 2.5 0 0 1 4 18.5"/></svg> NotebookLM 열기 (약관·사례 자료함)</button>
+        <button class="btn btn-g" onclick="window.open('https://drive.google.com','_blank')"><svg class="ei" viewBox="0 0 24 24"><path d="M12 18H3l4.5-8 3 4 4.5-8L21 18z"/></svg> 구글드라이브 열기 (보상사례 자료실)</button>
+        <div class="basic-nb"><svg class="ei" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 10.8V4h6v6.8l2 3.2H7z"/></svg> 약관 PDF를 NotebookLM에 넣고 담보별 보장 조건, 면책·감액기간, 지급 제한사항을 확인할 때 활용하세요.</div>
+      </div>
+    </div>
+
+    <!-- WD 매뉴얼 탭 -->
+    <div id="gc-manual" class="lib-pane" style="display:none;">
+      <div class="philosophy-card" style="margin-top:14px;"><div class="ph-title">WD 매뉴얼 공간</div><div class="ph-body">WD WAVE 최윤경 지점장이 만든 업무 매뉴얼을 이곳에서 확인합니다.<br>매뉴얼은 순차적으로 추가됩니다. 현재 준비 중인 항목은 아래에서 확인하세요.</div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;">
+        <div class="snip"><div class="sh"><div class="snm">설계사 업무 매뉴얼</div><span style="font-size:11px;color:var(--muted);padding:3px 8px;background:#f3f0ff;border-radius:6px;">준비 중</span></div><div class="sbody" style="color:var(--muted);">구글드라이브 링크 연결 예정</div></div>
+        <div class="snip"><div class="sh"><div class="snm">상담 매뉴얼</div><span style="font-size:11px;color:var(--muted);padding:3px 8px;background:#f3f0ff;border-radius:6px;">준비 중</span></div><div class="sbody" style="color:var(--muted);">구글드라이브 링크 연결 예정</div></div>
+        <div class="snip"><div class="sh"><div class="snm">고객 응대 매뉴얼</div><span style="font-size:11px;color:var(--muted);padding:3px 8px;background:#f3f0ff;border-radius:6px;">준비 중</span></div><div class="sbody" style="color:var(--muted);">구글드라이브 링크 연결 예정</div></div>
+        <div class="snip"><div class="sh"><div class="snm">업무요청서 작성 매뉴얼</div><span style="font-size:11px;color:var(--muted);padding:3px 8px;background:#f3f0ff;border-radius:6px;">준비 중</span></div><div class="sbody" style="color:var(--muted);">구글드라이브 링크 연결 예정</div></div>
+        <div class="snip"><div class="sh"><div class="snm">메가종합금융 총무 업무채널 이용 매뉴얼</div><span style="font-size:11px;color:var(--muted);padding:3px 8px;background:#f3f0ff;border-radius:6px;">준비 중</span></div><div class="sbody" style="color:var(--muted);">구글드라이브 링크 연결 예정</div></div>
+        <div class="snip"><div class="sh"><div class="snm">원수사 총무 요청 매뉴얼</div><span style="font-size:11px;color:var(--muted);padding:3px 8px;background:#f3f0ff;border-radius:6px;">준비 중</span></div><div class="sbody" style="color:var(--muted);">구글드라이브 링크 연결 예정</div></div>
+        <div class="snip"><div class="sh"><div class="snm">보상사례 활용 매뉴얼</div><span style="font-size:11px;color:var(--muted);padding:3px 8px;background:#f3f0ff;border-radius:6px;">준비 중</span></div><div class="sbody" style="color:var(--muted);">구글드라이브 링크 연결 예정</div></div>
+        <div class="snip"><div class="sh"><div class="snm">개인정보 입력 금지 기준</div><span style="font-size:11px;color:var(--muted);padding:3px 8px;background:#f3f0ff;border-radius:6px;">준비 중</span></div><div class="sbody" style="color:var(--muted);">구글드라이브 링크 연결 예정</div></div>
+        <div class="snip"><div class="sh"><div class="snm">WD WAVE 철학·운영 기준</div><span style="font-size:11px;color:var(--muted);padding:3px 8px;background:#f3f0ff;border-radius:6px;">준비 중</span></div><div class="sbody" style="color:var(--muted);">구글드라이브 링크 연결 예정</div></div>
+      </div>
+      <button class="btn btn-g" style="margin-top:14px;width:100%;" onclick="showToast('WD 매뉴얼 링크는 준비 중입니다. 사라님(지점장)께 문의하세요.')"><svg class="ei" viewBox="0 0 24 24"><path d="M12 18H3l4.5-8 3 4 4.5-8L21 18z"/></svg> 구글드라이브 매뉴얼 자료실 연결 예정</button>
+    </div>
   </div>
 </div>
 
-<!-- ════════ 10. 업무일지 메모 ════════ -->
+<!-- ════════ 신규. 메가세일즈북 (준비중) ════════ -->
+<div class="view" id="view-salesbook">
+  <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:320px;text-align:center;gap:18px;">
+    <svg style="width:48px;height:48px;fill:none;stroke:#C4B5FD;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    <div>
+      <div style="font-size:22px;font-weight:900;color:var(--ink);margin-bottom:10px;">메가세일즈북</div>
+      <div style="font-size:16px;font-weight:700;color:var(--purple);margin-bottom:8px;">준비중입니다.</div>
+      <div style="font-size:14px;color:var(--muted);line-height:1.7;">영업자료와 세일즈 콘텐츠를 정리한 뒤 제공할 예정입니다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ 신규. 시책정보 (준비중) ════════ -->
+<div class="view" id="view-sicheck">
+  <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:320px;text-align:center;gap:18px;">
+    <svg style="width:48px;height:48px;fill:none;stroke:#C4B5FD;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+    <div>
+      <div style="font-size:22px;font-weight:900;color:var(--ink);margin-bottom:10px;">시책정보</div>
+      <div style="font-size:16px;font-weight:700;color:var(--purple);margin-bottom:8px;">준비중입니다.</div>
+      <div style="font-size:14px;color:var(--muted);line-height:1.7;">보험사 시책과 주요 안내를 정리한 뒤 제공할 예정입니다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ 10. 빠른 메모 ════════ -->
 <div class="view" id="view-worklog">
   <div class="card">
-    <div class="sec-tag">RECORD CENTER</div>
-    <div class="sec-title">기록센터</div>
-    <div class="sec-sub">오늘의 할 일, 보험일기, 퀵메모를 한 곳에서 확인하는 Supabase에 저장되는 기록 공간입니다.</div>
+    <div class="sec-tag">QUICK MEMO</div>
+    <div class="sec-title">빠른 메모</div>
+    <div class="sec-sub">들은 말, 할 일, 아이디어, 톡 초안을 빠르게 남기고 구글킵·캘린더로 복사해 보관합니다. 빠른 메모는 개인 업무 기록입니다.</div>
+    <div class="basic-guide" style="margin-top:12px;"><svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 고객 개인정보, 연락처, 주민번호, 증권번호, 계좌번호, 병력 상세는 입력하지 않습니다. 저장 기능은 Supabase 구조 검수 후 적용합니다. 현재는 복사·정리 중심으로 사용합니다. 메모 보관은 <b>구글킵</b>, 일정은 <b>구글캘린더</b>에서 합니다.</div>
 
-    <div class="philosophy-card"><div class="ph-title">오늘의 기록 기준</div><div class="ph-body">잘하려고 애쓰기 전에, 오늘 들은 말과 확인할 일을 남기세요.<br>좋은 설계사는 모든 것을 기억하는 사람이 아니라, 놓치지 않기 위해 기록하는 사람입니다.<br>작은 기록이 고객을 지키고, 설계사의 실수를 줄입니다.</div></div>
-    <div class="wc-tabs" style="margin-top:16px;">
-      <button class="wc-tab on" data-wc="task" onclick="wcSwitch('task')">오늘의 할 일</button>
-      <button class="wc-tab" data-wc="diary" onclick="wcSwitch('diary')">보험일기</button>
-      <button class="wc-tab" data-wc="memo" onclick="wcSwitch('memo')">퀵메모</button>
-    </div>
-
-    <!-- 오늘의 할 일 -->
-    <div class="wc-pane on" id="wc-task">
-      <div class="wc-hint">오늘 해야 할 상담, 고객관리, 계약 확인 일을 짧게 남겨두세요.</div>
-      <div class="wc-bar">
-        <button class="btn btn-p" onclick="rcOpen('task')"><svg class="ei" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> 빠른 기록센터에서 할 일 추가</button>
-        <button class="btn btn-g" onclick="taskCopyAll()"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 할 일 전체 복사</button>
+    <div class="frm" style="margin-top:16px;">
+      <div class="fld">
+        <label>날짜</label>
+        <input id="qm_date" type="date" value="">
       </div>
-      <div class="wc-list" id="wc_task_list"></div>
-    </div>
-
-    <!-- 보험일기 (기존 유지) -->
-    <div class="wc-pane" id="wc-diary">
-      <div class="wc-hint">보험 이야기, 상담 기회, 가족·지인 보험 점검처럼 나중에 정리할 내용을 남기는 공간입니다.</div>
-      <div class="wc-bar">
-        <button class="btn btn-p" onclick="rcOpen('diary')"><svg class="ei" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> 빠른 기록센터에서 보험일기 추가</button>
-        <button class="btn btn-g" onclick="wlCopyAll()"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 오늘 보험일기 전체 복사</button>
+      <div class="fld">
+        <label>카테고리</label>
+        <select id="qm_cat">
+          <option value="">선택</option>
+          <option>일정</option>
+          <option>할 일</option>
+          <option>들은 말</option>
+          <option>궁금한 것</option>
+          <option>아이디어</option>
+          <option>톡 초안</option>
+          <option>보상사례 소재</option>
+          <option>기타</option>
+        </select>
       </div>
-      <div class="wlog-list" id="wlog_list"></div>
-    </div>
-
-    <!-- 퀵메모 -->
-    <div class="wc-pane" id="wc-memo">
-      <div class="wc-hint">짧게 떠오른 생각이나 고객에게 들은 말을 빠르게 남기는 공간입니다. 길게 정리할 보험 이야기는 보험일기에 남기세요.</div>
-      <div class="wc-bar">
-        <button class="btn btn-p" onclick="rcOpen('memo')"><svg class="ei" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> 빠른 기록센터에서 퀵메모 추가</button>
-        <button class="btn btn-g" onclick="memoCopy()"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 퀵메모 전체 복사</button>
+      <div class="fld">
+        <label>별칭/관계 <span style="font-size:11px;color:var(--muted);">예: 엄마, 지인A, 40대여성</span></label>
+        <input id="qm_alias" placeholder="예: 엄마, 아빠, 동생, 지인A, 40대 여성">
       </div>
-      <div class="wc-list" id="wc_memo_list"></div>
+      <div class="fld">
+        <label>연령대</label>
+        <select id="qm_age">
+          <option value="">선택</option>
+          <option>20대</option><option>30대</option><option>40대</option>
+          <option>50대</option><option>60대 이상</option>
+        </select>
+      </div>
+      <div class="fld">
+        <label>성별</label>
+        <select id="qm_gender">
+          <option value="">선택</option>
+          <option>여</option><option>남</option>
+        </select>
+      </div>
+      <div class="fld full">
+        <label>메모 내용 <span style="font-size:11px;color:var(--muted);">들은 말·할 일·아이디어·톡 초안 등</span></label>
+        <textarea id="qm_content" rows="5" placeholder="들은 말, 궁금한 것, 아이디어, 톡 문장 초안, 보상사례 소재 등 자유롭게 남기세요.&#10;개인정보(연락처·주민번호·계좌 등)는 입력하지 않습니다."></textarea>
+      </div>
     </div>
 
-    <div class="rc-note" style="margin-top:14px;">오늘의 할 일·보험일기·퀵메모는 Supabase에 저장됩니다. 고객 등록·조회는 [고객관리]에서 저장됩니다. 주민번호·계좌번호·증권번호 등 민감정보는 입력하지 마세요.</div>
+    <div class="btn-row" style="margin-top:12px;">
+      <button class="btn btn-p" onclick="qmAdd()"><svg class="ei" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> 메모 추가</button>
+      <button class="btn btn-g" onclick="qmReset()">입력 초기화</button>
+    </div>
+
+    <div class="std-sub-h" style="margin-top:22px;display:flex;justify-content:space-between;align-items:center;">
+      <span>메모 목록 <span style="font-size:11px;color:var(--muted);">(복사 후 구글킵에 보관하세요)</span></span>
+      <button class="btn btn-g" style="padding:8px 13px;font-size:12px;" onclick="qmCopyAll()"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 전체 복사 (구글킵용)</button>
+    </div>
+    <div id="qm_list" style="margin-top:10px;"><div class="gd-box empty">메모가 없습니다. 위에서 내용을 작성하고 [메모 추가]를 누르세요.</div></div>
+
+    <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
+      <button class="btn btn-g" onclick="window.open('https://keep.google.com','_blank')"><svg class="ei" viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.5.5 1 1.2 1 2h6c0-.8.5-1.5 1-2A6 6 0 0 0 12 3"/></svg> 구글킵 열기</button>
+      <button class="btn btn-g" onclick="window.open('https://calendar.google.com','_blank')"><svg class="ei" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> 구글캘린더 열기</button>
+    </div>
   </div>
 </div>
-<div class="view" id="view-policy">
-  <div class="card">
-    <div class="sec-tag">POLICY</div>
-    <div class="sec-title">계약관리</div>
-    <div class="sec-sub">내가 체결했거나 관리하는 고객의 가입계약을 간단히 기록합니다. <span style="color:var(--muted);font-size:11px;">· 고객 등록·조회는 [고객관리]에서 합니다.</span></div>
+<!-- 계약관리: v3재구성에서 비노출 -->
+<div class="view" id="view-policy" style="display:none!important;">
     <div class="basic-guide" style="margin-top:12px;"><svg class="ei" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 7.5 8 9 4.5-1.5 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg> <b>계약은 체결한 담당 설계사가 직접 등록합니다.</b> 대표 관리자는 전체 계약을 확인하고 누락 여부를 점검할 수 있습니다. <span style="color:var(--muted);font-size:11px;">(계약 저장은 2단계 예정)</span></div>
     <div class="std-sub-h" style="margin-top:18px;"><svg class="ei" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg> 계약고객 관리</div>
     <div class="sec-sub" style="margin-bottom:4px;">내가 체결했거나 관리하는 고객의 기본정보와 가입계약을 간단히 기록합니다.</div>
@@ -1581,7 +2063,7 @@ async function wdChangePw(uid,oldPw,newPw){
       <div class="fld"><label>갱신 여부</label><select id="pm_renew"><option value="">선택</option><option>갱신형</option><option>비갱신형</option><option>혼합</option><option>모름</option></select></div>
       <div class="fld"><label>납입 상태</label><select id="pm_status"><option value="">선택</option><option>납입 중</option><option>완납</option><option>실효 의심</option><option>해지</option><option>모름</option></select></div>
       <div class="fld"><label>다음 점검일</label><input type="date" id="pm_next"></div>
-      <div class="fld"><label>확인 필요</label><select id="pm_check"><option value="">선택</option><option>약관 확인</option><option>원수사 전산 확인</option><option>고객 인증 필요</option><option>대표 확인 필요</option></select></div>
+      <div class="fld"><label>확인 필요</label><select id="pm_check"><option value="">선택</option><option>약관 확인</option><option>원수사 전산 확인</option><option>고객 인증 필요</option><option>내부 확인 필요</option></select></div>
       <div class="fld full"><label>주요 보장 메모</label><textarea id="pm_coverage" placeholder="예: 암 진단비 / 실손 / 입원·수술"></textarea></div>
       <div class="fld full"><label>가입 이유</label><textarea id="pm_join_reason" placeholder="왜 가입했는지"></textarea></div>
       <div class="fld full"><label>선택 이유</label><textarea id="pm_choice_reason" placeholder="왜 이 상품·보험사를 골랐는지"></textarea></div>
@@ -1601,7 +2083,8 @@ async function wdChangePw(uid,oldPw,newPw){
 
 </div><!-- /wrap -->
 <!-- 플로팅 업무일지 (로그인 후 app-screen 안에서만 노출) -->
-<button id="wl-fab" class="wl-fab" onclick="rcOpen()" title="빠른 기록센터" aria-label="빠른 기록센터"><svg viewBox="0 0 24 24" style="width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.5.5 1 1.2 1 2h6c0-.8.5-1.5 1-2A6 6 0 0 0 12 3"/></svg></button>
+<!-- FAB 빠른기록센터: v3재구성에서 비노출 -->
+<button id="wl-fab" class="wl-fab" onclick="rcOpen()" title="빠른 기록센터" aria-label="빠른 기록센터" style="display:none!important;"><svg viewBox="0 0 24 24" style="width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.5.5 1 1.2 1 2h6c0-.8.5-1.5 1-2A6 6 0 0 0 12 3"/></svg></button>
 <div id="wl-panel" class="wl-panel">
   <div class="wl-head">
     <span class="wl-title"><svg class="ei" viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.5.5 1 1.2 1 2h6c0-.8.5-1.5 1-2A6 6 0 0 0 12 3"/></svg> 빠른 기록센터<span class="rc-sub">오늘 할 일, 보험일기, 퀵메모를 빠르게 남깁니다.</span></span>
@@ -1639,7 +2122,7 @@ async function wdChangePw(uid,oldPw,newPw){
     <div class="rc-pane" id="rc-diary">
       <div class="rc-hint">보험 이야기, 상담 기회, 가족·지인 보험 점검처럼 나중에 정리할 내용을 남기는 공간입니다.</div>
       <div class="wl-q">오늘 일상 속에서 어떤 보험 이야기가 있었나요?</div>
-      <div class="wl-q-sub">가볍게 적어두면 나중에 상담 기회, 고객 안내문, 대표 확인, 콘텐츠 소재로 정리할 수 있습니다.</div>
+      <div class="wl-q-sub">가볍게 적어두면 나중에 상담 기회, 고객 안내문, 내부 확인, 콘텐츠 소재로 정리할 수 있습니다.</div>
       <div class="wl-type">
         <button onclick="wlPickType('오늘의 보험 이야기',this)"><svg class="ei" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 20l1-4.2A8.5 8.5 0 1 1 21 11.5"/></svg> 오늘의 보험 이야기</button>
         <button onclick="wlPickType('내·가족 보험 점검',this)"><svg class="ei" viewBox="0 0 24 24"><circle cx="8" cy="9" r="2.5"/><circle cx="16" cy="9" r="2.5"/><path d="M3 19v-.5a4 4 0 0 1 8 0V19M13 19v-.5a4 4 0 0 1 8 0V19"/></svg> 내·가족 보험 점검</button>
@@ -1655,9 +2138,9 @@ async function wdChangePw(uid,oldPw,newPw){
       <div class="wl-fld"><label>제목</label><input id="wl_title" placeholder="한 줄 제목"></div>
       <div class="wl-fld"><label>내용</label><textarea id="wl_content" placeholder="들은 이야기·느낀 점·점검할 보험·상담 기회"></textarea></div>
       <div class="wl-fld"><label>다음 행동</label><select id="wl_next">
-        <option>기록만 하기</option><option>상담 후보로 보기</option><option>나중에 연락하기</option><option>보장점검 제안하기</option><option>대표 확인 필요</option><option>콘텐츠 소재로 보관</option>
+        <option>기록만 하기</option><option>상담 후보로 보기</option><option>나중에 연락하기</option><option>보장점검 제안하기</option><option>내부 확인 필요</option><option>콘텐츠 소재로 보관</option>
       </select></div>
-      <label class="wl-chk"><input type="checkbox" id="wl_flag"> 대표 확인 필요</label>
+      <label class="wl-chk"><input type="checkbox" id="wl_flag"> 내부 확인 필요</label>
       <div class="wl-note">임시 기록형 도구입니다. 중요한 내용은 복사해두면 안전하게 보관할 수 있어요. 새로고침하면 화면 입력 내용은 사라집니다.</div>
       <div class="wl-btns">
         <button class="btn btn-p" onclick="wlAdd()">+ 메모 추가</button>
@@ -1672,7 +2155,7 @@ async function wdChangePw(uid,oldPw,newPw){
       <div class="rc-fld"><label>메모 제목</label><input id="mm_title" placeholder="메모 제목"></div>
       <div class="rc-fld"><label>메모 내용</label><textarea id="mm_content" placeholder="떠오른 생각·들은 말·확인할 것"></textarea></div>
       <div class="rc-row">
-        <div class="rc-fld"><label>메모 유형</label><select id="mm_type"><option>고객에게 들은 말</option><option>상담 아이디어</option><option>확인 필요</option><option>콘텐츠 소재</option><option>대표 확인</option><option>기타</option></select></div>
+        <div class="rc-fld"><label>메모 유형</label><select id="mm_type"><option>고객에게 들은 말</option><option>상담 아이디어</option><option>확인 필요</option><option>콘텐츠 소재</option><option>내부 확인</option><option>기타</option></select></div>
         <div class="rc-fld"><label>연결 업무</label><select id="mm_link"><option>상담</option><option>고객관리</option><option>계약관리</option><option>보험일기</option><option>청구</option><option>기타</option></select></div>
       </div>
       <div class="rc-note">임시 기록형 도구입니다. 중요한 내용은 복사해두면 안전하게 보관할 수 있어요. 새로고침하면 화면 입력 내용은 사라집니다.</div>
@@ -1703,7 +2186,7 @@ var INSUR_GROUPS=[
   {k:'notice', t:'고지의무', d:'고지의무는 청약 전 병원 진료·검사·약 복용·치료 이력 등을 사실대로 알리는 것입니다.\n정확한 고지는 나중에 보험금을 안전하게 받기 위한 과정이며, 누락 시 불이익이 생길 수 있습니다.', q:'최근 5년 이내 진료·검사·약 복용·입원·수술 이력이 있으신가요?'},
   {k:'exempt', t:'면책기간·감액기간', d:'면책기간은 가입 후 일정 기간 보장이 되지 않는 기간이고, 감액기간은 일정 기간 안에 보험금이 줄어 지급되는 기간입니다.\n담보·상품마다 기간과 조건이 다르므로 약관에서 반드시 확인해야 합니다.', q:'(약관 확인 필요) 이 담보의 면책·감액기간을 함께 확인해볼까요?'}
  ]},
- {g:'납입·환급 구조', open:false, items:[
+ {g:'납입·환급 구조', open:true, items:[
   {k:'premium', t:'보험료', d:'보험료는 지금 낼 수 있는 금액도 중요하지만, 앞으로 계속 유지할 수 있는지도 함께 봐야 합니다.\n보험은 오래 유지해야 의미가 있어, 생활비와 예산 안에서 무리 없는 선을 찾는 것이 중요합니다.', q:'매월 부담 없이 오래 유지할 수 있는 보험료는 어느 정도인가요?'},
   {k:'pay_period', t:'납입기간', d:'납입기간은 보험료를 내는 기간입니다(예: 10년·20년납).\n짧으면 매월 부담이 크고, 길면 총 납입액이 늘 수 있어 생활 계획에 맞게 보는 것이 좋습니다.', q:'보험료를 몇 년 동안 납입하는 게 부담이 적으실까요?'},
   {k:'cover_period', t:'보장기간', d:'보장기간은 보장을 받는 기간입니다(예: 80세·100세 만기·종신).\n납입기간과 다를 수 있으므로, 언제까지 보장받고 싶은지를 기준으로 확인합니다.', q:'언제까지 보장받는 것이 안심이 되실까요?'},
@@ -1715,7 +2198,7 @@ var INSUR_GROUPS=[
   {k:'nosurr_type', t:'무해지환급형', d:'무해지환급형은 납입 중 해지 시 환급금이 없거나 매우 적은 대신 보험료를 낮춘 구조입니다.\n끝까지 유지할 수 있을 때 유리하므로, 유지 가능성을 함께 봐야 합니다.', q:'끝까지 유지할 계획이 확실하신가요?'},
   {k:'lowsurr_type', t:'저해지환급형', d:'저해지환급형은 납입 기간 중 환급금을 낮춘 대신 보험료를 줄인 구조로, 무해지형과 표준형의 중간 성격입니다.\n환급 조건이 상품마다 다르므로 비교가 필요합니다.', q:'보험료와 중간 환급 중 어느 쪽을 더 중요하게 보시나요?'}
  ]},
- {g:'담보별 설명', open:false, items:[
+ {g:'담보별 설명', open:true, items:[
   {k:'death', t:'사망', d:'사망보장은 피보험자가 사망했을 때 약관에서 정한 금액을 지급하는 보장입니다.\n일반사망·질병사망·재해사망 등 원인에 따라 보장이 나뉘므로 약관 기준 확인이 필요합니다.', q:'남은 가족의 생활 보장이 필요한 상황인가요?'},
   {k:'disability', t:'후유장해', d:'후유장해는 질병·상해로 약관상 장해 상태가 남았을 때 지급률에 따라 보험금을 받는 보장입니다.\n장해 분류와 지급률 기준이 약관마다 다릅니다.', q:'(약관 확인 필요) 장해 지급률 기준을 함께 확인해볼까요?'},
   {k:'cancer', t:'암', d:'암 진단비는 약관에서 정한 암으로 진단 확정 시 정해진 금액을 받는 보장입니다.\n일반암·소액암·유사암 분류, 면책·감액기간이 상품마다 달라 확인이 필요합니다.', q:'가족력이나 특별히 걱정되는 부분이 있으신가요?'},
@@ -1756,20 +2239,22 @@ function csBasic(key,btn){
   document.querySelectorAll('.basic-card').forEach(function(b){b.classList.remove('on');});
   if(btn) btn.classList.add('on');
   var d=INSUR_BASIC[key]; if(!d) return;
-  var box=document.getElementById('cs_box'); box.classList.remove('empty');
-  box.innerHTML=''
-    +'<div class="bb-title">'+csEsc(d.t)+'</div>'
-    +'<div class="bb-sec"><div class="bb-h"><svg class="ei" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 20l1-4.2A8.5 8.5 0 1 1 21 11.5"/></svg> 고객에게 쉽게 설명</div><div class="bb-txt">'+csEsc(d.d)+'</div></div>'
-    +'<div class="bb-sec"><div class="bb-h"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 1 1 3.6 2.2c-.8.4-1.1.9-1.1 1.8"/><path d="M12 17h.01"/></svg> 설계사가 확인할 질문</div><div class="bb-txt">'+csEsc(d.q)+'</div></div>'
-    +'<div class="bb-warn">'
-      +'<div class="bb-h" style="color:var(--red);"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg> 주의할 표현</div><div class="bb-ban">'+INSUR_BAN.map(function(x){return '· '+csEsc(x);}).join('<br>')+'</div>'
-      +'<div class="bb-h" style="color:var(--green);margin-top:9px;"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> 대신 이렇게</div><div class="bb-alt">'+INSUR_ALT.map(function(x){return '· '+csEsc(x);}).join('<br>')+'</div>'
-    +'</div>'
-    +'<div class="btn-row" style="margin-top:13px;">'
-      +'<button class="btn btn-p" onclick="csCopyDesc()"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 고객 설명문 복사</button>'
-      +'<button class="btn btn-g" onclick="csCopyQ()"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 1 1 3.6 2.2c-.8.4-1.1.9-1.1 1.8"/><path d="M12 17h.01"/></svg> 추가 질문 복사</button>'
-    +'</div>';
+  var mt=document.getElementById('basic_modal_title');
+  var md=document.getElementById('basic_modal_desc');
+  var mq=document.getElementById('basic_modal_question');
+  if(mt) mt.textContent=d.t;
+  if(md) md.textContent=d.d;
+  if(mq) mq.textContent=d.q;
+  var modal=document.getElementById('basic_modal');
+  if(modal) modal.classList.add('on');
+  document.body.style.overflow='hidden';
 }
+function closeBasicModal(){
+  var modal=document.getElementById('basic_modal');
+  if(modal) modal.classList.remove('on');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){ closeBasicModal(); closeConsultWarnModal(); }});
 function csCopyDesc(){ if(!_csCur){showToast('카드를 먼저 선택하세요');return;} copyText(INSUR_BASIC[_csCur].d,'고객 설명문을 복사했습니다'); }
 function csCopyQ(){ if(!_csCur){showToast('카드를 먼저 선택하세요');return;} copyText(INSUR_BASIC[_csCur].q,'추가 질문을 복사했습니다'); }
 
@@ -1796,10 +2281,19 @@ async function appLogin(){
     if(diaries.length){WORK_LOGS=diaries.map(function(r,i){return{id:i+1,title:'',content:r.content||'',date:r.diary_date||'',author:window._currentUser||'',cat:'',type:'',next:'',flag:false,_sid:r.id};});_wlSeq=WORK_LOGS.length+1;if(typeof wlRender==='function')wlRender();if(typeof diaryRenderHome==='function')diaryRenderHome();}
   },300);
   var ht=document.getElementById('hero-title'), hs=document.getElementById('hero-sub');
-  if(ht) ht.textContent=pr.data.name+'님, 어떤 보험 업무를 시작할까요?';
-  if(hs) hs.textContent='고객과의 상담에서 필요한 정보를 선택하고, 체계적으로 기록하여 업무에 활용하세요.';
+  var _today=new Date(); var _yr=_today.getFullYear(); var _mo=_today.getMonth()+1; var _dy=_today.getDate();
+  var _dateStr=_yr+'년 '+_mo+'월 '+_dy+'일';
+  var _uname=pr.data.name||'';
+  var _isAdmin=(window._currentRole==='admin');
+  var _greet=_isAdmin?(_uname+' 지점장님, 환영합니다.'):(_uname+' 설계사님, 환영합니다.');
+  var _sub=_isAdmin?'오늘도 고객을 지키는 상담을 시작해볼까요?':'오늘도 기준대로, 확인하며 상담하는 하루를 시작합니다.';
+  if(ht) ht.innerHTML=_dateStr+'<br><span style="font-size:1em;">'+_greet+'</span>';
+  if(hs) hs.textContent=_sub;
   var pn=document.getElementById('profile-name'); if(pn) pn.textContent=pr.data.name;
   document.getElementById('login-pw').value='';
+  var _saveChk=document.getElementById('login-save-id');
+  if(_saveChk && _saveChk.checked){ try{localStorage.setItem('wd_saved_login_id',uid);}catch(e){} }
+  else{ try{localStorage.removeItem('wd_saved_login_id');}catch(e){} }
   applyRoleUI();
   showTab('home');
   if(typeof rcRenderHome==='function') rcRenderHome();
@@ -2055,7 +2549,7 @@ function hqReset(){
 /* ── v0.9 상황별 업무 가이드 (자료 대행 아님 · 만드는 방법 안내 · 저장 없음) ── */
 var GUIDE_DATA=[
   {k:'proposal', ic:'<svg class="ei" viewBox="0 0 24 24"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/><path d="M14 6l3 3"/></svg>', t:'제안서 만드는 방법', when:'고객 니즈를 파악한 뒤 설계안을 제시할 때',
-   steps:['상담에서 니즈·예산·기존보험을 먼저 확인합니다.','설계·계약 메뉴에서 설계의뢰문을 작성해 매니저에게 전달합니다.','받은 설계안의 보험료·납입/보장기간·주요보장·갱신여부를 검토합니다.','보험 기초 카드(상담)로 고객 눈높이 설명을 준비합니다.'],
+   steps:['상담에서 니즈·예산·기존보험을 먼저 확인합니다.','업무요청서에서 설계의뢰문을 작성해 메가종합금융 총무 또는 원수사 총무에게 전달합니다.','받은 설계안의 보험료·납입/보장기간·주요보장·갱신여부를 검토합니다.','보험 기초 카드(상담)로 고객 눈높이 설명을 준비합니다.'],
    tips:['지급·보장을 단정하지 말고 "약관 조건 충족 시" 전제를 유지합니다.','특정 상품을 "무조건 좋다"로 권하지 않습니다.'], linkTab:'design', linkLabel:'설계·계약으로'},
   {k:'after', ic:'<svg class="ei" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>', t:'계약 후 안내장 만드는 방법', when:'계약 완료 후 고객에게 핵심을 정리해드릴 때',
    steps:['상품명·보험료·납입/보장기간·주요보장을 정리합니다.','청약 철회·품질보증 기간을 안내합니다.','다음 점검 시점과 문의 경로를 안내합니다.'],
@@ -2063,11 +2557,11 @@ var GUIDE_DATA=[
   {k:'katalk', ic:'<svg class="ei" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 20l1-4.2A8.5 8.5 0 1 1 21 11.5"/></svg>', t:'상담 후 고객 카톡 만드는 방법', when:'상담 직후 고객에게 정리 메시지를 보낼 때',
    steps:['상담 방향을 한 줄로 정리합니다.','고객이 걱정한 부분을 그대로 적습니다.','다음 확인 사항을 안내합니다.','부담 없는 톤으로 마무리합니다.'],
    tips:['"무조건/확정/당연히" 같은 표현은 피합니다.'], linkTab:'lib', linkLabel:'문장·프롬프트로'},
-  {k:'design_req', ic:'<svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg>', t:'설계의뢰문 만드는 방법', when:'매니저에게 설계를 의뢰할 때',
-   steps:['고객 개인정보는 최소화합니다(이니셜·요약).','희망보장·월 예산은 고객 말 그대로 적습니다.','고지사항은 상세 병력 대신 요약으로 적습니다.','매니저가 설계하기 쉽게 항목별로 정리합니다.'],
+  {k:'design_req', ic:'<svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg>', t:'설계의뢰문 만드는 방법', when:'메가종합금융 총무 또는 원수사 총무에게 설계를 의뢰할 때',
+   steps:['고객 개인정보는 최소화합니다(이니셜·요약).','희망보장·월 예산은 고객 말 그대로 적습니다.','고지사항은 상세 병력 대신 요약으로 적습니다.','총무가 설계 의뢰하기 쉽게 항목별로 정리합니다.'],
    tips:['승인 확정처럼 보이는 표현은 쓰지 않습니다.'], linkTab:'design', linkLabel:'설계·계약 3단계로'},
   {k:'underwrite', ic:'<svg class="ei" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>', t:'인수문의문 만드는 방법', when:'병력·직업 등으로 인수 가능 여부를 확인할 때',
-   steps:['고지 대상을 요약합니다(상세 병력은 금지, 요약).','직업·나이·희망 상품을 적습니다.','전산·연락처에서 담당 매니저를 확인합니다.','매니저에게 인수 가능 여부를 문의합니다.'],
+   steps:['고지 대상을 요약합니다(상세 병력은 금지, 요약).','직업·나이·희망 상품을 적습니다.','업무링크허브에서 원수사 총무 연락처를 확인합니다.','원수사 총무에게 인수 가능 여부를 문의합니다.'],
    tips:['"가입 가능"을 미리 단정하지 않습니다. 인수는 보험사 심사 결과입니다.'], linkTab:'hub', linkLabel:'전산·연락처로'},
   {k:'silson', ic:'<svg class="ei" viewBox="0 0 24 24"><path d="M4 21V8l8-5 8 5v13"/><path d="M12 9v6M9 12h6"/></svg>', t:'실손24 안내하는 방법', when:'고객이 실손보험금을 직접 청구하도록 도울 때',
    steps:['실손24는 고객이 직접 진행하는 것이 가장 안전하다고 안내합니다.','본인인증 → 진료내역 선택 → 서류 전자전송 → 보험사 접수 순서를 알려줍니다.','어려워하면 화면 기준으로 단계만 안내합니다.'],
@@ -2084,8 +2578,8 @@ var GUIDE_DATA=[
   {k:'riskcheck', ic:'<svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>', t:'위험표현 검사하는 방법', when:'고객에게 보낼 문장을 점검할 때',
    steps:['작성한 고객 안내문을 준비합니다.','문장·프롬프트의 "금지표현 검사 프롬프트"를 복사합니다.','AI에 안내문을 넣어 위험 표현을 점검·교정합니다.'],
    tips:['지급 단정·과장·오해·개인정보·민원 가능 표현을 중점 점검합니다.'], linkTab:'lib', linkLabel:'문장·프롬프트로'},
-  {k:'mgr', ic:'<svg class="ei" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L17 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>', t:'원수사 매니저 문의문 만드는 방법', when:'보험사 매니저에게 업무를 요청할 때',
-   steps:['보험사·건명·요청내용을 명확히 적습니다.','전산·연락처에서 담당 매니저를 확인합니다.','업무요청 문장을 복사해 전달합니다.'],
+  {k:'mgr', ic:'<svg class="ei" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L17 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>', t:'원수사 총무 요청문 만드는 방법', when:'원수사 총무에게 업무를 요청할 때',
+   steps:['보험사·건명·요청내용을 명확히 적습니다.','업무링크허브에서 원수사 총무 연락처를 확인합니다.','업무요청 문장을 복사해 전달합니다.'],
    tips:['고객 민감정보는 최소화해 전달합니다.'], linkTab:'hub', linkLabel:'전산·연락처로'},
   {k:'sites', ic:'<svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18"/></svg>', t:'금융/보험 사이트 찾기', when:'공식 조회·확인 사이트가 필요할 때',
    steps:['실손 청구는 실손24(공식)에서 진행합니다.','보험사 공식 사이트·전산은 전산·연락처 허브에서 확인합니다.','공시·조회는 보험개발원·생명/손해보험협회·금융감독원 등 공식 기관을 이용합니다.'],
@@ -2253,7 +2747,7 @@ function wlPickType(t,btn){
 }
 function wlClear(){ ['wl_title','wl_content'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';}); var c=document.getElementById('wl_flag'); if(c)c.checked=false; var nx=document.getElementById('wl_next'); if(nx)nx.selectedIndex=0; _wlType=''; document.querySelectorAll('.wl-type button').forEach(function(b){b.classList.remove('on');}); showToast('입력칸을 비웠습니다'); }
 function wlFmt(o){
-  return '[보험일기]\n작성자: '+o.author+(o.type?'\n유형: '+o.type:'')+'\n카테고리: '+o.cat+'\n제목: '+o.title+'\n내용: '+o.content+(o.next?'\n다음 행동: '+o.next:'')+'\n생성일: '+o.date+(o.flag?'\n<svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 대표 확인 필요':'');
+  return '[보험일기]\n작성자: '+o.author+(o.type?'\n유형: '+o.type:'')+'\n카테고리: '+o.cat+'\n제목: '+o.title+'\n내용: '+o.content+(o.next?'\n다음 행동: '+o.next:'')+'\n생성일: '+o.date+(o.flag?'\n[내부 확인 필요]':'');
 }
 function wlAdd(){
   var title=wlG('wl_title'), content=wlG('wl_content');
@@ -2285,7 +2779,7 @@ function wlRender(){
   box.innerHTML='';
   WORK_LOGS.forEach(function(o){
     var el=document.createElement('div'); el.className='wlog-card';
-    el.innerHTML='<div class="wlog-meta"><span class="wlog-date"><svg class="ei" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg> '+wlEsc(o.date)+'</span>'+(o.type?'<span class="wlog-type">'+wlEsc(o.type)+'</span>':'')+'<span class="wlog-cat">'+wlEsc(o.cat)+'</span><span class="wlog-author">'+wlEsc(o.author)+'</span>'+(o.flag?'<span class="wlog-flag"><svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 대표 확인 필요</span>':'')+'</div>'
+    el.innerHTML='<div class="wlog-meta"><span class="wlog-date"><svg class="ei" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg> '+wlEsc(o.date)+'</span>'+(o.type?'<span class="wlog-type">'+wlEsc(o.type)+'</span>':'')+'<span class="wlog-cat">'+wlEsc(o.cat)+'</span><span class="wlog-author">'+wlEsc(o.author)+'</span>'+(o.flag?'<span class="wlog-flag"><svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 내부 확인 필요</span>':'')+'</div>'
       +(o.title?'<div class="wlog-title">'+wlEsc(o.title)+'</div>':'')
       +(o.content?'<div class="wlog-content">'+wlEsc(o.content)+'</div>':'')
       +(o.next?'<div class="wlog-next">▶ '+wlEsc(o.next)+'</div>':'')
@@ -2387,7 +2881,7 @@ function toggleMobileMenu(){
   if(bar) bar.classList.toggle('mobile-open');
 }
 function showTab(t){
-  ['home','start','prospect','consult','design','claim','lib','guide','worklog','policy','hub'].forEach(function(k){
+  ['home','start','prospect','consult','design','claim','lib','guide','worklog','policy','hub','salesbook','sicheck'].forEach(function(k){
     var v=document.getElementById('view-'+k); if(v) v.classList.toggle('on',k===t);
   });
   document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('on',b.dataset.t===t);});
@@ -2414,21 +2908,36 @@ function pickPill(el,storeId){
 
 /* ── 단계 이동 ── */
 var _stepNow={c:1,d:1,r:1};
+var _stepMax={c:7,d:6,r:6};
 function goStep(panel,n){
   _stepNow[panel]=n;
-  for(var i=1;i<=6;i++){
+  var max=_stepMax[panel]||6;
+  for(var i=1;i<=max;i++){
     var pane=document.getElementById(panel+'-'+i);
     if(pane) pane.classList.toggle('on',i===n);
   }
   var bar=document.getElementById('steps-'+panel);
   if(bar){var btns=bar.querySelectorAll('.step-btn');btns.forEach(function(b,idx){b.classList.toggle('on',idx===n-1);});}
+  /* 3번 상담가이드 진입 시 피해야 할 상담말 팝업 */
+  if(panel==='c' && n===3){ openConsultWarnModal(); }
 }
 function stepMove(panel,dir){
+  var max=_stepMax[panel]||6;
   var n=_stepNow[panel]+dir;
-  if(n<1)n=1; if(n>6)n=6;
+  if(n<1)n=1; if(n>max)n=max;
   goStep(panel,n);
   var card=document.getElementById('view-'+(panel==='c'?'consult':panel==='d'?'design':'claim'));
   if(card) card.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ── 상담가이드 팝업 ── */
+function openConsultWarnModal(){
+  var m=document.getElementById('consult_warn_modal');
+  if(m){ m.style.display='flex'; document.body.style.overflow='hidden'; }
+}
+function closeConsultWarnModal(){
+  var m=document.getElementById('consult_warn_modal');
+  if(m){ m.style.display='none'; document.body.style.overflow=''; }
 }
 
 /* ── 체크리스트 ── */
@@ -2468,6 +2977,57 @@ function buildConsultMsg(){
     +'정확한 보장 내용은 약관과 인수 기준 확인 후 안내드리겠습니다.';
   setOut('c_out',t); showToast('안내문을 만들었습니다 — 표현 확인 후 복사하세요');
 }
+
+/* ── c4 설계의뢰문 생성 ── */
+function buildDesignInquiry(){
+  var t='[설계의뢰]\n안녕하세요, WD WAVE 소속 설계사입니다.\n아래 건 설계 부탁드립니다.\n\n'
+    +'고객: '+v('di_name')+'\n'
+    +'나이/성별: '+v('di_age')+'\n'
+    +'직업: '+v('di_job')+'\n'
+    +'상담유형: '+v('di_type')+'\n'
+    +'희망보장: '+v('di_want')+'\n'
+    +'월 예산: '+v('di_budget')+'\n'
+    +'기존 보험: '+v('di_exist')+'\n'
+    +'고지사항 요약: '+v('di_notice')+'\n'
+    +'요청사항: '+v('di_req')+'\n\n'
+    +'확인 부탁드립니다.';
+  setOut('di_out',t); showToast('설계의뢰문을 만들었습니다 — 확인 후 복사하세요');
+}
+
+/* ── c5 업무요청문 예시 복사 ── */
+function copyBizTemplate(){
+  var el=document.getElementById('biz_template_box');
+  var txt=el?el.innerText:'';
+  if(!txt){showToast('복사할 내용이 없습니다');return;}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){showToast('업무요청문을 복사했습니다');}).catch(function(){_fallbackCopy(txt);});
+  } else { _fallbackCopy(txt); }
+}
+function _fallbackCopy(txt){
+  var ta=document.createElement('textarea');
+  ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');showToast('업무요청문을 복사했습니다');}catch(e){showToast('복사 실패 — 직접 선택해 복사하세요');}
+  document.body.removeChild(ta);
+}
+
+/* ── c6 복사 텍스트 ── */
+var c6_checkText='[설계취합 체크리스트]\n□ 보험사별 설계안 수집\n□ 보험료 / 납입기간 / 보장기간 / 갱신 여부 확인\n□ 주요 담보 비교\n□ 면책기간 / 감액기간 / 해지환급금 확인\n□ 고객 상황에 맞는 장단점 정리\n□ 제안 방향 결정';
+var c6_promptText='"아래 설계자료를 바탕으로 고객에게 설명할 설계제안서 초안을 만들어줘. 지급 단정, 보장 확정, 과장 표현은 금지하고, 약관과 보험사 심사 기준에 따라 달라질 수 있다는 전제를 유지해줘."';
+
+/* ── c8 계약 후 안내문 생성 ── */
+function buildAfterContract(){
+  var t='[계약 후 안내문]\n고객님, 오늘 계약 완료 내용 안내드립니다.\n\n'
+    +'· 가입 상품: '+v('ca_product')+'\n'
+    +'· 보험료: '+v('ca_premium')+'\n'
+    +'· 납입/보장: '+v('ca_period')+'\n'
+    +'· 주요 보장: '+v('ca_cover')+'\n'
+    +'· 면책/감액기간: '+v('ca_exempt')+'\n\n'
+    +'[청구 방법]\n'+v('ca_claim')+'\n\n'
+    +'담당 설계사: '+v('ca_contact')+'\n\n'
+    +'※ 정확한 보장 내용은 약관과 청약서를 기준으로 확인하시기 바랍니다.';
+  setOut('ca_out',t); showToast('계약 후 안내문을 만들었습니다 — 확인 후 복사하세요');
+}
 function buildConsultReport(){
   var t='[상담후보고]\n'
     +'고객명: '+v('c_name')+'\n'
@@ -2479,7 +3039,7 @@ function buildConsultReport(){
   setOut('c_rep',t); copyText(t,'상담 후 보고문을 복사했습니다');
 }
 function buildDesignReq(){
-  var t='[설계의뢰]\n안녕하세요 매니저님, WD WAVE 소속 설계사입니다.\n아래 건 설계 부탁드립니다.\n\n'
+  var t='[설계의뢰]\n안녕하세요, WD WAVE 소속 설계사입니다.\n아래 건 설계 부탁드립니다.\n\n'
     +'고객: '+v('d_name')+'\n'
     +'나이/성별: '+v('d_age')+'\n'
     +'직업: '+v('d_job')+'\n'
@@ -2510,7 +3070,7 @@ function buildClaimReport(){
     +'제가 안내한 내용: '+v('r_guide')+'\n'
     +'고객 요청: '+v('r_said')+'\n'
     +'확인이 필요한 질문: '+v('r_ask');
-  setOut('r_rep',t); showToast('대표 보고문을 만들었습니다 — 확인 후 복사하세요');
+  setOut('r_rep',t); showToast('내부 보고문을 만들었습니다 — 확인 후 복사하세요');
 }
 
 /* ── AI 프롬프트 생성 (입력값 삽입) ── */
@@ -2533,8 +3093,8 @@ var PROMPTS={
   c_p1:function(){return '아래 고객 상담 내용을 바탕으로 보험설계사 관점에서 상담 내용을 정리해줘.\n\n정리 형식:\n1. 고객의 핵심 니즈\n2. 우선 확인해야 할 보장\n3. 추가로 물어봐야 할 질문\n4. 설계의뢰 시 넣어야 할 요청사항\n5. 고객에게 설명할 쉬운 문장\n6. 주의해야 할 표현\n\n주의:\n- 보험금 지급 여부를 단정하지 마\n- 과장 표현을 쓰지 마\n- 민감정보는 포함하지 마\n- "약관 조건 충족 시"라는 전제를 유지해줘\n\n고객 상담 내용:\n'+_cInfo();},
   c_p2:function(){return '아래 상담 내용을 고객에게 보낼 메시지로 정리해줘.\n\n요청:\n1. 짧은 카톡용\n2. 정중한 설명용\n3. 상담 후 요약용\n\n주의:\n- 지급 단정 표현 금지\n- 과장 표현 금지\n- 무조건/확정/당연히 같은 표현 금지\n- 고객이 부담스럽지 않게 작성\n\n상담 내용:\n'+_cInfo();},
   c_p3:function(){return '아래 고객 안내문에서 보험영업상 위험한 표현을 찾아줘.\n\n검사 항목:\n1. 지급 단정 표현\n2. 과장 표현\n3. 고객 오해 가능 표현\n4. 개인정보 위험 표현\n5. 민원으로 이어질 수 있는 표현\n\n문제가 있으면 안전한 문장으로 고쳐줘.\n\n고객 안내문:\n'+(val('c_out')||_cInfo());},
-  d_p1:function(){return '아래 고객 정보를 바탕으로 원수사 매니저에게 보낼 설계의뢰 문장을 정리해줘.\n\n요청:\n- 개인정보는 최소화\n- 희망보장과 예산은 고객 말 그대로 유지\n- 매니저가 설계하기 쉽게 항목별로 정리\n- 불필요한 감정 표현 제거\n\n고객 정보:\n'+_dInfo();},
-  d_p2:function(){return '아래 계약 진행 내용을 기준으로 계약 전 확인해야 할 리스크를 점검해줘.\n\n점검 항목:\n1. 고지사항 누락 가능성\n2. 고객 오해 가능성\n3. 보장 설명 부족 가능성\n4. 보험료 부담 가능성\n5. 대표 확인이 필요한 사항\n\n주의:\n- 가입을 강요하는 표현은 쓰지 마\n- 승인 확정처럼 보이는 표현은 쓰지 마\n\n계약 내용:\n'+_dInfo();},
+  d_p1:function(){return '아래 고객 정보를 바탕으로 원수사 총무에게 보낼 설계 요청문을 정리해줘.\n\n요청:\n- 개인정보는 최소화\n- 희망보장과 예산은 고객 말 그대로 유지\n- 총무가 설계 의뢰하기 쉽게 항목별로 정리\n- 불필요한 감정 표현 제거\n\n고객 정보:\n'+_dInfo();},
+  d_p2:function(){return '아래 계약 진행 내용을 기준으로 계약 전 확인해야 할 리스크를 점검해줘.\n\n점검 항목:\n1. 고지사항 누락 가능성\n2. 고객 오해 가능성\n3. 보장 설명 부족 가능성\n4. 보험료 부담 가능성\n5. 내부 확인이 필요한 사항\n\n주의:\n- 가입을 강요하는 표현은 쓰지 마\n- 승인 확정처럼 보이는 표현은 쓰지 마\n\n계약 내용:\n'+_dInfo();},
   d_p3:function(){return '아래 내용을 대표에게 보고하기 좋게 사실 중심으로 정리해줘.\n형식: 1.고객 2.진행상황 3.확인 필요 사항 4.대표 판단 요청\n주의: 감정 표현 줄이고, 사실과 추측을 구분.\n\n내용:\n'+_dInfo();},
   r_p1:function(){return '아래 고객의 보험금청구 문의 내용을 바탕으로 고객에게 보낼 안전한 안내문을 만들어줘.\n\n반드시 지킬 것:\n- "보험금은 약관 조건 충족 시 지급 여부가 결정됩니다"라는 취지를 포함\n- 지급 확정 표현 금지\n- 무조건/당연히/확정 같은 단어 금지\n- 고객이 불안하지 않도록 친절하게 작성\n\n청구 문의 내용:\n'+_rInfo();},
   r_p2:function(){return '아래 문제 상황을 대표에게 보고하기 좋게 사실 중심으로 정리해줘.\n\n정리 형식:\n1. 발생일시\n2. 고객 요청\n3. 내가 안내한 내용\n4. 현재 상태\n5. 위험 요소\n6. 즉시 필요한 판단\n7. 고객에게 다음으로 할 말\n\n주의:\n- 감정 표현은 줄여줘\n- 사실과 추측을 구분해줘\n- 고객에게 임의로 약속하지 않는 방향으로 정리해줘\n\n문제 상황:\n'+_rInfo();},
@@ -2659,6 +3219,80 @@ function hubLink(u){window.open(u,'_blank','noopener');}
 function hubCall(t){location.href='tel:'+t;}
 function hubCopy(text,label){ copyText(text,(label||'복사')+' 복사 완료'); }
 function hubT(m){ showToast(m); }
+
+/* ── v3 빠른 메모 (세션 임시 · 비저장 · 복사형) ── */
+var QM_LIST = [];
+var _qmSeq = 1;
+function qmVal(id){ var e=document.getElementById(id); return e?(e.value||'').trim():''; }
+function qmAdd(){
+  var cat = qmVal('qm_cat')||'기타';
+  var content = qmVal('qm_content');
+  if(!content){ showToast('메모 내용을 입력하세요'); return; }
+  var date = qmVal('qm_date') || new Date().toISOString().slice(0,10);
+  var alias = qmVal('qm_alias');
+  var age = qmVal('qm_age');
+  var gender = qmVal('qm_gender');
+  var meta = [alias,age,gender].filter(Boolean).join(' · ');
+  QM_LIST.push({ id:_qmSeq++, date:date, cat:cat, meta:meta, content:content });
+  qmReset();
+  qmRender();
+  showToast('메모가 추가됐습니다. 구글킵에 복사해 보관하세요.');
+}
+function qmReset(){
+  ['qm_content','qm_alias'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
+  ['qm_cat','qm_age','qm_gender'].forEach(function(id){ var e=document.getElementById(id); if(e) e.selectedIndex=0; });
+}
+function qmDelete(id){
+  QM_LIST = QM_LIST.filter(function(m){ return m.id!==id; });
+  qmRender();
+}
+function qmRender(){
+  var el = document.getElementById('qm_list'); if(!el) return;
+  if(!QM_LIST.length){ el.innerHTML='<div class="gd-box empty">메모가 없습니다. 위에서 내용을 작성하고 [메모 추가]를 누르세요.</div>'; return; }
+  el.innerHTML = QM_LIST.map(function(m){
+    return '<div class="snip" style="margin-bottom:8px;"><div class="sh"><div class="snm">['+m.cat+'] '+m.date+(m.meta?' · '+m.meta:'')+'</div><button class="copy-mini" onclick="qmDelete('+m.id+')">삭제</button></div><div class="sbody">'+m.content+'<div style="margin-top:6px;"><button class="copy-mini" onclick="qmCopySingle('+m.id+')" style="margin-right:6px;">구글킵 복사</button><button class="copy-mini" onclick="qmCopyCal('+m.id+')">캘린더 복사</button></div></div></div>';
+  }).join('');
+}
+function qmCopySingle(id){
+  var m = QM_LIST.find(function(x){ return x.id===id; }); if(!m) return;
+  var txt = '['+m.cat+'] '+m.date+(m.meta?' · '+m.meta:'')+'\n'+m.content;
+  copyText(txt,'구글킵용 복사 완료');
+}
+function qmCopyCal(id){
+  var m = QM_LIST.find(function(x){ return x.id===id; }); if(!m) return;
+  var txt = '[일정] '+m.date+'\n'+m.content;
+  copyText(txt,'캘린더용 복사 완료');
+}
+function qmCopyAll(){
+  if(!QM_LIST.length){ showToast('복사할 메모가 없습니다'); return; }
+  var txt = QM_LIST.map(function(m){ return '['+m.cat+'] '+m.date+(m.meta?' · '+m.meta:'')+'\n'+m.content; }).join('\n\n---\n\n');
+  copyText(txt,'전체 메모 복사 완료 (구글킵에 붙여넣기)');
+}
+
+/* ── v3 보상사례 탭 전환 ── */
+function gcSwitch(tab, btn){
+  ['cases','guide','links','manual'].forEach(function(t){
+    var el=document.getElementById('gc-'+t); if(el) el.style.display=(t===tab?'':'none');
+  });
+  document.querySelectorAll('.cat-btn').forEach(function(b){ b.classList.remove('on'); });
+  if(btn) btn.classList.add('on');
+  if(tab==='guide') gdInit();
+}
+
+/* ── 날짜 초기값 설정 ── */
+window.addEventListener('DOMContentLoaded', function(){
+  var d = document.getElementById('qm_date');
+  if(d) d.value = new Date().toISOString().slice(0,10);
+  try{
+    var _sid=localStorage.getItem('wd_saved_login_id');
+    if(_sid){
+      var _idEl=document.getElementById('login-id');
+      var _chkEl=document.getElementById('login-save-id');
+      if(_idEl) _idEl.value=_sid;
+      if(_chkEl) _chkEl.checked=true;
+    }
+  }catch(e){}
+});
 </script>
 <script>
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('service-worker.js').catch(function(e){console.warn('SW 등록 실패',e);});});}
