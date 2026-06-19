@@ -1,0 +1,2485 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>WD 우리동네 보험관리 키트</title>
+<!--
+  ════════════════════════════════════════════════════════════
+  WD 우리동네 보험관리 키트 v1.14 (로그인·고객관리 저장형 / 1단계)
+  · Supabase Auth 이메일 로그인 + kit_customers 저장 (publishable key + RLS)
+  · 고객관리: 본인 고객만 조회 / 관리자(최윤경)는 전체 조회 전용
+  · 상담·계약·기록센터 저장은 2단계 예정(이번 단계 미포함)
+  · 민감정보(주민번호 전체·계좌·증권번호·인증서·OTP·로그인정보)는 저장하지 않습니다.
+  ════════════════════════════════════════════════════════════
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+@font-face{font-family:'Paperlogy';font-weight:300;font-display:swap;src:url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-3Light.woff2') format('woff2');}
+@font-face{font-family:'Paperlogy';font-weight:400;font-display:swap;src:url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-4Regular.woff2') format('woff2');}
+@font-face{font-family:'Paperlogy';font-weight:500;font-display:swap;src:url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2');}
+@font-face{font-family:'Paperlogy';font-weight:600;font-display:swap;src:url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-6SemiBold.woff2') format('woff2');}
+@font-face{font-family:'Paperlogy';font-weight:700;font-display:swap;src:url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-7Bold.woff2') format('woff2');}
+@font-face{font-family:'Paperlogy';font-weight:800;font-display:swap;src:url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-8ExtraBold.woff2') format('woff2');}
+/* ══════ v1.7 블루·라임 대시보드 ══════ */
+.home-wrap{display:grid;grid-template-columns:1fr;gap:20px;align-items:start;}
+@media(min-width:1080px){.home-wrap{grid-template-columns:minmax(0,1fr) 312px;}}
+.home-side{display:flex;flex-direction:column;gap:14px;}
+/* 우측 패널 */
+.side-card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:17px 18px;}
+.side-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;}
+.side-h .st{font-size:13.5px;font-weight:800;color:var(--ink);}
+.side-h .more{font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:var(--sans);}
+.todo{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line);}
+.todo:first-of-type{border-top:none;}
+.todo-ck{flex-shrink:0;width:19px;height:19px;margin-top:1px;}
+.todo-ck svg{width:19px;height:19px;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.todo.done .todo-ck svg{stroke:var(--lime-strong);}
+.todo:not(.done) .todo-ck svg{stroke:#C2C9D6;}
+.todo-tx{flex:1;min-width:0;}
+.todo-tt{font-size:12.5px;font-weight:600;color:var(--ink);line-height:1.4;}
+.todo.done .todo-tt{color:var(--muted);}
+.todo-sb{font-size:11px;color:var(--muted);margin-top:2px;}
+.todo-tm{font-size:11px;color:var(--muted);font-weight:600;flex-shrink:0;}
+.memo-box{background:linear-gradient(135deg,#F7FBF0,var(--lime-soft));border:1px solid #DCF3BE;border-radius:12px;padding:13px 14px;font-size:12.5px;color:#3F5320;line-height:1.65;position:relative;overflow:hidden;}
+.memo-box::after{content:'';position:absolute;right:0;bottom:0;border-width:0 0 18px 18px;border-style:solid;border-color:transparent transparent var(--lime-strong) transparent;}
+/* 업무 현황 */
+@media(min-width:760px){.stat-row{grid-template-columns:1.2fr 1fr 1.2fr 1fr;align-items:center;}}
+/* 공지 */
+.notice-bar{display:flex;align-items:center;gap:12px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px 18px;}
+.notice-bar .ni{flex-shrink:0;width:34px;height:34px;border-radius:9px;background:var(--tint);display:flex;align-items:center;justify-content:center;}
+.notice-bar .ni svg{width:18px;height:18px;fill:none;stroke:var(--purple);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+.notice-bar .nt{flex:1;min-width:0;font-size:12.5px;color:var(--ink);}
+.notice-bar .nt b{color:var(--muted);font-weight:700;margin-right:8px;}
+.notice-bar .nm{font-size:11.5px;color:var(--muted);font-weight:600;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;font-family:var(--sans);flex-shrink:0;}
+.notice-bar .nm svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+/* v1.7 모바일 헤더 반응형 */
+/* ══════ v1.9 빠른 기록센터 ══════ */
+.wl-panel{width:404px;}
+.rc-sub{font-size:11px;color:rgba(255,255,255,.85);margin-top:2px;font-weight:500;}
+.rc-tabs{display:flex;gap:4px;padding:10px 14px 0;background:var(--paper);border-bottom:1px solid var(--line);}
+.rc-tab{flex:1;background:transparent;border:none;border-bottom:2.5px solid transparent;padding:9px 4px;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer;font-family:var(--sans);transition:all .15s;}
+.rc-tab:hover{color:var(--ink);}
+.rc-tab.on{color:var(--purple);border-bottom-color:var(--purple);}
+.rc-pane{display:none;}
+.rc-pane.on{display:block;}
+.rc-fld{display:flex;flex-direction:column;gap:4px;margin-bottom:9px;}
+.rc-fld label{font-size:11px;font-weight:700;color:var(--muted);}
+.rc-fld input,.rc-fld select,.rc-fld textarea{padding:9px 11px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:var(--sans);color:var(--ink);}
+.rc-fld input:focus,.rc-fld select:focus,.rc-fld textarea:focus{outline:none;border-color:var(--purple);}
+.rc-fld textarea{min-height:64px;resize:vertical;line-height:1.6;}
+.rc-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.rc-note{font-size:10.5px;color:var(--muted);line-height:1.55;background:var(--tint);border-radius:8px;padding:8px 10px;margin:4px 0 10px;}
+.rc-btns{display:flex;gap:6px;flex-wrap:wrap;}
+/* 홈 우측 리스트(실데이터) */
+.side-item{display:flex;gap:9px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line);}
+.side-item:first-child{border-top:none;}
+.side-dot{flex-shrink:0;width:8px;height:8px;border-radius:50%;background:var(--lime-strong);margin-top:5px;}
+.side-dot.done{background:var(--lime-strong);}
+.side-dot.wait{background:var(--tint-line);}
+.side-itx{flex:1;min-width:0;}
+.side-itt{font-size:12.5px;font-weight:600;color:var(--ink);line-height:1.4;}
+.side-isb{font-size:11px;color:var(--muted);margin-top:2px;}
+.side-itm{font-size:11px;color:var(--muted);font-weight:600;flex-shrink:0;}
+.side-empty{font-size:12px;color:var(--muted);line-height:1.6;padding:6px 2px;}
+@media(max-width:480px){.wl-panel{width:calc(100vw - 24px);right:12px;}}
+/* ══════ v1.10 기록센터 3분류 + 메뉴 가독성 ══════ */
+.wc-tabs{display:flex;gap:6px;border-bottom:2px solid var(--line);margin-bottom:16px;}
+.wc-tab{background:transparent;border:none;border-bottom:2.5px solid transparent;margin-bottom:-2px;padding:10px 16px;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;font-family:var(--sans);transition:all .15s;}
+.wc-tab:hover{color:var(--ink);}
+.wc-tab.on{color:var(--purple);border-bottom-color:var(--purple);}
+.wc-pane{display:none;}
+.wc-pane.on{display:block;}
+.wc-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.wc-list{display:flex;flex-direction:column;gap:10px;}
+.wc-item{background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:14px 16px;}
+.wc-item-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+.wc-item-tt{font-size:14px;font-weight:800;color:var(--ink);}
+.wc-tag{font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:7px;background:var(--lime-soft);color:var(--lime-ink);}
+.wc-tag.b{background:var(--tint);color:var(--purple);}
+.wc-item-meta{font-size:12px;color:var(--muted);line-height:1.5;}
+.wc-item-memo{font-size:12.5px;color:var(--ink);line-height:1.55;margin-top:5px;white-space:pre-wrap;}
+.wc-item-btns{display:flex;gap:6px;margin-top:10px;}
+.wc-item-btns button{border:none;border-radius:7px;padding:6px 11px;font-size:11px;font-weight:800;cursor:pointer;font-family:var(--sans);background:var(--tint);color:var(--purple);}
+.wc-item-btns button.del{background:var(--red-tint);color:var(--red);}
+.wc-empty{text-align:center;padding:38px 18px;color:var(--muted);font-size:13px;line-height:1.7;}
+/* 최근 보험일기(홈 우측) */
+.diary-item{padding:9px 0;border-top:1px solid var(--line);}
+.diary-item:first-child{border-top:none;}
+.diary-itt{font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.4;}
+.diary-isb{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+/* 상단 메뉴 가독성 강화 */
+.tabs .tab{font-size:14.5px;padding:9px 16px;}
+.tabs .tab.on{background:rgba(255,255,255,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);}
+.tabs .tab[data-t="design"],.tabs .tab[data-t="claim"]{font-size:13px;color:rgba(255,255,255,.68);}
+.tabs .tab[data-t="design"].on,.tabs .tab[data-t="claim"].on{color:#fff;}
+/* ══════ v1.11 모바일 사용성 ══════ */
+/* 탭 용도 안내 박스 */
+.rc-hint{font-size:11px;color:var(--muted);background:var(--tint);border:1px solid var(--tint-line);border-radius:8px;padding:8px 11px;margin-bottom:11px;line-height:1.5;}
+.wc-hint{font-size:12px;color:var(--muted);background:var(--tint);border:1px solid var(--tint-line);border-radius:9px;padding:9px 13px;margin-bottom:13px;line-height:1.55;}
+/* 패널 헤더 줄바꿈 */
+.wl-title .rc-sub{display:block;margin-top:3px;line-height:1.45;}
+.wl-head{align-items:flex-start;}
+/* ══════ v1.13 철학(브랜딩) 카드 ══════ */
+.philosophy-card{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--purple);border-radius:14px;padding:16px 18px;margin-bottom:14px;}
+.philosophy-card .ph-title{font-size:13.5px;font-weight:900;color:var(--purple);margin-bottom:7px;}
+.philosophy-card .ph-body{font-size:13px;color:var(--ink);line-height:1.75;word-break:keep-all;}
+.philosophy-card.soft{background:linear-gradient(180deg,var(--tint),var(--paper));}
+</style>
+<style>
+:root{
+  --navy:#111B66; --purple:#2448FF; --navy-deep:#0E1550; --violet:#4A35D8;
+  --bg:#F6F8FF; --paper:#FFFFFF; --ink:#101828; --muted:#667085;
+  --line:#DDE4F2; --tint:#EAF0FF; --tint-line:#D5E0FF;
+  --lime:#8CFF00; --lime-strong:#74F000; --lime-soft:#ECFFD8; --lime-ink:#3D6B00;
+  --amber:#9A5B00; --amber-tint:#FBF3E4; --red:#B3422F; --red-tint:#FBEDEA;
+  --green:#1F7A4D; --green-tint:#E9F6EE;
+  --serif:'Paperlogy','Pretendard','Noto Sans KR',sans-serif;
+  --sans:'Paperlogy','Pretendard','Noto Sans KR',-apple-system,'Apple SD Gothic Neo',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;}}
+body{font-family:var(--sans);color:var(--ink);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased;word-break:keep-all;}
+button{font-family:var(--sans);cursor:pointer;}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--purple);outline-offset:2px;border-radius:4px;}
+
+/* ── 헤더 ── */
+.top{position:sticky;top:0;z-index:50;background:linear-gradient(135deg,var(--purple),var(--navy));box-shadow:0 2px 10px rgba(45,53,97,.18);}
+.brand{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 10px;max-width:1080px;margin:0 auto;}
+.brand .l{display:flex;align-items:baseline;gap:8px;}
+.brand .mark{font-weight:900;font-size:16px;letter-spacing:-.3px;color:#fff;}
+.brand .sub{font-size:11px;color:#C3C8E4;font-weight:500;}
+.brand .home-btn{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.32);color:#fff;font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:8px;}
+/* 탭 */
+.tabs{display:flex;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:0 10px 2px;max-width:1080px;margin:0 auto;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex:0 0 auto;background:none;border:none;color:#C3C8E4;font-size:12.5px;font-weight:700;padding:9px 13px;border-radius:9px 9px 0 0;white-space:nowrap;transition:all .15s;}
+.tab:hover{color:#fff;}
+.tab.on{background:var(--bg);color:var(--purple);}
+
+/* ── 레이아웃 ── */
+.wrap{max-width:1080px;margin:0 auto;padding:18px 16px 60px;}
+.view{display:none;animation:fade .25s ease;}
+.view.on{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:translateY(0);}}
+
+/* 공통 카드 */
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:14px;}
+.sec-tag{font-size:10px;font-weight:700;color:var(--purple);letter-spacing:.18em;margin-bottom:7px;}
+.sec-title{font-size:20px;font-weight:900;color:var(--ink);letter-spacing:-.4px;margin-bottom:6px;}
+.sec-sub{font-size:13px;color:var(--muted);line-height:1.7;}
+
+/* 홈 */
+.hero{background:linear-gradient(135deg,#322a57,var(--purple));border-radius:18px;padding:30px 26px;color:#fff;margin-bottom:16px;}
+.hero h1{font-size:21px;font-weight:800;line-height:1.4;margin-bottom:10px;}
+.hero p{font-size:13.5px;color:rgba(255,255,255,.82);line-height:1.8;}
+.start-btn{display:block;width:100%;background:linear-gradient(135deg,var(--purple),var(--navy));color:#fff;border:none;border-radius:14px;padding:16px;font-size:15px;font-weight:800;margin-bottom:16px;box-shadow:0 4px 14px rgba(74,63,122,.28);}
+.start-btn:hover{transform:translateY(-1px);}
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:16px;}
+@media(min-width:560px){.home-grid{grid-template-columns:repeat(4,1fr);}}
+.home-card{background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:18px 14px;text-align:left;transition:all .18s;}
+.home-card:hover{border-color:var(--purple);transform:translateY(-2px);box-shadow:0 6px 18px rgba(74,63,122,.12);}
+.home-card .ic{font-size:24px;margin-bottom:9px;}
+.home-card .nm{font-size:13.5px;font-weight:800;color:var(--ink);line-height:1.4;}
+/* v1.5 본진형 메인홈 */
+.big-grid{display:grid;grid-template-columns:1fr;gap:13px;margin-bottom:22px;}
+@media(min-width:620px){.big-grid{grid-template-columns:1fr 1fr;}}
+.big-card{background:var(--paper);border:1.5px solid var(--line);border-radius:18px;padding:22px 20px;text-align:left;cursor:pointer;transition:all .18s;display:flex;gap:15px;align-items:flex-start;font-family:var(--sans);}
+.big-card:hover{border-color:var(--purple);transform:translateY(-2px);box-shadow:0 10px 28px rgba(74,63,122,.14);}
+.big-card .bic{font-size:30px;flex-shrink:0;width:52px;height:52px;border-radius:14px;background:var(--tint);display:flex;align-items:center;justify-content:center;}
+.big-card .bnm{font-size:16.5px;font-weight:900;color:var(--ink);margin-bottom:5px;}
+.big-card .bds{font-size:12.5px;color:var(--muted);line-height:1.55;}
+.sub-tools-h{font-size:12px;font-weight:800;color:var(--muted);margin-bottom:10px;letter-spacing:.3px;}
+.sub-tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px;margin-bottom:18px;}
+.sub-tool{background:var(--tint);border:1px solid var(--tint-line);border-radius:11px;padding:12px 13px;text-align:left;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:9px;transition:all .15s;}
+.sub-tool:hover{border-color:var(--purple);}
+.sub-tool .si{font-size:17px;}
+.sub-tool .snm{font-size:12.5px;font-weight:700;color:var(--ink);}
+
+/* 경고 박스 */
+.warn{background:var(--lime-soft);border:1px solid #C9F29B;border-left:4px solid var(--purple);border-radius:11px;padding:13px 16px;margin-bottom:14px;}
+.warn .t{font-size:12px;font-weight:800;color:var(--purple);margin-bottom:5px;}
+.warn ul{margin:0;padding-left:17px;}
+.warn li{font-size:12px;color:#6B5320;line-height:1.85;}
+
+/* pill 선택 */
+.pill-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px;}
+.pill{background:var(--tint);border:1.5px solid var(--tint-line);color:var(--muted);font-size:13px;font-weight:700;padding:10px 15px;border-radius:99px;transition:all .15s;}
+.pill:hover{border-color:var(--purple);color:var(--purple);}
+.pill.on{background:linear-gradient(135deg,var(--purple),var(--navy));color:#fff;border-color:var(--purple);}
+
+/* 단계 인디케이터 */
+.steps{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;margin-bottom:16px;}
+.steps::-webkit-scrollbar{display:none;}
+.step-btn{flex:0 0 auto;background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:7px;transition:all .15s;}
+.step-btn .n{width:20px;height:20px;border-radius:50%;background:var(--tint);color:var(--muted);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+.step-btn.on{border-color:var(--purple);background:#F4F2FB;color:var(--purple);}
+.step-btn.on .n{background:var(--purple);color:#fff;}
+.step-pane{display:none;}
+.step-pane.on{display:block;animation:fade .2s ease;}
+
+/* 입력 폼 */
+.frm{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:8px;}
+@media(max-width:560px){.frm{grid-template-columns:1fr;}}
+.fld{display:flex;flex-direction:column;gap:5px;}
+.fld.full{grid-column:1/-1;}
+.fld label{font-size:11.5px;font-weight:700;color:var(--muted);}
+.fld input,.fld select,.fld textarea{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:9px;font-size:13.5px;color:var(--ink);background:var(--paper);font-family:var(--sans);}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px rgba(74,63,122,.1);}
+.fld textarea{resize:vertical;min-height:62px;line-height:1.6;}
+
+/* 질문 리스트 */
+.q-list{list-style:none;}
+.q-list li{background:var(--tint);border-radius:11px;padding:13px 16px;margin-bottom:9px;font-size:13.5px;color:var(--ink);line-height:1.6;display:flex;gap:10px;}
+.q-list li b{color:var(--purple);flex-shrink:0;}
+
+/* 결과/프롬프트 박스 */
+.out-box{background:#FAFBFE;border:1.5px dashed var(--tint-line);border-radius:12px;padding:16px;font-size:13px;color:var(--ink);line-height:1.85;white-space:pre-wrap;min-height:60px;margin-bottom:10px;font-family:var(--sans);}
+.out-box.empty{color:#9AA1B4;font-style:normal;}
+.prompt-box{background:#1B2138;border-radius:12px;padding:15px 16px;font-size:12px;color:#D7DCEF;line-height:1.8;white-space:pre-wrap;font-family:'SFMono-Regular',Consolas,monospace;max-height:240px;overflow-y:auto;margin-bottom:10px;}
+
+/* 버튼 */
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
+.btn{border:none;border-radius:10px;padding:11px 16px;font-size:13px;font-weight:800;transition:all .15s;}
+.btn-p{background:linear-gradient(135deg,var(--purple),var(--navy));color:#fff;box-shadow:0 3px 10px rgba(74,63,122,.22);}
+.btn-p:hover{transform:translateY(-1px);}
+.btn-g{background:var(--paper);color:var(--purple);border:1.5px solid var(--tint-line);}
+.btn-g:hover{border-color:var(--purple);}
+.btn-dark{background:var(--navy-deep);color:#fff;}
+.btn-block{width:100%;}
+
+/* 체크리스트 */
+.chk-list{list-style:none;}
+.chk-item{display:flex;align-items:flex-start;gap:11px;padding:11px 14px;border:1.5px solid var(--line);border-radius:11px;margin-bottom:8px;cursor:pointer;transition:all .15s;user-select:none;}
+.chk-item:hover{border-color:var(--purple);}
+.chk-item.checked{background:var(--green-tint);border-color:#B6E0C6;}
+.chk-box{width:22px;height:22px;border-radius:7px;border:2px solid var(--tint-line);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:transparent;margin-top:1px;}
+.chk-item.checked .chk-box{background:var(--lime-strong);border-color:var(--lime-strong);color:var(--purple);}
+.chk-item .lbl{font-size:13.5px;color:var(--ink);font-weight:600;line-height:1.5;}
+
+/* 단계 이동 */
+.nav-row{display:flex;gap:9px;margin-top:18px;}
+.nav-row .btn{flex:1;padding:13px;}
+
+/* 모음 페이지 */
+.cat-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px;}
+.cat-btn{flex:1 1 0;min-width:80px;background:var(--tint);border:1.5px solid var(--tint-line);border-radius:11px;padding:11px 8px;font-size:13px;font-weight:800;color:var(--muted);transition:all .15s;}
+.cat-btn.on{background:linear-gradient(135deg,var(--purple),var(--navy));color:#fff;border-color:var(--purple);}
+.snip{background:var(--paper);border:1.5px solid var(--line);border-radius:12px;padding:15px 17px;margin-bottom:10px;}
+.snip .sh{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;}
+.snip .snm{font-size:13.5px;font-weight:800;color:var(--ink);}
+.snip .sbody{font-size:12.5px;color:var(--muted);line-height:1.8;white-space:pre-wrap;}
+.copy-mini{background:var(--tint);border:1px solid var(--tint-line);color:var(--purple);font-size:11px;font-weight:800;padding:6px 11px;border-radius:8px;flex-shrink:0;}
+.copy-mini:hover{background:#E5E2F3;}
+.ban-grid{display:grid;grid-template-columns:1fr;gap:9px;}
+@media(min-width:560px){.ban-grid{grid-template-columns:1fr 1fr;}}
+.ban-bad{background:var(--red-tint);border:1px solid #EAC4BC;border-radius:11px;padding:13px 15px;}
+.ban-bad .h{font-size:11px;font-weight:800;color:var(--red);margin-bottom:7px;}
+.ban-good{background:var(--green-tint);border:1px solid #B6E0C6;border-radius:11px;padding:13px 15px;}
+.ban-good .h{font-size:11px;font-weight:800;color:var(--green);margin-bottom:7px;}
+.ban-list{font-size:12px;line-height:1.95;color:var(--ink);}
+
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--navy-deep);color:#fff;padding:11px 21px;border-radius:99px;font-size:12.5px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:99;max-width:88vw;text-align:center;}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+footer{text-align:center;font-size:11px;color:var(--muted);padding:14px 16px 40px;}
+
+/* ── v0.2 상담 기준 보강 ── */
+.std{background:#F4F2FB;border:1.5px solid #D9D2F0;border-left:4px solid var(--purple);border-radius:12px;padding:15px 17px;margin-bottom:14px;}
+.std .st{font-size:12.5px;font-weight:800;color:var(--purple);margin-bottom:9px;}
+.std ul{list-style:none;}
+.std li{font-size:13px;color:var(--ink);line-height:1.9;padding-left:19px;position:relative;}
+.std li::before{content:'';position:absolute;left:0;top:7px;width:14px;height:14px;background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%232448FF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>') no-repeat center/contain;}
+.danger{background:var(--red-tint);border:1px solid #EAC4BC;border-left:4px solid var(--red);border-radius:11px;padding:13px 16px;margin-bottom:14px;}
+.danger .t{font-size:12px;font-weight:800;color:var(--red);margin-bottom:5px;}
+.danger ul{margin:0;padding-left:17px;}
+.danger li{font-size:12px;color:#7A3325;line-height:1.9;}
+.flow-wrap{margin-bottom:14px;}
+.flow-h{font-size:12.5px;font-weight:800;color:var(--purple);margin-bottom:8px;}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+.flow .fstep{background:var(--tint);border:1px solid var(--tint-line);border-radius:8px;padding:7px 11px;font-size:12.5px;font-weight:700;color:var(--purple);}
+.flow .arr{color:#B0AECF;font-size:11px;font-weight:800;}
+.react{border-radius:11px;padding:11px 15px;margin-bottom:8px;}
+.react .rt{font-size:12px;font-weight:800;margin-bottom:3px;}
+.react .rd{font-size:12.5px;line-height:1.6;color:var(--ink);}
+.react.pos{background:#FFF0FA;border:1px solid #FFB8E5;} .react.pos .rt{color:#FF2DAA;}
+.react.mid{background:var(--lime-soft);border:1px solid #B7FF5A;} .react.mid .rt{color:var(--lime-ink);}
+.react.neg{background:#EEF2FF;border:1px solid #B8C4FF;} .react.neg .rt{color:var(--purple);}
+.std-sub-h{font-size:12.5px;font-weight:800;color:var(--purple);margin:18px 0 10px;}
+
+/* ── v0.4 전산·연락처 허브 ── */
+.hub-filters{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;margin-bottom:14px;}
+.hub-filters::-webkit-scrollbar{display:none;}
+.hub-fbtn{flex:0 0 auto;background:var(--tint);border:1.5px solid var(--tint-line);color:var(--muted);font-size:13px;font-weight:700;padding:9px 15px;border-radius:99px;white-space:nowrap;}
+.hub-fbtn.on{background:linear-gradient(135deg,var(--purple),var(--navy));color:#fff;border-color:var(--purple);}
+.hub-srch{width:100%;padding:11px 14px;border:1.5px solid var(--line);border-radius:11px;font-size:13.5px;margin-bottom:14px;font-family:var(--sans);}
+.hub-srch:focus{outline:none;border-color:var(--purple);}
+.hub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:13px;}
+@media(max-width:560px){.hub-grid{grid-template-columns:1fr;}}
+.hub-card{background:var(--paper);border:1.5px solid var(--line);border-radius:15px;padding:17px;display:flex;flex-direction:column;}
+.hub-card.mega{border:2px solid var(--purple);box-shadow:0 5px 18px rgba(74,63,122,.13);}
+.hub-ctop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:11px;}
+.hub-cname{font-size:15.5px;font-weight:900;color:var(--ink);}
+.hub-badge{display:inline-block;font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:7px;margin-top:5px;}
+.hub-badge.life{background:#E8F0FB;color:#2563A8;}
+.hub-badge.loss{background:var(--green-tint);color:var(--green);}
+.hub-badge.mega{background:linear-gradient(135deg,var(--purple),var(--navy));color:#fff;}
+.hub-badge.chief{background:var(--tint);color:var(--purple);}
+.hub-rows{font-size:12.5px;line-height:1.5;margin-bottom:12px;}
+.hub-row{display:flex;gap:8px;padding:5px 0;border-bottom:1px dashed var(--tint);}
+.hub-row:last-child{border-bottom:none;}
+.hub-k{color:var(--muted);font-weight:600;min-width:60px;flex-shrink:0;}
+.hub-v{color:var(--ink);font-weight:600;word-break:break-all;flex:1;}
+.hub-v.dim{color:#B0B4C2;font-weight:500;}
+.hub-pw.dot{letter-spacing:2px;font-weight:800;}
+.hub-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;}
+.hub-b{border:none;border-radius:8px;padding:8px 11px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:var(--sans);}
+.hub-b.p{background:linear-gradient(135deg,var(--purple),var(--navy));color:#fff;}
+.hub-b.g{background:var(--tint);color:var(--purple);border:1px solid var(--tint-line);}
+.hub-b.tel{background:var(--green-tint);color:var(--green);}
+.hub-b.dis{background:#F1F1F5;color:#B0B4C2;}
+.hub-empty{text-align:center;padding:48px 20px;color:#B0B4C2;font-size:13px;line-height:1.7;}
+/* ── v0.6 허브 잠금 ── */
+.hub-lock{text-align:center;padding:28px 18px;}
+.hub-lock-ico{font-size:38px;margin-bottom:14px;}
+.hub-lock-msg{font-size:13.5px;color:var(--ink);line-height:1.75;margin-bottom:18px;}
+.hub-lock-input{width:100%;max-width:280px;padding:12px 14px;border:1.5px solid var(--tint-line);border-radius:11px;font-size:14px;text-align:center;font-family:var(--sans);margin-bottom:12px;}
+.hub-lock-input:focus{outline:none;border-color:var(--purple);}
+.hub-lock-btn{display:block;width:100%;max-width:280px;margin:0 auto 18px;background:linear-gradient(135deg,var(--purple),var(--navy));color:#fff;border:none;border-radius:11px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--sans);}
+.hub-lock-warn{font-size:11.5px;color:var(--lime-ink);background:var(--lime-soft);border:1px solid #ECD9B0;border-radius:10px;padding:12px 15px;line-height:1.8;max-width:430px;margin:0 auto;text-align:left;}
+/* ── v0.6 전체 로그인 ── */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#322a57,var(--purple));padding:24px;}
+.login-card{background:var(--paper);border-radius:20px;padding:34px 28px;max-width:380px;width:100%;box-shadow:0 16px 50px rgba(34,41,73,.3);}
+.login-brand{text-align:center;margin-bottom:24px;}
+.login-brand .lm{font-size:21px;font-weight:900;color:var(--purple);letter-spacing:-.3px;}
+.login-brand .ls{font-size:12px;color:var(--muted);margin-top:5px;}
+.login-fld{margin-bottom:13px;}
+.login-fld label{display:block;font-size:11.5px;font-weight:700;color:var(--muted);margin-bottom:5px;}
+.login-fld input{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;font-family:var(--sans);}
+.login-fld input:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px rgba(74,63,122,.1);}
+.login-btn{width:100%;background:linear-gradient(135deg,var(--purple),var(--navy));color:#fff;border:none;border-radius:11px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:var(--sans);margin-top:8px;}
+.login-hint{font-size:11px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.7;}
+/* ── v0.7 상담 시작 — 보험 기초 카드 ── */
+.basic-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-bottom:14px;}
+.basic-card{background:var(--tint);border:1.5px solid var(--tint-line);color:var(--purple);font-size:13px;font-weight:800;padding:12px 8px;border-radius:11px;cursor:pointer;font-family:var(--sans);transition:all .15s;}
+.basic-card:hover{border-color:var(--purple);}
+.basic-card.on{background:linear-gradient(135deg,var(--purple),var(--navy));color:#fff;border-color:var(--purple);}
+.basic-box{background:#FAFBFE;border:1.5px solid var(--tint-line);border-radius:13px;padding:17px;}
+.basic-box.empty{color:#9AA1B4;text-align:center;padding:34px 18px;font-size:13px;}
+.basic-guide{background:var(--tint);border:1px solid var(--tint-line);border-radius:10px;padding:11px 13px;font-size:12px;color:#6B5320;line-height:1.65;margin-bottom:8px;}
+.basic-nb{background:var(--tint);border:1px solid var(--tint-line);border-radius:10px;padding:10px 13px;font-size:11.5px;color:var(--muted);line-height:1.6;margin-bottom:14px;}
+.bg-group{border:1.5px solid var(--tint-line);border-radius:12px;margin-bottom:9px;overflow:hidden;}
+.bg-head{width:100%;background:var(--tint);border:none;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;font-size:13.5px;font-weight:800;color:var(--purple);cursor:pointer;font-family:var(--sans);}
+.bg-arrow{transition:transform .2s;font-size:12px;}
+.bg-head.open .bg-arrow{transform:rotate(180deg);}
+.bg-body{display:none;padding:12px;}
+.bg-body.open{display:block;}
+.bg-body .basic-grid{margin-bottom:0;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));}
+.bb-title{font-size:16px;font-weight:900;color:var(--ink);margin-bottom:13px;}
+.bb-sec{margin-bottom:13px;}
+.bb-h{font-size:11.5px;font-weight:800;color:var(--purple);margin-bottom:5px;}
+.bb-txt{font-size:13px;color:var(--ink);line-height:1.78;}
+.bb-warn{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:6px;}
+.bb-ban{font-size:12px;color:#7A3325;line-height:1.9;}
+.bb-alt{font-size:12px;color:var(--ink);line-height:1.9;}
+/* ── v0.8 가망고객 대기판 ── */
+.ps-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:8px;}
+.ps-card{background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:16px;}
+.ps-ctop{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;}
+.ps-name{font-size:15px;font-weight:900;color:var(--ink);}
+.ps-tel{font-size:12px;color:var(--muted);}
+.ps-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+.ps-tag{font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:7px;background:var(--tint);color:var(--purple);}
+.ps-tag.next{background:var(--green-tint);color:var(--green);}
+.ps-memo{font-size:12.5px;color:#3C455C;line-height:1.6;margin-bottom:11px;white-space:pre-wrap;}
+.ps-btns{display:flex;flex-wrap:wrap;gap:6px;}
+.ps-b{border:none;border-radius:8px;padding:8px 11px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:var(--sans);}
+.ps-b.p{background:linear-gradient(135deg,var(--purple),var(--navy));color:#fff;}
+.ps-b.g{background:var(--tint);color:var(--purple);border:1px solid var(--tint-line);}
+.ps-b.del{background:var(--red-tint);color:var(--red);}
+.ps-empty{text-align:center;padding:40px 18px;color:#B0B4C2;font-size:13px;line-height:1.7;}
+/* ── v0.9 상황별 업무 가이드 ── */
+.gd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px;margin-bottom:16px;}
+.gd-card{background:var(--tint);border:1.5px solid var(--tint-line);color:var(--ink);border-radius:12px;padding:13px 12px;text-align:left;cursor:pointer;font-family:var(--sans);transition:all .15s;display:flex;align-items:center;gap:9px;}
+.gd-card:hover{border-color:var(--purple);}
+.gd-card.on{background:linear-gradient(135deg,var(--purple),var(--navy));color:#fff;border-color:var(--purple);}
+.gd-card .gi{font-size:18px;flex-shrink:0;}
+.gd-card .gn{font-size:12.5px;font-weight:800;line-height:1.35;}
+.gd-box{background:#FAFBFE;border:1.5px solid var(--tint-line);border-radius:13px;padding:18px;}
+.gd-box.empty{color:#9AA1B4;text-align:center;padding:38px 18px;font-size:13px;line-height:1.7;}
+.gd-title{font-size:17px;font-weight:900;color:var(--ink);margin-bottom:4px;}
+.gd-when{font-size:12px;color:var(--muted);margin-bottom:15px;}
+.gd-h{font-size:11.5px;font-weight:800;color:var(--purple);margin:14px 0 7px;}
+.gd-steps{list-style:none;counter-reset:gd;}
+.gd-steps li{position:relative;padding-left:30px;margin-bottom:8px;font-size:13px;color:var(--ink);line-height:1.6;counter-increment:gd;}
+.gd-steps li::before{content:counter(gd);position:absolute;left:0;top:0;width:21px;height:21px;border-radius:50%;background:var(--purple);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+.gd-tips{background:var(--tint);border:1px solid var(--tint-line);border-radius:10px;padding:11px 14px;margin-top:6px;}
+.gd-tips li{font-size:12px;color:#6B5320;line-height:1.85;margin-left:16px;}
+.gd-go{margin-top:15px;}
+/* ── v1.1 업무일지 (노란 플로팅 · 비저장 누적) ── */
+.wl-fab{position:fixed;right:18px;bottom:18px;z-index:60;width:54px;height:54px;border-radius:50%;border:none;background:var(--lime-strong);color:var(--purple);cursor:pointer;box-shadow:0 6px 20px rgba(116,240,0,.5);transition:transform .15s;display:flex;align-items:center;justify-content:center;}
+.wl-fab:hover{transform:translateY(-2px);}
+.wl-panel{position:fixed;right:18px;bottom:82px;z-index:61;width:344px;max-width:calc(100vw - 32px);background:var(--paper);border:1.5px solid var(--line);border-radius:16px;box-shadow:0 16px 50px rgba(34,41,73,.28);display:none;overflow:hidden;}
+.wl-panel.on{display:block;animation:fade .2s ease;}
+.wl-head{background:linear-gradient(120deg,#111B66,#2448FF);color:#fff;padding:13px 16px;display:flex;align-items:center;justify-content:space-between;}
+.wl-title{font-size:13.5px;font-weight:900;}
+.wl-x{background:rgba(255,255,255,.2);border:none;color:#fff;width:26px;height:26px;border-radius:7px;font-size:13px;cursor:pointer;font-weight:800;display:flex;align-items:center;justify-content:center;}
+.wl-body{padding:14px 16px 16px;max-height:72vh;overflow-y:auto;}
+.wl-fld{display:flex;flex-direction:column;gap:4px;margin-bottom:9px;}
+.wl-fld label{font-size:11px;font-weight:700;color:var(--muted);}
+.wl-fld input,.wl-fld select,.wl-fld textarea{padding:9px 11px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:var(--sans);color:var(--ink);}
+.wl-fld input:focus,.wl-fld select:focus,.wl-fld textarea:focus{outline:none;border-color:var(--purple);}
+.wl-fld textarea{min-height:74px;resize:vertical;line-height:1.6;}
+.wl-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.wl-qt{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px;}
+.wl-qt button{background:var(--lime-soft);border:1px solid #C9F29B;color:var(--lime-ink);font-size:11px;font-weight:700;padding:5px 9px;border-radius:7px;cursor:pointer;font-family:var(--sans);}
+.wl-qt button:hover{background:#DEF7BD;}
+.wl-q{font-size:13px;font-weight:800;color:var(--ink);line-height:1.5;margin-bottom:5px;}
+.wl-q-sub{font-size:11px;color:var(--muted);line-height:1.55;margin-bottom:12px;}
+.wl-type{display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:11px;}
+.wl-type button{display:flex;align-items:center;gap:8px;background:var(--paper);border:1.5px solid var(--line);color:var(--ink);font-size:12px;font-weight:700;padding:9px 11px;border-radius:9px;cursor:pointer;font-family:var(--sans);text-align:left;}
+.wl-type button:hover{background:var(--lime-soft);}
+.wl-type button.on{background:var(--lime-soft);color:var(--lime-ink);border-color:var(--lime-strong);}
+.wlog-type{font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:7px;background:var(--lime-soft);color:var(--lime-ink);}
+.wlog-next{font-size:11px;color:var(--purple);font-weight:700;margin-bottom:9px;}
+.wl-chk{display:flex;align-items:center;gap:7px;margin-bottom:10px;font-size:12.5px;color:var(--ink);font-weight:600;cursor:pointer;user-select:none;}
+.wl-chk input{width:17px;height:17px;accent-color:var(--lime-strong);}
+.wl-note{font-size:11px;color:var(--muted);background:var(--tint);border-radius:8px;padding:8px 11px;line-height:1.6;margin-bottom:11px;}
+.wl-btns{display:flex;gap:7px;}
+.wl-btns .btn{flex:1;padding:10px;font-size:12.5px;}
+@media(max-width:480px){.wl-panel{right:12px;left:12px;width:auto;bottom:78px;}}
+/* 업무일지 메모칸 카드 */
+.wlog-bar{display:flex;justify-content:flex-end;margin-bottom:12px;}
+.wlog-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
+.wlog-card{background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:15px;}
+.wlog-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:9px;}
+.wlog-date{font-size:11.5px;color:var(--muted);font-weight:600;}
+.wlog-cat{font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:7px;background:var(--tint);color:#7A5B12;}
+.wlog-author{font-size:11px;color:var(--muted);}
+.wlog-flag{font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:7px;background:var(--red-tint);color:var(--red);}
+.wlog-title{font-size:14.5px;font-weight:900;color:var(--ink);margin-bottom:5px;}
+.wlog-content{font-size:12.5px;color:#3C455C;line-height:1.6;margin-bottom:11px;white-space:pre-wrap;}
+.wlog-btns{display:flex;gap:6px;}
+.wlog-b{border:none;border-radius:8px;padding:7px 12px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:var(--sans);}
+.wlog-b.g{background:var(--tint);color:var(--purple);border:1px solid var(--tint-line);}
+.wlog-b.del{background:var(--red-tint);color:var(--red);}
+.wlog-empty{text-align:center;padding:44px 18px;color:#B0B4C2;font-size:13px;line-height:1.8;}
+/* ── v1.4 고객관리(계약고객) ── */
+.pm-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:13px;margin-top:8px;}
+.pm-card{background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:16px;}
+.pm-top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:11px;}
+.pm-name{font-size:15px;font-weight:900;color:var(--ink);}
+.pm-rel{font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:7px;background:var(--tint);color:var(--purple);}
+.pm-rows{display:flex;flex-direction:column;gap:5px;margin-bottom:11px;}
+.pm-row{display:flex;font-size:12.5px;line-height:1.5;}
+.pm-row .k{flex:0 0 78px;color:var(--muted);font-weight:600;}
+.pm-row .v{color:var(--ink);flex:1;white-space:pre-wrap;}
+.pm-chk{font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:7px;background:var(--lime-soft);color:var(--lime-ink);display:inline-block;margin-bottom:10px;}
+.pm-btns{display:flex;gap:6px;}
+.pm-b{border:none;border-radius:8px;padding:7px 12px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:var(--sans);}
+.pm-b.g{background:var(--tint);color:var(--purple);border:1px solid var(--tint-line);}
+.pm-b.del{background:var(--red-tint);color:var(--red);}
+.pm-empty{text-align:center;padding:42px 18px;color:#B0B4C2;font-size:13px;line-height:1.8;}
+/* ══════ v1.6 대시보드 리뉴얼 ══════ */
+body,button,input,select,textarea{font-family:var(--sans);}
+svg.ei{display:inline-block;vertical-align:-0.16em;width:1.05em;height:1.05em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+svg.ti,svg.tic,svg.tck{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+svg.ti{width:17px;height:17px;}
+svg.tic{width:16px;height:16px;stroke-width:2;}
+svg.tck{width:16px;height:16px;}
+/* 헤더 */
+.top{display:flex;align-items:center;gap:18px;background:linear-gradient(100deg,#111B66,#2448FF);padding:0 22px;height:62px;}
+.brand{display:flex;align-items:center;gap:11px;flex-shrink:0;}
+.brand .mark{font-size:19px;font-weight:900;color:#fff;letter-spacing:.5px;}
+.brand .bbar{width:1px;height:18px;background:rgba(255,255,255,.32);}
+.brand .sub{font-size:12px;color:rgba(255,255,255,.74);font-weight:500;}
+.tabs{display:flex;align-items:center;gap:2px;flex:1;justify-content:center;overflow-x:auto;}
+.tabs::-webkit-scrollbar{display:none;}
+.tabs .tab{display:flex;align-items:center;gap:6px;background:transparent;border:none;color:rgba(255,255,255,.8);font-size:13.5px;font-weight:600;padding:8px 13px;border-radius:9px;cursor:pointer;font-family:var(--sans);white-space:nowrap;transition:all .15s;}
+.tabs .tab:hover{background:rgba(255,255,255,.1);color:#fff;}
+.tabs .tab.on{background:rgba(255,255,255,.17);color:#fff;font-weight:700;}
+.top-right{display:flex;align-items:center;gap:9px;flex-shrink:0;}
+.bell{background:transparent;border:none;color:rgba(255,255,255,.85);cursor:pointer;padding:7px;border-radius:9px;display:flex;}
+.bell:hover{background:rgba(255,255,255,.12);}
+.profile{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:10px;cursor:pointer;font-family:var(--sans);white-space:nowrap;}
+.profile:hover{background:rgba(255,255,255,.2);}
+.pav{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;}
+.pav svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.profile .pnm{font-weight:800;}
+/* 대시 헤드 */
+.dash-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin:8px 0 24px;}
+.dash-head h1{font-size:25px;font-weight:900;color:var(--ink);margin-bottom:8px;letter-spacing:-.5px;line-height:1.25;}
+.dash-head p{font-size:13.5px;color:var(--muted);line-height:1.5;}
+.sec-badge{display:flex;align-items:center;gap:7px;background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:10px 15px;font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap;flex-shrink:0;}
+.sec-badge .ti{color:var(--purple);}
+.sec-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--lime-strong);display:inline-block;box-shadow:0 0 0 3px rgba(140,255,0,.2);}
+/* 큰 카드 */
+.bcard-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:28px;}
+@media(min-width:680px){.bcard-grid{grid-template-columns:1fr 1fr;}}
+.bcard{display:flex;gap:18px;align-items:flex-start;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:24px;cursor:pointer;text-align:left;font-family:var(--sans);transition:all .18s;box-shadow:0 1px 3px rgba(34,41,73,.04);}
+.bcard:hover{border-color:var(--purple);box-shadow:0 12px 32px rgba(74,63,122,.14);transform:translateY(-3px);}
+.bcard-ic{flex-shrink:0;width:62px;height:62px;border-radius:50%;background:linear-gradient(135deg,#EFEBFA,#E4DEF5);display:flex;align-items:center;justify-content:center;}
+.bcard-ic svg{width:28px;height:28px;fill:none;stroke:var(--purple);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+.bcard-body{flex:1;min-width:0;}
+.bcard-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
+.bcard-nm{font-size:18px;font-weight:900;color:var(--ink);}
+.bcard-top .tic{color:#BCC1D0;}
+.bcard-ds{font-size:13px;color:var(--muted);line-height:1.62;margin-bottom:14px;}
+.bcard-tags{display:flex;flex-wrap:wrap;gap:6px;}
+.bcard-tags span{font-size:11px;font-weight:700;color:var(--lime-ink);background:var(--lime-soft);border:1px solid #D4F5A8;border-radius:7px;padding:4px 11px;}
+/* 업무 도구 */
+.tools-h{font-size:14px;font-weight:800;color:var(--ink);margin-bottom:13px;}
+.tools-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:12px;margin-bottom:26px;}
+.tool{display:flex;align-items:center;gap:12px;background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:14px 16px;cursor:pointer;text-align:left;font-family:var(--sans);transition:all .15s;}
+.tool:hover{border-color:var(--purple);box-shadow:0 6px 18px rgba(74,63,122,.1);}
+.tool-ic{flex-shrink:0;width:38px;height:38px;border-radius:10px;background:var(--tint);display:flex;align-items:center;justify-content:center;}
+.tool-ic svg{width:20px;height:20px;fill:none;stroke:var(--purple);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+.tool-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.tool-nm{font-size:13px;font-weight:800;color:var(--ink);}
+.tool-ds{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tool .tic{color:#C5CAD6;flex-shrink:0;}
+/* 안내 */
+.remind{background:var(--tint);border:1px solid var(--tint-line);border-radius:14px;padding:17px 20px;}
+.remind-h{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:var(--purple);margin-bottom:13px;}
+.remind-h .ti{color:var(--purple);}
+.remind-grid{display:grid;grid-template-columns:1fr;gap:10px;}
+@media(min-width:680px){.remind-grid{grid-template-columns:1fr 1fr;}}
+.remind-grid span{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--ink);line-height:1.5;}
+.remind-grid .tck{color:#2BB673;flex-shrink:0;margin-top:1px;}
+/* ══════ v1.12 모바일 햄버거 메뉴 ══════ */
+.mobile-menu-btn{display:none;width:42px;height:42px;border:none;border-radius:12px;background:rgba(255,255,255,.14);align-items:center;justify-content:center;flex-direction:column;gap:5px;margin-left:auto;cursor:pointer;}
+.mobile-menu-btn span{display:block;width:20px;height:2px;border-radius:99px;background:#fff;}
+@media(max-width:880px){
+  .top{flex-wrap:wrap;height:auto;padding:14px 16px;gap:10px;}
+  .brand{order:1;padding:0;margin:0;}
+  .brand .mark{font-size:24px;}
+  .brand .sub,.brand .bbar{display:none;}
+  .mobile-menu-btn{display:flex;order:2;}
+  .top-right{order:3;margin-left:0;}
+  .profile{font-size:12px;padding:6px 10px;}
+  .tabs{order:4;display:none;flex:0 0 100%;width:100%;background:rgba(255,255,255,.1);border-radius:14px;padding:10px;gap:8px;overflow:visible;flex-wrap:wrap;justify-content:flex-start;}
+  .tabs.mobile-open{display:flex;}
+  .tabs .tab{flex:1 1 calc(50% - 8px);justify-content:center;font-size:13.5px;padding:10px 8px;border-radius:10px;background:rgba(255,255,255,.08);}
+  .tabs .tab.on{background:#fff;color:var(--purple);}
+  .tabs .tab[data-t="home"]{flex-basis:100%;}
+  .tabs .tab[data-t="design"],.tabs .tab[data-t="claim"]{font-size:13px;color:rgba(255,255,255,.82);}
+  .tabs .tab[data-t="design"].on,.tabs .tab[data-t="claim"].on{color:var(--purple);}
+  .home-wrap{display:flex;flex-direction:column;}
+  .home-main{order:1;}
+  .home-side{order:2;}
+  .dash-head{margin-top:22px;}
+  .dash-head h1{font-size:30px;line-height:1.25;letter-spacing:-1px;}
+  .dash-head p{font-size:15px;line-height:1.6;}
+}
+
+/* ════════ v1.14 고객관리 SaaS 디자인 고도화 ════════ */
+#tabBar .tab.on{background:rgba(255,255,255,.20);border-radius:10px;color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);}
+.cm-wrap{max-width:1180px;margin:0 auto;}
+.cm-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px;}
+.cm-title{font-size:24px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:10px;letter-spacing:-.02em;}
+.cm-title svg{width:26px;height:26px;color:var(--purple);}
+.cm-sub{color:var(--muted);font-size:13.5px;margin-top:4px;}
+.cm-badges{display:flex;gap:8px;flex-wrap:wrap;}
+.cm-badge{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:700;color:#475467;box-shadow:0 1px 2px rgba(16,24,40,.04);}
+.cm-badge .d{width:7px;height:7px;border-radius:50%;background:#cbd5e1;}
+.cm-badge.ok{color:var(--green);border-color:#cdeedd;background:var(--green-tint);}
+.cm-badge.ok .d{background:var(--green);}
+.cm-badge.gh .d{background:#24292f;}
+.cm-badge.nf .d{background:#2f81f7;}
+
+.cm-grid{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start;}
+.cm-main{display:flex;flex-direction:column;gap:16px;min-width:0;}
+.cm-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 1px 3px rgba(16,24,40,.05);}
+.cm-card-h{font-size:16px;font-weight:800;color:var(--navy);margin-bottom:14px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+.cm-mini{font-size:11.5px;font-weight:600;color:#98a2b3;}
+
+.cm-admin{background:linear-gradient(180deg,#EDF2FF,#fff);border:1.5px solid var(--tint-line);border-radius:16px;padding:15px 18px;}
+.cm-admin-h{display:inline-flex;align-items:center;gap:8px;font-weight:800;color:var(--purple);font-size:14px;margin-bottom:5px;}
+.cm-admin-h svg{width:18px;height:18px;}
+.cm-admin p{font-size:12.5px;color:#475467;line-height:1.55;}
+
+.cm-form{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 14px;}
+.cm-form.one{grid-template-columns:1fr;}
+.cm-f{display:flex;flex-direction:column;gap:5px;min-width:0;}
+.cm-f.full{grid-column:1/-1;}
+.cm-f>label{font-size:12px;font-weight:700;color:#475467;}
+.cm-f .req{color:var(--red);}
+.cm-f input,.cm-f select,.cm-f textarea{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13.5px;font-family:var(--sans);color:var(--ink);background:#fff;transition:border-color .15s,box-shadow .15s;}
+.cm-f input:focus,.cm-f select:focus,.cm-f textarea:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(36,72,255,.12);outline:none;}
+.cm-f textarea{min-height:62px;resize:vertical;}
+.cm-f.chk{flex-direction:row;align-items:center;}
+.cm-f.chk label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#344054;cursor:pointer;}
+.cm-f.chk input{width:16px;height:16px;accent-color:var(--purple);}
+
+.cm-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+.cm-btn{border:none;border-radius:11px;padding:12px 22px;font-size:14px;font-weight:800;display:inline-flex;align-items:center;gap:8px;transition:transform .08s,box-shadow .15s,background .15s;}
+.cm-btn svg{width:17px;height:17px;}
+.cm-btn.primary{background:linear-gradient(135deg,var(--purple),#1A37D8);color:#fff;box-shadow:0 4px 12px rgba(36,72,255,.28);}
+.cm-btn.primary:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(36,72,255,.36);}
+.cm-btn.ghost{background:#fff;color:#475467;border:1.5px solid var(--line);}
+.cm-btn.ghost:hover{background:#F8FAFF;border-color:var(--tint-line);}
+
+.cm-list-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+.cm-list-title{font-size:16px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:8px;}
+.cm-count{background:var(--tint);color:var(--purple);font-size:12px;font-weight:800;border-radius:999px;padding:3px 10px;}
+.cm-list-tools{display:flex;gap:8px;flex-wrap:wrap;}
+.cm-list-tools input,.cm-list-tools select{border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;font-size:13px;font-family:var(--sans);background:#fff;}
+.cm-list-tools input{min-width:190px;}
+.cm-list-tools input:focus,.cm-list-tools select:focus{border-color:var(--purple);outline:none;box-shadow:0 0 0 3px rgba(36,72,255,.1);}
+
+.cm-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(238px,1fr));gap:12px;}
+.cm-cust{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px;transition:box-shadow .15s,border-color .15s,transform .1s;}
+.cm-cust:hover{box-shadow:0 6px 18px rgba(16,24,40,.08);border-color:var(--tint-line);transform:translateY(-1px);}
+.cm-cust-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:9px;}
+.cm-owner{display:inline-flex;align-items:center;gap:5px;background:var(--purple);color:#fff;font-size:11.5px;font-weight:800;border-radius:999px;padding:3px 10px;}
+.cm-cust-name{font-size:16px;font-weight:800;color:var(--ink);}
+.cm-cust-tel{font-size:13px;color:#475467;margin-top:1px;font-variant-numeric:tabular-nums;}
+.cm-cust-meta{font-size:12px;color:#667085;margin-top:6px;}
+.cm-cust-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;}
+.cm-tag{font-size:11px;font-weight:700;border-radius:7px;padding:3px 8px;background:#EEF2FF;color:#3a4a8c;border:1px solid #E0E7FF;}
+.cm-tag.next{background:#FFF4E5;color:#9A5B00;border-color:#FCE6C2;}
+.cm-tag.flag{background:#FEF0F0;color:#B3422F;border-color:#F8D7D2;}
+.cm-tag.st{background:var(--green-tint);color:var(--green);border-color:#cdeedd;}
+.cm-cust-memo{font-size:12.5px;color:#475467;margin-top:9px;background:#F8FAFF;border-radius:8px;padding:8px 10px;line-height:1.5;}
+.cm-cust-foot{display:flex;flex-wrap:wrap;gap:10px;margin-top:9px;font-size:11.5px;color:#98a2b3;}
+.cm-del{margin-top:11px;background:#fff;border:1px solid var(--line);color:#98a2b3;border-radius:8px;padding:5px 11px;font-size:12px;font-weight:700;}
+.cm-del:hover{color:var(--red);border-color:#F8D7D2;background:var(--red-tint);}
+.cm-empty{grid-column:1/-1;text-align:center;color:#98a2b3;padding:34px 16px;font-size:13.5px;border:1.5px dashed var(--line);border-radius:14px;}
+
+.cm-side{display:flex;flex-direction:column;gap:14px;position:sticky;top:84px;}
+.cm-quick{background:linear-gradient(160deg,var(--purple),var(--navy));border-radius:18px;padding:18px;color:#fff;box-shadow:0 8px 24px rgba(17,27,102,.28);}
+.cm-quick-h{font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px;}
+.cm-quick-sub{font-size:12px;color:#C9D4FF;margin:5px 0 14px;}
+.cm-quick .cm-f>label{color:#C9D4FF;}
+.cm-quick .cm-f input,.cm-quick .cm-f select,.cm-quick .cm-f textarea{background:rgba(255,255,255,.96);border-color:transparent;color:var(--ink);}
+.cm-quick .cm-f.chk label{color:#EAF0FF;}
+.cm-quick .cm-actions{margin-top:14px;}
+.cm-quick .cm-btn.primary{background:#fff;color:var(--purple);box-shadow:0 4px 12px rgba(0,0,0,.18);}
+.cm-quick .cm-btn.ghost{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.35);}
+.cm-tip{background:var(--amber-tint);border:1px solid #F2E3C4;border-radius:14px;padding:13px 15px;font-size:12px;color:#7a5a1e;line-height:1.55;}
+.cm-tip b{color:#5c4313;}
+
+@media(max-width:980px){
+  .cm-grid{grid-template-columns:1fr;}
+  .cm-side{position:static;}
+}
+@media(max-width:560px){
+  .cm-form{grid-template-columns:1fr;}
+  .cm-list-tools input{min-width:0;flex:1;}
+}
+/* 홈 우측 초간단 빠른 고객등록 카드 */
+.hq-card{background:#fff;border:1.5px solid var(--tint-line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:9px;box-shadow:0 1px 3px rgba(16,24,40,.05);}
+.hq-h{font-size:13.5px;font-weight:800;color:var(--purple);display:flex;align-items:center;gap:6px;}
+.hq-h svg{width:15px;height:15px;}
+.hq-sub{font-size:11px;color:#98a2b3;margin-top:-3px;}
+.hq-f{display:flex;flex-direction:column;gap:4px;}
+.hq-f>label{font-size:11px;font-weight:700;color:#667085;}
+.hq-f input,.hq-f select{border:1.5px solid var(--line);border-radius:9px;padding:8px 10px;font-size:13px;font-family:var(--sans);background:#fff;width:100%;color:var(--ink);}
+.hq-f input:focus,.hq-f select:focus{border-color:var(--purple);outline:none;box-shadow:0 0 0 3px rgba(36,72,255,.10);}
+.hq-btn{margin-top:2px;background:linear-gradient(135deg,var(--purple),#1A37D8);color:#fff;border:none;border-radius:9px;padding:9px;font-size:13px;font-weight:800;box-shadow:0 3px 10px rgba(36,72,255,.25);}
+.hq-btn:hover{filter:brightness(1.06);}
+/* 테스트 배포 안내 띠 */
+.test-banner{background:#FFF3CD;color:#7a5a1e;border-bottom:1px solid #F2E3C4;text-align:center;font-size:12.5px;font-weight:700;padding:8px 14px;line-height:1.5;}
+.test-banner b{color:#8a4b00;}
+</style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1A37D8">
+<link rel="apple-touch-icon" href="icons/wd-app-icon-180.png">
+<link rel="icon" type="image/png" href="icons/wd-app-icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ── WD kit_ 저장형 1단계: Supabase 연결 (publishable/anon key · RLS 보호) ──
+   ⚠ 아래 2줄만 사라님이 검수 시 실제 값과 대조하세요. service_role 키는 절대 금지. */
+const SUPABASE_URL = "https://pqsxpijdprvitxbqcooa.supabase.co";
+const SUPABASE_KEY = "sb_publishable_w0vIgh27tEdRL4Dd8wUpZQ_95BoLM_i";
+var sb = null;
+try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); }
+catch(e){ console.error('Supabase init 실패:', e); }
+window._currentUser=''; window._currentRole=''; window._currentUid='';
+</script>
+</head>
+<body>
+
+<!-- ── 헤더 ── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="lm">WD WAVE</div>
+      <div class="ls">우리동네 보험관리 키트</div>
+    </div>
+    <div class="login-fld"><label>이메일</label><input id="login-id" type="email" placeholder="예: name@email.com" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pw').focus()"></div>
+    <div class="login-fld"><label>비밀번호</label><input type="password" id="login-pw" placeholder="비밀번호" autocomplete="current-password" onkeydown="if(event.key==='Enter')appLogin()"></div>
+    <button class="login-btn" onclick="appLogin()">로그인</button>
+    <div class="login-hint">WD WAVE 소속 설계사 전용입니다.</div>
+  </div>
+</div>
+
+<div id="app-screen" style="display:none;">
+<div class="top">
+  <div class="brand">
+    <span class="mark">WD WAVE</span>
+    <span class="bbar"></span>
+    <span class="sub">우리동네 보험관리 키트</span>
+  </div>
+  <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="메뉴 열기"><span></span><span></span><span></span></button>
+  <nav class="tabs" id="tabBar">
+    <button class="tab on" data-t="home" onclick="showTab('home')"><svg viewBox="0 0 24 24" class="ti"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/></svg>홈</button>
+    <button class="tab" data-t="consult" onclick="showTab('consult')">상담 시작</button>
+    <button class="tab" data-t="prospect" onclick="showTab('prospect')">고객관리</button>
+    <button class="tab" data-t="policy" onclick="showTab('policy')">계약관리</button>
+    <button class="tab" data-t="worklog" onclick="showTab('worklog')">기록센터</button>
+    <button class="tab" data-t="design" onclick="showTab('design')">설계·계약</button>
+    <button class="tab" data-t="claim" onclick="showTab('claim')">청구·문제보고</button>
+    <!-- 보조도구에서 접근 (탭 숨김, 기능 유지) -->
+    <button class="tab" data-t="start" onclick="showTab('start')" style="display:none;">오늘 업무 시작</button>
+    <button class="tab" data-t="lib" onclick="showTab('lib')" style="display:none;">문장·프롬프트</button>
+    <button class="tab" data-t="hub" onclick="showTab('hub')" style="display:none;">전산·연락처</button>
+    <button class="tab" data-t="guide" onclick="showTab('guide')" style="display:none;">업무 가이드</button>
+  </nav>
+  <div class="top-right">
+    <button class="bell" onclick="showToast('알림이 없습니다')" aria-label="알림"><svg viewBox="0 0 24 24" class="ti"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></button>
+    <button class="profile" onclick="if(confirm('로그아웃할까요? (다른 계정으로 로그인하려면 확인)')) appLogout(); else showTab('home');"><span class="pav"><svg viewBox="0 0 24 24" class="ti"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 14 0v1"/></svg></span><span class="pnm" id="profile-name">설계사</span> 컨설턴트<svg viewBox="0 0 24 24" class="tic"><path d="m6 9 6 6 6-6"/></svg></button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ════════ 1. 홈 ════════ -->
+<div class="test-banner">🧪 <b>테스트 배포</b> · 저장 기능 점검 중 — 실제 고객정보 입력 금지, <b>테스트 이름만</b> 사용하세요</div>
+<div class="view on" id="view-home">
+  <div class="home-wrap">
+  <div class="home-main">
+  <div class="dash-head">
+    <div>
+      <h1 id="hero-title">어떤 보험 업무를 시작할까요?</h1>
+      <p id="hero-sub">고객과의 상담에서 필요한 정보를 선택하고, 체계적으로 기록하여 업무에 활용하세요.</p>
+    </div>
+  </div>
+
+  <div class="philosophy-card soft"><div class="ph-title">이 키트가 만들어진 이유</div><div class="ph-body">이 키트는 더 많이 팔기 위한 도구가 아닙니다.<br>초보 설계사가 고객 앞에서 덜 흔들리고, 확인할 것을 확인하며, 책임 있게 상담하도록 돕기 위해 만들었습니다.<br>고객을 관리하는 습관이 쌓일 때, 신뢰와 성과도 함께 자랍니다.</div></div>
+  <div class="bcard-grid">
+    <button class="bcard" onclick="showTab('consult')">
+      <span class="bcard-ic"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-9 8.35 8.5 8.5 0 0 1-3.8-.9L3 20l1.05-4.2A8.5 8.5 0 1 1 21 11.5"/></svg></span>
+      <div class="bcard-body">
+        <div class="bcard-top"><span class="bcard-nm">상담 시작</span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></div>
+        <div class="bcard-ds">고객과 상담을 진행하며 보장분석, 질문, 우려사항, 다음 행동까지 체계적으로 정리합니다.</div>
+        <div class="bcard-tags"><span>보장분석</span><span>질문정리</span><span>다음액션</span></div>
+      </div>
+    </button>
+    <button class="bcard" onclick="showTab('prospect')">
+      <span class="bcard-ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19v-.8a5.5 5.5 0 0 1 11 0v.8"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2a4.6 4.6 0 0 1 5 4.3v.5"/></svg></span>
+      <div class="bcard-body">
+        <div class="bcard-top"><span class="bcard-nm">고객관리</span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></div>
+        <div class="bcard-ds">가망고객과 상담 전후 고객의 기본정보와 연락 흐름을 관리합니다.</div>
+        <div class="bcard-tags"><span>고객정보</span><span>상담이력</span><span>연락내역</span></div>
+      </div>
+    </button>
+    <button class="bcard" onclick="showTab('policy')">
+      <span class="bcard-ic"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7"/><path d="M14 3v5h5"/><path d="M18 13.5 21 15v3.2c0 1.8-1.4 2.8-3 3.3-1.6-.5-3-1.5-3-3.3V15z"/></svg></span>
+      <div class="bcard-body">
+        <div class="bcard-top"><span class="bcard-nm">계약관리</span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></div>
+        <div class="bcard-ds">내가 체결했거나 관리하는 고객의 가입계약과 주요 메모를 기록합니다.</div>
+        <div class="bcard-tags"><span>계약현황</span><span>보험료</span><span>갱신관리</span></div>
+      </div>
+    </button>
+    <button class="bcard" onclick="showTab('worklog')">
+      <span class="bcard-ic"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h11v16H6a2 2 0 0 0-2 2z"/><path d="M17 3v18"/><path d="M9 8.5l3.5-1 1 3.5"/></svg></span>
+      <div class="bcard-body">
+        <div class="bcard-top"><span class="bcard-nm">기록센터</span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></div>
+        <div class="bcard-ds">오늘의 할 일, 보험일기, 퀵메모를 빠르게 남기고 확인합니다.</div>
+        <div class="bcard-tags"><span>오늘 할 일</span><span>보험일기</span><span>퀵메모</span></div>
+      </div>
+    </button>
+  </div>
+
+  <div class="tools-h">업무 도구</div>
+  <div class="tools-row">
+    <button class="tool" onclick="showTab('lib')"><span class="tool-ic"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-9 8.35 8.5 8.5 0 0 1-3.8-.9L3 20l1.05-4.2A8.5 8.5 0 1 1 21 11.5"/><path d="M8 9.5h8M8 13h5"/></svg></span><span class="tool-tx"><span class="tool-nm">문장·프롬프트</span><span class="tool-ds">상담에 바로 쓰는 문장</span></span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></button>
+    <button class="tool" onclick="showTab('hub')"><span class="tool-ic"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="2.4"/><path d="M8.5 16a3.5 3.5 0 0 1 7 0"/></svg></span><span class="tool-tx"><span class="tool-nm">전산·연락처</span><span class="tool-ds">회사 전산 및 연락처 바로가기</span></span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></button>
+    <button class="tool" onclick="showTab('guide')"><span class="tool-ic"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M19 18v3H6.5A2.5 2.5 0 0 1 4 18.5"/></svg></span><span class="tool-tx"><span class="tool-nm">업무 가이드</span><span class="tool-ds">상황별 업무 절차 안내</span></span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></button>
+    <button class="tool" onclick="showTab('design')"><span class="tool-ic"><svg viewBox="0 0 24 24"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/><path d="M14 6l3 3"/></svg></span><span class="tool-tx"><span class="tool-nm">설계·계약</span><span class="tool-ds">보험 설계 및 계약 진행</span></span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></button>
+    <button class="tool" onclick="showTab('claim')"><span class="tool-ic"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v3M12 17h.01"/></svg></span><span class="tool-tx"><span class="tool-nm">청구·문제보고</span><span class="tool-ds">청구 문의와 문제 상황 정리</span></span><svg viewBox="0 0 24 24" class="tic"><path d="m9 6 6 6-6 6"/></svg></button>
+  </div>
+
+  <div class="remind">
+    <div class="remind-h"><svg viewBox="0 0 24 24" class="ti"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg>꼭 기억하세요</div>
+    <div class="remind-grid">
+      <span><svg viewBox="0 0 24 24" class="tck"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>고객관리 기록은 저장되며, 본인이 등록한 고객만 보입니다.</span>
+      <span><svg viewBox="0 0 24 24" class="tck"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>민감정보(주민번호·계좌·병력 등)는 임의로 저장하지 마세요.</span>
+      <span><svg viewBox="0 0 24 24" class="tck"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>모든 계약 내용은 약관과 보험사 정책을 반드시 확인하세요.</span>
+      <span><svg viewBox="0 0 24 24" class="tck"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>AI 프롬프트는 고객 발송 전 한 번 더 검토하면 안심돼요.</span>
+    </div>
+  </div>
+
+
+  <div class="notice-bar">
+    <span class="ni"><svg viewBox="0 0 24 24"><path d="m3 11 17-6v14L3 13zM8 13v5a2 2 0 0 0 2 2"/></svg></span>
+    <div class="nt"><b>안내</b>현재 v1.14는 고객관리 저장형 1단계입니다. 고객등록과 고객조회는 저장되며, 상담·계약·기록센터 저장은 2단계에서 적용됩니다.</div>
+  </div>
+
+  <div class="philosophy-card soft"><div class="ph-title">만든 사람의 마음</div><div class="ph-body">WD WAVE는 보험을 판매보다 관리로 봅니다.<br>돈을 버는 일은 부끄러운 일이 아니지만, 고객을 책임지는 방식이어야 오래 갑니다.<br>이 키트는 정직하게 배우고, 기록하고, 성장하려는 설계사를 돕기 위해 만들었습니다.</div></div>
+
+  </div><!-- /home-main -->
+
+  <aside class="home-side">
+    <div class="sec-badge" style="justify-content:center;"><svg viewBox="0 0 24 24" class="ti"><path d="M12 3 4 6v6c0 5 3.5 7.5 8 9 4.5-1.5 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>보안 접속 상태 : 안전 <span class="dot"></span></div>
+    <div class="hq-card">
+      <div class="hq-h"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4.5 13H11l-1 9 8.5-11H12z"/></svg> 빠른 고객등록</div>
+      <div class="hq-sub">현장에서 고객을 바로 잡아두세요. 상세 입력은 [고객관리]에서.</div>
+      <div class="hq-f" id="hq_owner_wrap" style="display:none;"><label>담당자</label><select id="hq_owner"><option value="">담당자 선택</option></select></div>
+      <div class="hq-f"><label>고객명 *</label><input id="hq_name" placeholder="예: 김○○"></div>
+      <div class="hq-f"><label>전화번호</label><input id="hq_tel" placeholder="예: 010-0000-0000"></div>
+      <button class="hq-btn" onclick="hqAdd()">저장</button>
+    </div>
+    <div class="side-card">
+      <div class="side-h"><span class="st">오늘의 할 일</span><button class="more" onclick="rcOpen('task')">더보기</button></div>
+      <div id="home-task-list"></div>
+    </div>
+    <div class="side-card">
+      <div class="side-h"><span class="st">오늘의 메모</span><button class="more" onclick="rcOpen('memo')">더보기</button></div>
+      <div id="home-memo-list"></div>
+    </div>
+    <div class="side-card">
+      <div class="side-h"><span class="st">최근 보험일기</span><button class="more" onclick="rcOpen('diary')">더보기</button></div>
+      <div id="home-diary-list"></div>
+    </div>
+  </aside>
+
+  </div><!-- /home-wrap -->
+</div>
+
+<!-- ════════ 2. 오늘 업무 시작 ════════ -->
+<div class="view" id="view-start">
+  <div class="card">
+    <div class="sec-tag">TODAY</div>
+    <div class="sec-title">지금 어떤 상황인가요?</div>
+    <div class="sec-sub">상황을 선택하면 해야 할 일이 정리된 진행판으로 이동합니다.</div>
+    <div class="pill-grid" style="margin-top:18px;">
+      <button class="pill" onclick="routeTo('consult')">신규 고객 상담 전</button>
+      <button class="pill" onclick="routeTo('consult')">상담을 막 끝냈음</button>
+      <button class="pill" onclick="routeTo('consult')">보장점검 / 리모델링</button>
+      <button class="pill" onclick="routeTo('design')">설계의뢰가 필요함</button>
+      <button class="pill" onclick="routeTo('design')">계약 진행 중</button>
+      <button class="pill" onclick="routeTo('claim')">보험금청구 문의</button>
+      <button class="pill" onclick="routeTo('claim')">문제가 생겨 보고해야 함</button>
+    </div>
+  </div>
+  <div class="warn">
+    <div class="t"><svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 입력 주의</div>
+    <ul>
+      <li>주민번호·계좌번호·병력 상세·가족 상세정보는 입력하지 마세요.</li>
+      <li>고객은 이니셜 또는 요약 표현으로 입력하세요.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ════════ 3. 상담 진행판 ════════ -->
+<div class="view" id="view-consult">
+  <div class="card">
+    <div class="sec-tag">상담 진행판</div>
+    <div class="sec-title">상담을 단계대로 진행합니다</div>
+    <div class="steps" id="steps-c">
+      <button class="step-btn on" onclick="goStep('c',1)"><span class="n">1</span>상황 선택</button>
+      <button class="step-btn" onclick="goStep('c',2)"><span class="n">2</span>정보 체크</button>
+      <button class="step-btn" onclick="goStep('c',3)"><span class="n">3</span>질문 확인</button>
+      <button class="step-btn" onclick="goStep('c',4)"><span class="n">4</span>안내문</button>
+      <button class="step-btn" onclick="goStep('c',5)"><span class="n">5</span>AI 프롬프트</button>
+      <button class="step-btn" onclick="goStep('c',6)"><span class="n">6</span>완료 체크</button>
+    </div>
+
+    <!-- c1 -->
+    <div class="step-pane on" id="c-1">
+      <div class="std">
+        <div class="st"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m16 8-2 6-6 2 2-6z"/></svg> 상담 태도 기준 — 시작 전에 먼저 기억하세요</div>
+        <ul>
+          <li>상품 설명보다 <b>신뢰 형성</b>이 먼저입니다.</li>
+          <li>설계사가 상담 <b>흐름을 주도</b>합니다.</li>
+          <li>고객이 편하게 말하도록 <b>질문 중심</b>으로 진행합니다.</li>
+          <li>설득보다 <b>상황 이해와 방향 제시</b>가 우선입니다.</li>
+        </ul>
+      </div>
+
+      <div class="philosophy-card"><div class="ph-title">상담 전 마음 기준</div><div class="ph-body">고객은 오늘 가입할 사람이기 전에, 자신의 상황을 맡길지 고민하는 사람입니다.<br>설계사는 설득하는 사람이 아니라, 놓친 부분을 함께 확인하고 책임 있게 안내하는 사람입니다.<br>확인하지 않은 말은 하지 않고, 모르는 것은 확인한 뒤 안내합니다.</div></div>
+
+      <div class="std-sub-h"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg> 고객 기본정보 <span style="font-weight:600;color:var(--muted);font-size:11px;">· 저장되지 않습니다</span></div>
+      <div class="frm">
+        <div class="fld"><label>고객명</label><input id="cs_name" placeholder="예: 김○○"></div>
+        <div class="fld"><label>전화번호</label><input id="cs_tel" placeholder="화면에서만 사용 · 저장 안 됨"></div>
+        <div class="fld"><label>상담 목적</label><input id="cs_purpose" placeholder="예: 보장점검 / 신규가입"></div>
+        <div class="fld full"><label>상담 메모</label><textarea id="cs_memo" placeholder="상담 중 메모 (화면에서만 사용)"></textarea></div>
+      </div>
+
+      <div class="std-sub-h"><svg class="ei" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 10.8V4h6v6.8l2 3.2H7z"/></svg> 상담 유형</div>
+      <div class="pill-grid">
+        <button class="pill" onclick="pickPill(this,'c_sit')">신규가입</button>
+        <button class="pill" onclick="pickPill(this,'c_sit')">기존보험 점검</button>
+        <button class="pill" onclick="pickPill(this,'c_sit')">리모델링</button>
+        <button class="pill" onclick="pickPill(this,'c_sit')">보험료 줄이기</button>
+        <button class="pill" onclick="pickPill(this,'c_sit')">가족 보장 상담</button>
+        <button class="pill" onclick="pickPill(this,'c_sit')">실손/청구 문의</button>
+      </div>
+      <input type="hidden" id="c_sit">
+
+      <div class="std-sub-h"><svg class="ei" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 1 2-2h12"/></svg> 보험 기초 상담 <span style="font-weight:600;color:var(--muted);font-size:11px;">· 카테고리를 펼쳐 카드를 누르면 고객 설명문이 나옵니다</span></div>
+      <div class="basic-guide"><svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 이 설명은 상담을 돕기 위한 기본 안내입니다. 실제 보장 여부, 지급 여부, 면책·감액기간, 해지환급금은 반드시 해당 상품의 <b>약관과 보험사 기준</b>을 확인해야 합니다.</div>
+      <div class="basic-nb"><svg class="ei" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M9 3v16"/></svg> 약관 PDF는 <b>NotebookLM</b>에 넣어두고, 특정 담보의 보장 조건·면책기간·감액기간·해지환급금을 확인할 때 활용하면 좋습니다. 단, 최종 판단은 원문 약관과 보험사 확인을 기준으로 합니다.</div>
+      <div id="basic_groups"></div>
+      <div class="basic-box empty" id="cs_box" style="margin-top:14px;">위 카드를 누르면 고객 설명문과 확인 질문이 여기에 표시됩니다.</div>
+    </div>
+
+    <!-- c2 -->
+    <div class="step-pane" id="c-2">
+      <div class="warn"><div class="t"><svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 민감정보 금지</div><ul><li>주민번호·병력 상세·계좌정보는 입력하지 마세요. 이니셜·요약으로.</li></ul></div>
+      <div class="danger">
+        <div class="t"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg> 피해야 할 상담 말 — 정보 받을 때 특히 조심</div>
+        <ul>
+          <li>시작하자마자 직업·소득 등 개인정보부터 묻기</li>
+          <li>상품 설명이나 보장 내용부터 꺼내기</li>
+          <li>상담보다 판매 중심 분위기 만들기</li>
+          <li>데이터 없이 이전 설계사 비판하기</li>
+          <li>가족·지인이라고 억지로 권유하기</li>
+          <li>부정 반응에 계속 설득하기</li>
+        </ul>
+      </div>
+      <div class="frm">
+        <div class="fld"><label>고객 (이니셜)</label><input id="c_name" placeholder="예: 김○○"></div>
+        <div class="fld"><label>나이 / 성별</label><input id="c_age" placeholder="예: 40대 / 여"></div>
+        <div class="fld"><label>상담 유형</label><input id="c_type" placeholder="예: 신규 / 점검 / 리모델링"></div>
+        <div class="fld"><label>희망 보장</label><input id="c_want" placeholder="예: 암·뇌·심장"></div>
+        <div class="fld"><label>월 예산</label><input id="c_budget" placeholder="예: 10만원 내외"></div>
+        <div class="fld"><label>기존 보험 여부</label><input id="c_exist" placeholder="예: 있음 (점검 희망)"></div>
+        <div class="fld full"><label>고객이 걱정하는 부분</label><textarea id="c_worry" placeholder="고객이 말한 걱정을 그대로"></textarea></div>
+        <div class="fld full"><label>특이사항</label><textarea id="c_etc" placeholder="기억할 점"></textarea></div>
+      </div>
+    </div>
+
+    <!-- c3 -->
+    <div class="step-pane" id="c-3">
+      <div class="flow-wrap">
+        <div class="flow-h"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9.5h.01M15 9.5h.01"/></svg> 초면고객 상담 흐름</div>
+        <div class="flow">
+          <span class="fstep">인사·소개</span><span class="arr">›</span>
+          <span class="fstep">가입경로 질문</span><span class="arr">›</span>
+          <span class="fstep">기존 관리 확인</span><span class="arr">›</span>
+          <span class="fstep">인정·칭찬</span><span class="arr">›</span>
+          <span class="fstep">상담 목적 제시</span><span class="arr">›</span>
+          <span class="fstep">실제 상담 전환</span>
+        </div>
+      </div>
+      <div class="flow-wrap">
+        <div class="flow-h"><svg class="ei" viewBox="0 0 24 24"><path d="M9 17H7A5 5 0 0 1 7 7h1"/><path d="M15 7h2a5 5 0 0 1 0 10h-1"/><path d="M8 12h8"/></svg> 지인고객 상담 흐름</div>
+        <div class="flow">
+          <span class="fstep">보험 시작한 이유</span><span class="arr">›</span>
+          <span class="fstep">보험 인식 전환</span><span class="arr">›</span>
+          <span class="fstep">고객 이익 제시</span><span class="arr">›</span>
+          <span class="fstep">부담 없는 점검 제안</span><span class="arr">›</span>
+          <span class="fstep">가입경로 확인</span><span class="arr">›</span>
+          <span class="fstep">기존 관리 확인</span><span class="arr">›</span>
+          <span class="fstep">보장분석 진행</span>
+        </div>
+      </div>
+      <div class="sec-sub" style="margin:6px 0 12px;font-weight:800;color:var(--ink);">고객에게 이렇게 물어보세요.</div>
+      <ul class="q-list">
+        <li><b>·</b><span>현재 보험을 점검하고 싶으신 이유가 있으실까요?</span></li>
+        <li><b>·</b><span>가장 걱정되는 보장은 어떤 부분이세요?</span></li>
+        <li><b>·</b><span>기존 보험료가 부담되시나요?</span></li>
+        <li><b>·</b><span>매월 부담 없는 보험료 범위가 있으실까요?</span></li>
+        <li><b>·</b><span>최근 병원 진료나 약 복용 중인 내용이 있으실까요?</span></li>
+        <li><b>·</b><span>가족 중 걱정되는 질병이나 상황이 있으실까요?</span></li>
+      </ul>
+      <div class="std-sub-h"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></svg> 가망고객 반응별 응대 기준</div>
+      <div class="react pos"><div class="rt">긍정 반응</div><div class="rd">바로 상담으로 연결합니다.</div></div>
+      <div class="react mid"><div class="rt">애매한 반응</div><div class="rd">관계를 유지하고, 적절한 타이밍에 다시 접촉합니다.</div></div>
+      <div class="react neg"><div class="rt">부정 반응</div><div class="rd">가볍게 공감하고 대화를 마무리합니다. (계속 설득 금지)</div></div>
+    </div>
+
+    <!-- c4 -->
+    <div class="step-pane" id="c-4">
+      <div class="sec-sub" style="margin-bottom:12px;">입력값으로 고객 안내 문장을 만듭니다.</div>
+      <div class="btn-row"><button class="btn btn-p" onclick="buildConsultMsg()"><svg class="ei" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> 안내문 만들기</button></div>
+      <div class="out-box empty" id="c_out">[안내문 만들기]를 누르면 여기에 문장이 생성됩니다.</div>
+      <button class="btn btn-g btn-block" onclick="copyOut('c_out','고객 안내문을 복사했습니다')"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 안내문 복사</button>
+    </div>
+
+    <!-- c5 -->
+    <div class="step-pane" id="c-5">
+      <div class="sec-sub" style="margin-bottom:12px;">입력값이 들어간 AI 프롬프트를 복사해 AI에 붙여넣으세요.</div>
+      <div class="btn-row">
+        <button class="btn btn-dark" onclick="copyPrompt('c_p1')">상담 정리</button>
+        <button class="btn btn-dark" onclick="copyPrompt('c_p2')">고객 메시지</button>
+        <button class="btn btn-dark" onclick="copyPrompt('c_p3')">금지표현 검사</button>
+      </div>
+      <div class="prompt-box" id="c_ppv">위 버튼을 누르면 프롬프트가 복사되고, 미리보기가 여기 표시됩니다.</div>
+    </div>
+
+    <!-- c6 -->
+    <div class="step-pane" id="c-6">
+      <ul class="chk-list">
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">상담 내용 정리 완료</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">고객에게 보낼 문장 확인 완료</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">AI 프롬프트 복사 완료</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">대표 보고 필요 여부 확인</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">설계의뢰 필요 여부 확인</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">민감정보 미기재 확인</span></li>
+      </ul>
+      <div class="btn-row" style="margin-top:8px;"><button class="btn btn-p btn-block" onclick="buildConsultReport()"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 상담 후 보고문 만들어 복사</button></div>
+      <div class="out-box empty" id="c_rep" style="margin-top:10px;">버튼을 누르면 보고문이 생성·복사됩니다.</div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-g" onclick="stepMove('c',-1)">← 이전</button>
+      <button class="btn btn-p" onclick="stepMove('c',1)">다음 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ 4. 설계·계약 진행판 ════════ -->
+<div class="view" id="view-design">
+  <div class="card">
+    <div class="sec-tag">설계·계약 진행판</div>
+    <div class="sec-title">설계의뢰와 계약을 안전하게</div>
+    <div class="steps" id="steps-d">
+      <button class="step-btn on" onclick="goStep('d',1)"><span class="n">1</span>상황 선택</button>
+      <button class="step-btn" onclick="goStep('d',2)"><span class="n">2</span>설계 정보</button>
+      <button class="step-btn" onclick="goStep('d',3)"><span class="n">3</span>의뢰문</button>
+      <button class="step-btn" onclick="goStep('d',4)"><span class="n">4</span>계약 전 확인</button>
+      <button class="step-btn" onclick="goStep('d',5)"><span class="n">5</span>AI 프롬프트</button>
+      <button class="step-btn" onclick="goStep('d',6)"><span class="n">6</span>완료 체크</button>
+    </div>
+
+    <div class="step-pane on" id="d-1">
+      <div class="sec-sub" style="margin-bottom:14px;">어떤 업무인가요?</div>
+      <div class="pill-grid">
+        <button class="pill" onclick="pickPill(this,'d_sit')">신규 설계의뢰</button>
+        <button class="pill" onclick="pickPill(this,'d_sit')">리모델링 설계</button>
+        <button class="pill" onclick="pickPill(this,'d_sit')">비교안 요청</button>
+        <button class="pill" onclick="pickPill(this,'d_sit')">인수 가능 여부 문의</button>
+        <button class="pill" onclick="pickPill(this,'d_sit')">가입 의사 있음</button>
+        <button class="pill" onclick="pickPill(this,'d_sit')">계약 진행 중</button>
+        <button class="pill" onclick="pickPill(this,'d_sit')">계약 후 보고</button>
+      </div>
+      <input type="hidden" id="d_sit">
+    </div>
+
+    <div class="step-pane" id="d-2">
+      <div class="warn"><div class="t"><svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 민감정보 금지</div><ul><li>주민번호·계좌·병력 상세는 입력하지 마세요.</li></ul></div>
+      <div class="frm">
+        <div class="fld"><label>고객 (이니셜)</label><input id="d_name" placeholder="예: 박○○"></div>
+        <div class="fld"><label>나이 / 성별</label><input id="d_age" placeholder="예: 35 / 남"></div>
+        <div class="fld"><label>직업</label><input id="d_job" placeholder="예: 사무직"></div>
+        <div class="fld"><label>상담 유형</label><input id="d_type" placeholder="예: 신규 / 리모델링"></div>
+        <div class="fld"><label>희망 보장</label><input id="d_want" placeholder="고객 말 그대로"></div>
+        <div class="fld"><label>월 예산</label><input id="d_budget" placeholder="예: 12만원"></div>
+        <div class="fld"><label>기존 보험</label><input id="d_exist" placeholder="예: 실손 보유"></div>
+        <div class="fld"><label>요청 보험사</label><input id="d_company" placeholder="예: 미정 / OO화재"></div>
+        <div class="fld full"><label>고지사항</label><textarea id="d_notice" placeholder="고객이 알린 고지 내용(상세 병력 금지, 요약)"></textarea></div>
+      </div>
+    </div>
+
+    <div class="step-pane" id="d-3">
+      <div class="sec-sub" style="margin-bottom:12px;">매니저에게 보낼 설계의뢰 문장을 만듭니다.</div>
+      <div class="btn-row"><button class="btn btn-p" onclick="buildDesignReq()"><svg class="ei" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> 의뢰문 만들기</button></div>
+      <div class="out-box empty" id="d_out">[의뢰문 만들기]를 누르면 생성됩니다.</div>
+      <button class="btn btn-g btn-block" onclick="copyOut('d_out','설계의뢰문을 복사했습니다')"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 의뢰문 복사</button>
+    </div>
+
+    <div class="step-pane" id="d-4">
+      <ul class="chk-list">
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">상품명 확인</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">보험료 확인</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">납입기간 / 보장기간 확인</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">주요 보장 확인</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">고지사항 확인</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">고객 최종 동의 확인</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">대표 확인 필요 여부 확인</span></li>
+      </ul>
+      <div class="warn"><div class="t"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg> 하면 안 되는 것</div><ul><li>승인 확정 표현 금지 · 보장 과장 금지 · 확인 전 청약 진행 금지 · 고지 누락 금지</li></ul></div>
+    </div>
+
+    <div class="step-pane" id="d-5">
+      <div class="sec-sub" style="margin-bottom:12px;">입력값이 들어간 AI 프롬프트입니다.</div>
+      <div class="btn-row">
+        <button class="btn btn-dark" onclick="copyPrompt('d_p1')">설계의뢰 정리</button>
+        <button class="btn btn-dark" onclick="copyPrompt('d_p2')">계약 전 리스크 점검</button>
+        <button class="btn btn-dark" onclick="copyPrompt('d_p3')">대표 보고</button>
+      </div>
+      <div class="prompt-box" id="d_ppv">버튼을 누르면 프롬프트가 복사되고 여기 표시됩니다.</div>
+    </div>
+
+    <div class="step-pane" id="d-6">
+      <ul class="chk-list">
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">설계의뢰 문장 복사 완료</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">매니저 전달 완료</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">대표 확인 필요 여부 확인</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">계약 전 확인 항목 점검 완료</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">고객 안내 전 위험 표현 검사 완료</span></li>
+      </ul>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-g" onclick="stepMove('d',-1)">← 이전</button>
+      <button class="btn btn-p" onclick="stepMove('d',1)">다음 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ 5. 청구·문제 보고판 ════════ -->
+<div class="view" id="view-claim">
+  <div class="card">
+    <div class="sec-tag">청구·문제 보고판</div>
+    <div class="sec-title">청구·민원·실수를 안전하게 처리</div>
+    <div class="steps" id="steps-r">
+      <button class="step-btn on" onclick="goStep('r',1)"><span class="n">1</span>상황 선택</button>
+      <button class="step-btn" onclick="goStep('r',2)"><span class="n">2</span>사실 정리</button>
+      <button class="step-btn" onclick="goStep('r',3)"><span class="n">3</span>고객 안내문</button>
+      <button class="step-btn" onclick="goStep('r',4)"><span class="n">4</span>대표 보고문</button>
+      <button class="step-btn" onclick="goStep('r',5)"><span class="n">5</span>AI 프롬프트</button>
+      <button class="step-btn" onclick="goStep('r',6)"><span class="n">6</span>완료 체크</button>
+    </div>
+
+    <div class="step-pane on" id="r-1">
+      <div class="sec-sub" style="margin-bottom:14px;">어떤 상황인가요?</div>
+      <div class="pill-grid">
+        <button class="pill" onclick="pickPill(this,'r_sit')">보험금청구 문의</button>
+        <button class="pill" onclick="pickPill(this,'r_sit')">청구 가능 여부</button>
+        <button class="pill" onclick="pickPill(this,'r_sit')">진단·수술·입원</button>
+        <button class="pill" onclick="pickPill(this,'r_sit')">고객 불만</button>
+        <button class="pill" onclick="pickPill(this,'r_sit')">안내 실수</button>
+        <button class="pill" onclick="pickPill(this,'r_sit')">서류 오류</button>
+        <button class="pill" onclick="pickPill(this,'r_sit')">고지 누락 의심</button>
+        <button class="pill" onclick="pickPill(this,'r_sit')">개인정보 유출 의심</button>
+      </div>
+      <input type="hidden" id="r_sit">
+    </div>
+
+    <div class="step-pane" id="r-2">
+      <div class="frm">
+        <div class="fld"><label>고객 (이니셜)</label><input id="r_name" placeholder="예: 이○○"></div>
+        <div class="fld"><label>발생 일시</label><input id="r_when" placeholder="예: 6/15 오전"></div>
+        <div class="fld"><label>보험사</label><input id="r_company" placeholder="예: OO생명"></div>
+        <div class="fld"><label>문의 / 문제 유형</label><input id="r_type" placeholder="예: 청구 가능 여부"></div>
+        <div class="fld full"><label>고객이 한 말</label><textarea id="r_said" placeholder="고객이 말한 내용 그대로"></textarea></div>
+        <div class="fld full"><label>내가 안내한 내용</label><textarea id="r_guide" placeholder="내가 고객에게 안내한 내용"></textarea></div>
+        <div class="fld full"><label>현재 상태</label><textarea id="r_state" placeholder="지금 상황"></textarea></div>
+        <div class="fld full"><label>확인이 필요한 질문</label><textarea id="r_ask" placeholder="대표·보험사에 확인할 점"></textarea></div>
+      </div>
+    </div>
+
+    <div class="step-pane" id="r-3">
+      <div class="sec-sub" style="margin-bottom:12px;">고객에게 보낼 안전한 안내문을 만듭니다.</div>
+      <div class="btn-row"><button class="btn btn-p" onclick="buildClaimMsg()"><svg class="ei" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> 청구 안내문 만들기</button></div>
+      <div class="out-box empty" id="r_out">[청구 안내문 만들기]를 누르면 생성됩니다.</div>
+      <button class="btn btn-g btn-block" onclick="copyOut('r_out','고객 안내문을 복사했습니다')"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 안내문 복사</button>
+    </div>
+
+    <div class="step-pane" id="r-4">
+      <div class="sec-sub" style="margin-bottom:12px;">대표에게 보낼 보고문을 만듭니다.</div>
+      <div class="btn-row"><button class="btn btn-p" onclick="buildClaimReport()"><svg class="ei" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> 대표 보고문 만들기</button></div>
+      <div class="out-box empty" id="r_rep">[대표 보고문 만들기]를 누르면 생성됩니다.</div>
+      <button class="btn btn-g btn-block" onclick="copyOut('r_rep','대표 보고문을 복사했습니다')"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 보고문 복사</button>
+    </div>
+
+    <div class="step-pane" id="r-5">
+      <div class="btn-row">
+        <button class="btn btn-dark" onclick="copyPrompt('r_p1')">청구 안내</button>
+        <button class="btn btn-dark" onclick="copyPrompt('r_p2')">문제상황 정리</button>
+        <button class="btn btn-dark" onclick="copyPrompt('r_p3')">민원 위험 점검</button>
+      </div>
+      <div class="prompt-box" id="r_ppv">버튼을 누르면 프롬프트가 복사되고 여기 표시됩니다.</div>
+    </div>
+
+    <div class="step-pane" id="r-6">
+      <ul class="chk-list">
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">고객 안내문 확인 완료</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">대표 보고문 복사 완료</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">지급 단정 표현 없음</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">문제 축소 보고 없음</span></li>
+        <li class="chk-item" onclick="toggleChk(this)"><span class="chk-box"><svg class="ei" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><span class="lbl">추가 안내 전 대표 확인 필요 여부 확인</span></li>
+      </ul>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-g" onclick="stepMove('r',-1)">← 이전</button>
+      <button class="btn btn-p" onclick="stepMove('r',1)">다음 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ 6. 문장·프롬프트 모음 ════════ -->
+<div class="view" id="view-lib">
+  <div class="card">
+    <div class="sec-tag">LIBRARY</div>
+    <div class="sec-title">문장 · 프롬프트 모음</div>
+    <div class="sec-sub">필요할 때 바로 복사해서 쓰세요.</div>
+    <div class="basic-guide" style="margin-top:12px;"><svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 보험 상담 문장은 반드시 <b>약관과 보험사 기준 확인</b>을 전제로 사용합니다. 약관 PDF는 <b>NotebookLM</b>에 넣어두고 담보별 보장 조건, 면책·감액기간, 해지환급금 등을 확인할 때 활용하면 좋습니다.</div>
+    <div class="philosophy-card"><div class="ph-title">AI는 정리를 돕고, 책임은 사람이 집니다</div><div class="ph-body">AI는 상담 내용을 정리하고 문장을 다듬는 데 도움을 줄 수 있습니다.<br>하지만 고객 앞에서 말하고, 확인하고, 책임지는 사람은 설계사입니다.<br>AI가 만든 문장도 고객에게 보내기 전 한 번 더 확인합니다.</div></div>
+    <div class="cat-tabs" style="margin-top:16px;">
+      <button class="cat-btn on" onclick="libCat('a',this)">고객용 문장</button>
+      <button class="cat-btn" onclick="libCat('b',this)">내부 보고</button>
+      <button class="cat-btn" onclick="libCat('c',this)">AI 프롬프트</button>
+      <button class="cat-btn" onclick="libCat('d',this)">금지 표현표</button>
+    </div>
+
+    <!-- A 고객용 -->
+    <div id="lib-a" class="lib-pane">
+      <div class="snip"><div class="sh"><div class="snm">상담 후 정리 안내</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">[상담 정리 안내]
+고객님, 오늘 상담 내용 정리드립니다.
+
+· 상담 방향:
+· 걱정하신 부분:
+· 다음 확인 사항:
+
+정확한 보장 내용은 약관과 인수 기준 확인 후 안내드리겠습니다.</div></div>
+      <div class="snip"><div class="sh"><div class="snm">추가 확인 요청</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">고객님, 안내드린 부분 중 확인이 필요한 내용이 있어 연락드립니다. 확인 후 정확히 다시 안내드리겠습니다.</div></div>
+      <div class="snip"><div class="sh"><div class="snm">서류 요청</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">고객님, 진행을 위해 아래 서류가 필요합니다.
+· 필요 서류:
+준비되시면 알려주세요. 확인 후 다음 절차 안내드리겠습니다.</div></div>
+      <div class="snip"><div class="sh"><div class="snm">약관 확인 후 안내</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">고객님, 이 부분은 상품별 약관과 보험사 기준에 따라 달라질 수 있어, 정확한 내용은 약관 확인 후 안내드리겠습니다.</div></div>
+      <div class="snip"><div class="sh"><div class="snm">지급 단정 방지</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">보험금 지급 여부는 약관 조건 충족 여부와 보험사 심사 결과에 따라 결정됩니다. 확인 후 안전하게 안내드리겠습니다.</div></div>
+      <div class="snip"><div class="sh"><div class="snm">보장 비교 안내</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">어떤 보험이 무조건 좋다기보다, 고객님 상황에 맞는 보장 구조인지 확인하는 것이 중요합니다.</div></div>
+      <div class="snip"><div class="sh"><div class="snm">고지사항 재확인</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">청약 전 병원 진료, 검사, 약 복용, 치료 이력은 다시 한번 확인해 주세요. 정확한 고지는 고객님을 보호하기 위한 과정입니다.</div></div>
+      <div class="snip"><div class="sh"><div class="snm">기존 보험 점검 안내</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">기존 보험이 무조건 나쁘다는 뜻이 아니라, 현재 상황에 맞게 잘 유지되고 있는지 함께 확인해보겠습니다.</div></div>
+      <div class="snip"><div class="sh"><div class="snm">가족 보험 점검 안내</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">내 보험뿐 아니라 가족 보험도 함께 보면 보험료 부담과 부족한 보장을 더 쉽게 확인할 수 있습니다.</div></div>
+    </div>
+
+    <!-- B 내부 보고 -->
+    <div id="lib-b" class="lib-pane" style="display:none;">
+      <div class="snip"><div class="sh"><div class="snm">상담 후 보고</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">[상담후보고]
+고객명:
+상담유형:
+상담결과: 진행 / 보류 / 거절
+고객 반응:
+다음 일정:
+확인이 필요한 사항:</div></div>
+      <div class="snip"><div class="sh"><div class="snm">설계의뢰</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">[설계의뢰]
+안녕하세요 매니저님, WD WAVE 소속 설계사입니다.
+아래 건 설계 부탁드립니다.
+
+고객:
+나이/성별:
+직업:
+상담유형:
+희망보장:
+월 예산:
+고지사항:
+요청사항:
+
+확인 부탁드립니다.</div></div>
+      <div class="snip"><div class="sh"><div class="snm">문제 보고</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">[문제보고]
+건명:
+고객명:
+발생일시:
+상황 요약:
+현재 상태:
+제가 안내한 내용:
+고객 요청:
+확인이 필요한 질문:</div></div>
+    </div>
+
+    <!-- C AI 프롬프트 -->
+    <div id="lib-c" class="lib-pane" style="display:none;">
+      <div class="snip"><div class="sh"><div class="snm">상담 정리 프롬프트</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">아래 고객 상담 내용을 바탕으로 보험설계사 관점에서 정리해줘.
+1. 핵심 니즈 2. 우선 확인할 보장 3. 추가 질문 4. 설계의뢰 요청사항 5. 고객용 쉬운 문장 6. 주의 표현
+주의: 지급 단정 금지, 과장 금지, 민감정보 금지, "약관 조건 충족 시" 전제 유지.
+상담 내용: [여기에 붙여넣기]</div></div>
+      <div class="snip"><div class="sh"><div class="snm">금지표현 검사 프롬프트</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">아래 고객 안내문에서 보험영업상 위험한 표현을 찾아줘.
+1. 지급 단정 2. 과장 3. 오해 가능 4. 개인정보 위험 5. 민원 가능
+문제가 있으면 안전한 문장으로 고쳐줘.
+안내문: [여기에 붙여넣기]</div></div>
+      <div class="snip"><div class="sh"><div class="snm">대표 보고 정리 프롬프트</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">아래 상황을 대표에게 보고하기 좋게 사실 중심으로 정리해줘.
+1. 발생일시 2. 고객 요청 3. 내가 안내한 내용 4. 현재 상태 5. 위험 요소 6. 즉시 필요한 판단 7. 다음에 할 말
+주의: 감정 표현 줄이고, 사실과 추측 구분, 임의 약속 금지.
+상황: [여기에 붙여넣기]</div></div>
+      <div class="snip"><div class="sh"><div class="snm">약관 확인용 프롬프트</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">아래 약관 내용을 기준으로 해당 담보의 보장 조건, 면책기간, 감액기간, 지급 제한 사항을 초보 설계사가 이해하기 쉽게 정리해줘. 단, 약관 원문에 없는 내용은 추측하지 말고 '약관 확인 필요'라고 표시해줘.
+약관 내용: [여기에 붙여넣기]</div></div>
+      <div class="snip"><div class="sh"><div class="snm">고객 안내문 안전검사 프롬프트</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">아래 고객 안내문에서 지급 단정, 보장 확정, 과장 표현, 민원 위험 표현을 찾아 안전한 문장으로 수정해줘. 반드시 '약관과 보험사 심사 기준에 따라 달라질 수 있음'이라는 전제를 유지해줘.
+안내문: [여기에 붙여넣기]</div></div>
+      <div class="snip"><div class="sh"><div class="snm">담보 설명 쉽게 바꾸기 프롬프트</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">아래 보험 담보 설명을 보험을 잘 모르는 고객도 이해할 수 있게 쉽게 바꿔줘. 단, 보장 여부나 지급 여부를 확정하지 말고 약관 확인이 필요하다는 문장을 포함해줘.
+담보 설명: [여기에 붙여넣기]</div></div>
+      <div class="snip"><div class="sh"><div class="snm">보험일기 정리 프롬프트</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">아래 보험일기 내용을 보고 1. 보험 이슈 2. 고객 감정 3. 상담 기회 4. 조심할 표현 5. 다음 행동 6. 고객에게 보낼 수 있는 부드러운 문장으로 정리해줘. 단, 영업 권유처럼 보이지 않게 해줘.
+보험일기: [여기에 붙여넣기]</div></div>
+      <div class="snip"><div class="sh"><div class="snm">대표 확인 요청 프롬프트</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">아래 내용을 대표에게 확인 요청하기 좋게 사실 중심으로 정리해줘. 고객이 한 말, 내가 이해한 내용, 확인이 필요한 질문을 구분해줘. 추측이나 확답은 하지 마.
+내용: [여기에 붙여넣기]</div></div>
+      <div class="snip"><div class="sh"><div class="snm">NotebookLM 약관 활용 안내 프롬프트</div><button class="copy-mini" onclick="copySnip(this)">복사</button></div><div class="sbody">이 약관 PDF를 NotebookLM에 넣고 확인할 때 사용할 질문 목록을 만들어줘. 보장 조건, 면책기간, 감액기간, 지급 제한, 해지환급금, 고지 관련 유의사항을 확인할 수 있는 질문으로 정리해줘.</div></div>
+      <div class="basic-nb" style="margin-top:6px;"><svg class="ei" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 10.8V4h6v6.8l2 3.2H7z"/></svg> 제안서 작성 프롬프트와 가입 후 안내서 프롬프트는 향후 <b>별도 교육</b>을 통해 제공됩니다. 현재 화면에서는 기본 상담, 약관 확인, 청구 안내, 위험표현 검사 중심으로 제공합니다.</div>
+    </div>
+
+    <!-- D 금지 표현표 -->
+    <div id="lib-d" class="lib-pane" style="display:none;">
+      <div class="philosophy-card"><div class="ph-title">이 말을 하지 않는 이유</div><div class="ph-body">조심스러운 말을 쓰는 이유는 겁이 많아서가 아닙니다.<br>고객을 오해로부터 보호하고, 설계사를 실수와 민원으로부터 지키기 위해서입니다.<br>확정하지 않고 확인하는 태도가 오래 가는 신뢰를 만듭니다.</div></div>
+      <div class="ban-grid">
+        <div class="ban-bad"><div class="h"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg> 쓰면 안 되는 말</div><div class="ban-list">· 무조건 지급됩니다<br>· 확정입니다<br>· 당연히 나옵니다<br>· 제가 나오게 해드릴게요<br>· 이 보험은 무조건 좋아요<br>· 기존 보험은 다 안 좋아요<br>· 걱정 마세요, 다 됩니다</div></div>
+        <div class="ban-good"><div class="h"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> 이렇게 바꾸세요</div><div class="ban-list">· 약관 조건 충족 시 지급 여부가 결정됩니다<br>· 정확한 내용은 보험사 심사 후 확인됩니다<br>· 확인 후 안내드리겠습니다<br>· 기존 보험의 장단점을 함께 확인해보겠습니다</div></div>
+      </div>
+      <div class="ban-grid" style="margin-top:10px;">
+        <div class="ban-bad"><div class="h"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg> 피해야 할 상담 행동</div><div class="ban-list">· 시작하자마자 직업·소득부터 묻기<br>· 상품·보장 내용부터 꺼내기<br>· 판매 중심 분위기 만들기<br>· 데이터 없이 이전 설계사 비판<br>· 가족·지인이라 억지 권유<br>· 부정 반응에 계속 설득</div></div>
+        <div class="ban-good"><div class="h"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> 대신 이렇게</div><div class="ban-list">· 신뢰 형성 → 가입경로 → 기존 관리 순서로<br>· 상품보다 상황 이해·방향 제시 먼저<br>· 질문 중심으로 고객이 말하게<br>· 부정 반응은 공감하고 가볍게 마무리</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ 7. 전산·연락처 허브 ════════ -->
+<div class="view" id="view-hub">
+  <div class="card">
+    <div class="sec-tag">DIRECTORY</div>
+    <div class="sec-title">전산·연락처 허브</div>
+    <div class="sec-sub">보험사 전산·코드·매니저·홈페이지를 한 곳에서 찾습니다.</div>
+    <input class="hub-srch" id="hub-srch" style="margin-top:16px;" placeholder="보험사명, 매니저명, 업무명 검색" oninput="hubRender(this.value)">
+    <div class="hub-filters">
+      <button class="hub-fbtn on" onclick="hubFilter('all',this)">전체</button>
+      <button class="hub-fbtn" onclick="hubFilter('life',this)">생명보험사</button>
+      <button class="hub-fbtn" onclick="hubFilter('loss',this)">손해보험사</button>
+      <button class="hub-fbtn" onclick="hubFilter('mega',this)">메가업무지원</button>
+      <button class="hub-fbtn" onclick="hubFilter('chief',this)">지점/총무</button>
+    </div>
+    <div class="hub-grid" id="hub-grid"></div>
+  </div>
+</div>
+
+<!-- ════════ 8. 가망고객 대기판 ════════ -->
+<div class="view" id="view-prospect">
+  <div class="cm-wrap">
+    <div class="cm-head">
+      <div class="cm-head-l">
+        <div class="cm-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19v-.8a5.5 5.5 0 0 1 11 0v.8"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2a4.6 4.6 0 0 1 5 4.3v.5"/></svg> 고객 관리</div>
+        <div class="cm-sub">고객 정보를 등록하고 체계적으로 관리하세요.</div>
+      </div>
+      <div class="cm-badges">
+        <span class="cm-badge ok"><span class="d"></span>자동 저장 중</span>
+        <span class="cm-badge gh"><span class="d"></span>고객 기록 안전 보관</span>
+        <span class="cm-badge nf"><span class="d"></span>담당자별 관리 적용</span>
+      </div>
+    </div>
+
+    <div class="cm-grid">
+      <div class="cm-main">
+
+        <div id="ps_admin_note" class="cm-admin" style="display:none;">
+          <div class="cm-admin-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 7.5 8 9 4.5-1.5 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg> 관리자 모드</div>
+          <p>관리자 계정은 전체 고객을 조회하고, <b>담당자를 지정해 고객을 등록</b>할 수 있습니다. (수정·삭제는 담당 설계사 계정에서)</p>
+        </div>
+
+        <div class="cm-card">
+          <div class="cm-card-h">고객 등록 <span class="cm-mini">민감정보(주민번호 전체·계좌번호·상세 병력·증권번호·OTP·로그인 정보)는 입력하지 마세요.</span></div>
+          <div id="ps_form_wrap">
+            <div class="cm-form">
+              <div class="cm-f full" id="ps_owner_wrap" style="display:none;"><label>담당자 선택 <span class="req">*</span> <span class="cm-mini">선택한 담당자 명의로 저장됩니다</span></label><select id="ps_owner"><option value="">담당자 선택</option></select></div>
+              <div class="cm-f"><label>고객명 <span class="req">*</span></label><input id="ps_name" placeholder="예: 김○○"></div>
+              <div class="cm-f"><label>전화번호</label><input id="ps_tel" placeholder="예: 010-0000-0000"></div>
+              <div class="cm-f"><label>생년 / 출생연도</label><input id="ps_birth" placeholder="예: 1985"></div>
+              <div class="cm-f"><label>성별</label><select id="ps_gender"><option value="">선택</option><option>여</option><option>남</option></select></div>
+              <div class="cm-f"><label>관계</label><select id="ps_rel"><option value="">선택</option><option>본인</option><option>지인</option><option>소개</option><option>기존고객</option><option>신규문의</option><option>가족/친척</option><option>기타</option></select></div>
+              <div class="cm-f"><label>상담 경로</label><input id="ps_route" placeholder="예: 지인 소개 / 온라인"></div>
+              <div class="cm-f"><label>주소 요약</label><input id="ps_addr" placeholder="예: 서울 강남구 역삼동"></div>
+              <div class="cm-f"><label>고객 상태</label><select id="ps_status"><option value="">선택</option><option>신규</option><option>상담중</option><option>계약</option><option>관리중</option><option>보류</option><option>종결</option></select></div>
+              <div class="cm-f"><label>관심 상황</label><select id="ps_interest"><option value="">선택</option><option>신규가입</option><option>기존보험 점검</option><option>리모델링</option><option>보험료 부담</option><option>가족 보장</option><option>실손/청구 문의</option><option>숨은보험금/미청구보험</option><option>기타</option></select></div>
+              <div class="cm-f"><label>다음 행동</label><select id="ps_next"><option value="">선택</option><option>첫 연락하기</option><option>보장점검 제안</option><option>상담 약속 잡기</option><option>자료 확인 후 연락</option><option>대표 확인 후 연락</option><option>나중에 다시 연락</option></select></div>
+              <div class="cm-f"><label>다음 연락일</label><input type="date" id="ps_nextdate"></div>
+              <div class="cm-f full"><label>메모</label><textarea id="ps_memo" placeholder="기억할 점을 입력하세요 (선택)"></textarea></div>
+              <div class="cm-f chk"><label><input type="checkbox" id="ps_verify"> 고객 인증 필요</label></div>
+              <div class="cm-f chk"><label><input type="checkbox" id="ps_insurer"> 원수사 전산 확인 필요</label></div>
+            </div>
+            <div class="cm-actions">
+              <button class="cm-btn primary" onclick="psAdd()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> 고객 등록</button>
+              <button class="cm-btn ghost" onclick="psReset()">입력 초기화</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cm-card">
+          <div class="cm-list-bar">
+            <div class="cm-list-title">등록된 고객 <span class="cm-count" id="ps_count">전체 0명</span></div>
+            <div class="cm-list-tools">
+              <input id="ps_search" placeholder="검색 (이름/전화/메모)" oninput="psRender()">
+              <select id="ps_filter" onchange="psRender()" style="display:none;"><option value="">전체 고객</option></select>
+            </div>
+          </div>
+          <span id="ps_filter_wrap" style="display:none;"></span>
+          <div class="cm-cards" id="ps_list"><div class="cm-empty">불러오는 중...</div></div>
+        </div>
+
+      </div>
+
+      <aside class="cm-side">
+        <div class="cm-quick">
+          <div class="cm-quick-h"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M13 2 4.5 13H11l-1 9 8.5-11H12z"/></svg> 빠른 고객등록</div>
+          <div class="cm-quick-sub">현장에서 빠르게 등록하면 고객관리 목록에 바로 보입니다.</div>
+          <div class="cm-form one">
+            <div class="cm-f" id="qc_owner_wrap" style="display:none;"><label>담당자 선택 <span class="req">*</span></label><select id="qc_owner"><option value="">담당자 선택</option></select></div>
+            <div class="cm-f"><label>고객명 <span class="req">*</span></label><input id="qc_name" placeholder="예: 김○○"></div>
+            <div class="cm-f"><label>전화번호</label><input id="qc_tel" placeholder="예: 010-0000-0000"></div>
+            <div class="cm-f"><label>관심 상황</label><select id="qc_interest"><option value="">선택</option><option>신규가입</option><option>기존보험 점검</option><option>리모델링</option><option>보험료 부담</option><option>가족 보장</option><option>실손/청구 문의</option><option>숨은보험금/미청구보험</option><option>기타</option></select></div>
+            <div class="cm-f"><label>다음 행동</label><select id="qc_next"><option value="">선택</option><option>첫 연락하기</option><option>보장점검 제안</option><option>상담 약속 잡기</option><option>자료 확인 후 연락</option><option>대표 확인 후 연락</option><option>나중에 다시 연락</option></select></div>
+            <div class="cm-f"><label>메모</label><textarea id="qc_memo" placeholder="간단 메모"></textarea></div>
+            <div class="cm-f chk"><label><input type="checkbox" id="qc_verify"> 고객 인증 필요</label></div>
+            <div class="cm-f chk"><label><input type="checkbox" id="qc_insurer"> 원수사 전산 확인 필요</label></div>
+          </div>
+          <div class="cm-actions">
+            <button class="cm-btn primary" onclick="qcAdd()">빠른 등록</button>
+            <button class="cm-btn ghost" onclick="qcReset()">초기화</button>
+          </div>
+        </div>
+        <div class="cm-tip">정확한 정보는 고객 신뢰의 시작입니다. 입력 전 고객에게 동의를 구하고, <b>민감정보는 절대 입력하지 마세요.</b></div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════ 9. 상황별 업무 가이드 ════════ -->
+<div class="view" id="view-guide">
+  <div class="card">
+    <div class="sec-tag">HOW-TO GUIDE</div>
+    <div class="sec-title">상황별 업무 가이드</div>
+    <div class="sec-sub">자료를 대신 만들어드리는 곳이 아니라, 상황별로 자료를 <b>만드는 방법</b>을 안내하는 메뉴입니다. 카드를 누르면 단계와 체크포인트가 나옵니다.</div>
+    <div class="gd-grid" id="gd_grid" style="margin-top:16px;"></div>
+    <div class="gd-box empty" id="gd_box">위에서 상황을 선택하면 만드는 방법이 여기에 표시됩니다.</div>
+  </div>
+</div>
+
+<!-- ════════ 10. 업무일지 메모 ════════ -->
+<div class="view" id="view-worklog">
+  <div class="card">
+    <div class="sec-tag">RECORD CENTER</div>
+    <div class="sec-title">기록센터</div>
+    <div class="sec-sub">오늘의 할 일, 보험일기, 퀵메모를 한 곳에서 확인하는 임시 기록 공간입니다. 필요한 내용은 복사해서 보관하세요.</div>
+
+    <div class="philosophy-card"><div class="ph-title">오늘의 기록 기준</div><div class="ph-body">잘하려고 애쓰기 전에, 오늘 들은 말과 확인할 일을 남기세요.<br>좋은 설계사는 모든 것을 기억하는 사람이 아니라, 놓치지 않기 위해 기록하는 사람입니다.<br>작은 기록이 고객을 지키고, 설계사의 실수를 줄입니다.</div></div>
+    <div class="wc-tabs" style="margin-top:16px;">
+      <button class="wc-tab on" data-wc="task" onclick="wcSwitch('task')">오늘의 할 일</button>
+      <button class="wc-tab" data-wc="diary" onclick="wcSwitch('diary')">보험일기</button>
+      <button class="wc-tab" data-wc="memo" onclick="wcSwitch('memo')">퀵메모</button>
+    </div>
+
+    <!-- 오늘의 할 일 -->
+    <div class="wc-pane on" id="wc-task">
+      <div class="wc-hint">오늘 해야 할 상담, 고객관리, 계약 확인 일을 짧게 남겨두세요.</div>
+      <div class="wc-bar">
+        <button class="btn btn-p" onclick="rcOpen('task')"><svg class="ei" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> 빠른 기록센터에서 할 일 추가</button>
+        <button class="btn btn-g" onclick="taskCopyAll()"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 할 일 전체 복사</button>
+      </div>
+      <div class="wc-list" id="wc_task_list"></div>
+    </div>
+
+    <!-- 보험일기 (기존 유지) -->
+    <div class="wc-pane" id="wc-diary">
+      <div class="wc-hint">보험 이야기, 상담 기회, 가족·지인 보험 점검처럼 나중에 정리할 내용을 남기는 공간입니다.</div>
+      <div class="wc-bar">
+        <button class="btn btn-p" onclick="rcOpen('diary')"><svg class="ei" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> 빠른 기록센터에서 보험일기 추가</button>
+        <button class="btn btn-g" onclick="wlCopyAll()"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 오늘 보험일기 전체 복사</button>
+      </div>
+      <div class="wlog-list" id="wlog_list"></div>
+    </div>
+
+    <!-- 퀵메모 -->
+    <div class="wc-pane" id="wc-memo">
+      <div class="wc-hint">짧게 떠오른 생각이나 고객에게 들은 말을 빠르게 남기는 공간입니다. 길게 정리할 보험 이야기는 보험일기에 남기세요.</div>
+      <div class="wc-bar">
+        <button class="btn btn-p" onclick="rcOpen('memo')"><svg class="ei" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> 빠른 기록센터에서 퀵메모 추가</button>
+        <button class="btn btn-g" onclick="memoCopy()"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 퀵메모 전체 복사</button>
+      </div>
+      <div class="wc-list" id="wc_memo_list"></div>
+    </div>
+
+    <div class="rc-note" style="margin-top:14px;">오늘의 할 일·보험일기·퀵메모는 아직 임시 기록입니다(저장은 2단계 예정). 고객 등록·조회는 [고객관리]에서 저장됩니다. 주민번호·계좌번호·증권번호 등 민감정보는 입력하지 마세요.</div>
+  </div>
+</div>
+<div class="view" id="view-policy">
+  <div class="card">
+    <div class="sec-tag">POLICY</div>
+    <div class="sec-title">계약관리</div>
+    <div class="sec-sub">내가 체결했거나 관리하는 고객의 가입계약을 간단히 기록합니다. <span style="color:var(--muted);font-size:11px;">· 고객 등록·조회는 [고객관리]에서 합니다.</span></div>
+    <div class="basic-guide" style="margin-top:12px;"><svg class="ei" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 7.5 8 9 4.5-1.5 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg> <b>계약은 체결한 담당 설계사가 직접 등록합니다.</b> 대표 관리자는 전체 계약을 확인하고 누락 여부를 점검할 수 있습니다. <span style="color:var(--muted);font-size:11px;">(계약 저장은 2단계 예정)</span></div>
+    <div class="std-sub-h" style="margin-top:18px;"><svg class="ei" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg> 계약고객 관리</div>
+    <div class="sec-sub" style="margin-bottom:4px;">내가 체결했거나 관리하는 고객의 기본정보와 가입계약을 간단히 기록합니다.</div>
+    <div class="basic-guide" style="margin-top:12px;"><svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 이 화면은 보장분석이 아니라, 내가 체결했거나 관리하는 계약을 책임 있게 기억하기 위한 <b>최소 관리 기록</b>입니다. 실제 보장내용·만기·갱신 여부·해지환급금·지급 조건은 반드시 <b>해당 보험사 전산, 고객 인증 자료, 약관</b>을 기준으로 확인해야 합니다.</div>
+    <div class="philosophy-card"><div class="ph-title">관리는 성과의 시작입니다</div><div class="ph-body">고객을 위해 고민한 것은 기록으로 남겨야 합니다.<br>기록이 쌓이면 관리가 되고, 관리가 쌓이면 신뢰가 됩니다.<br>WD WAVE는 그 신뢰가 정직한 성과로 이어지는 구조를 만듭니다.</div></div>
+    <div class="basic-nb"><svg class="ei" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 10.8V4h6v6.8l2 3.2H7z"/></svg> 이 화면의 메모만으로 보장 여부나 보험금 지급 여부를 판단하지 않습니다.</div>
+    <div class="warn"><div class="t"><svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 비저장 · 개인정보 주의</div><ul><li>현재 버전은 저장되지 않는 비저장 복사형입니다. 필요한 내용은 복사해서 별도로 보관하세요.</li><li>주민번호·병력 상세·증권번호·계좌 등 민감정보는 입력하지 마세요.</li></ul></div>
+
+    <div class="frm" style="margin-top:6px;">
+      <div class="fld"><label>고객명</label><input id="pm_name" placeholder="예: 김○○"></div>
+      <div class="fld"><label>관계</label><select id="pm_rel"><option value="">선택</option><option>본인</option><option>배우자</option><option>부모</option><option>자녀</option><option>지인</option><option>고객</option><option>기타</option></select></div>
+      <div class="fld"><label>연락처</label><input id="pm_contact" placeholder="화면에서만 사용 · 저장 안 됨"></div>
+      <div class="fld"><label>생년 / 연령대</label><input id="pm_age" placeholder="예: 1975 / 40대"></div>
+      <div class="fld"><label>상담 경로</label><input id="pm_route" placeholder="예: 지인 소개 / 기존고객 / 온라인"></div>
+      <div class="fld"><label>계약자 / 피보험자 구분</label><select id="pm_role"><option value="">선택</option><option>계약자=피보험자</option><option>계약자≠피보험자</option><option>모름</option></select></div>
+      <div class="fld"><label>보험사</label><input id="pm_insurer" placeholder="예: 메리츠 / KB"></div>
+      <div class="fld"><label>상품명</label><input id="pm_product" placeholder="예: ○○종합보험"></div>
+      <div class="fld"><label>가입일</label><input type="date" id="pm_join"></div>
+      <div class="fld"><label>만기일 / 보장기간</label><input id="pm_maturity" placeholder="예: 2045-01 또는 100세"></div>
+      <div class="fld"><label>월 보험료</label><input id="pm_premium" placeholder="예: 8만원"></div>
+      <div class="fld"><label>납입기간</label><input id="pm_payperiod" placeholder="예: 20년납"></div>
+      <div class="fld"><label>갱신 여부</label><select id="pm_renew"><option value="">선택</option><option>갱신형</option><option>비갱신형</option><option>혼합</option><option>모름</option></select></div>
+      <div class="fld"><label>납입 상태</label><select id="pm_status"><option value="">선택</option><option>납입 중</option><option>완납</option><option>실효 의심</option><option>해지</option><option>모름</option></select></div>
+      <div class="fld"><label>다음 점검일</label><input type="date" id="pm_next"></div>
+      <div class="fld"><label>확인 필요</label><select id="pm_check"><option value="">선택</option><option>약관 확인</option><option>원수사 전산 확인</option><option>고객 인증 필요</option><option>대표 확인 필요</option></select></div>
+      <div class="fld full"><label>주요 보장 메모</label><textarea id="pm_coverage" placeholder="예: 암 진단비 / 실손 / 입원·수술"></textarea></div>
+      <div class="fld full"><label>가입 이유</label><textarea id="pm_join_reason" placeholder="왜 가입했는지"></textarea></div>
+      <div class="fld full"><label>선택 이유</label><textarea id="pm_choice_reason" placeholder="왜 이 상품·보험사를 골랐는지"></textarea></div>
+    </div>
+    <div class="btn-row" style="margin-top:4px;">
+      <button class="btn btn-p" onclick="pmAdd()">+ 메모 추가</button>
+      <button class="btn btn-g" onclick="pmReset()">입력 초기화</button>
+    </div>
+
+    <div class="std-sub-h" style="margin-top:22px;display:flex;justify-content:space-between;align-items:center;">
+      <span><svg class="ei" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg> 계약고객 목록</span>
+      <button class="btn btn-g" style="padding:8px 13px;font-size:12px;" onclick="pmCopyAll()"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 전체 복사</button>
+    </div>
+    <div class="pm-list" id="pm_list"></div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+<!-- 플로팅 업무일지 (로그인 후 app-screen 안에서만 노출) -->
+<button id="wl-fab" class="wl-fab" onclick="rcOpen()" title="빠른 기록센터" aria-label="빠른 기록센터"><svg viewBox="0 0 24 24" style="width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.5.5 1 1.2 1 2h6c0-.8.5-1.5 1-2A6 6 0 0 0 12 3"/></svg></button>
+<div id="wl-panel" class="wl-panel">
+  <div class="wl-head">
+    <span class="wl-title"><svg class="ei" viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.5.5 1 1.2 1 2h6c0-.8.5-1.5 1-2A6 6 0 0 0 12 3"/></svg> 빠른 기록센터<span class="rc-sub">오늘 할 일, 보험일기, 퀵메모를 빠르게 남깁니다.</span></span>
+    <button class="wl-x" onclick="rcClose()" aria-label="닫기"><svg class="ei" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="rc-tabs">
+    <button class="rc-tab on" data-rc="task" onclick="rcSwitch('task')">오늘의 할 일</button>
+    <button class="rc-tab" data-rc="diary" onclick="rcSwitch('diary')">보험일기</button>
+    <button class="rc-tab" data-rc="memo" onclick="rcSwitch('memo')">퀵메모</button>
+  </div>
+  <div class="wl-body">
+
+    <!-- 탭1: 오늘의 할 일 -->
+    <div class="rc-pane on" id="rc-task">
+      <div class="rc-hint">오늘 해야 할 상담, 고객관리, 계약 확인 일을 짧게 남겨두세요.</div>
+      <div class="rc-fld"><label>제목</label><input id="tk_title" placeholder="할 일 제목"></div>
+      <div class="rc-row">
+        <div class="rc-fld"><label>시간</label><input id="tk_time" placeholder="예: 14:00"></div>
+        <div class="rc-fld"><label>대상자</label><input id="tk_target" placeholder="예: 김○○"></div>
+      </div>
+      <div class="rc-row">
+        <div class="rc-fld"><label>업무 유형</label><select id="tk_type"><option>상담</option><option>고객관리</option><option>계약관리</option><option>청구</option><option>보험일기</option><option>기타</option></select></div>
+        <div class="rc-fld"><label>상태</label><select id="tk_status"><option>예정</option><option>진행중</option><option>완료</option></select></div>
+      </div>
+      <div class="rc-fld"><label>메모</label><textarea id="tk_memo" placeholder="간단 메모"></textarea></div>
+      <div class="rc-note">임시 기록형 도구입니다. 중요한 내용은 복사해두면 안전하게 보관할 수 있어요. 새로고침하면 화면 입력 내용은 사라집니다.</div>
+      <div class="rc-btns">
+        <button class="btn btn-p" onclick="taskAdd()">+ 할 일 추가</button>
+        <button class="btn btn-g" onclick="taskReset()">입력 비우기</button>
+        <button class="btn btn-g" onclick="taskCopyAll()">할 일 전체 복사</button>
+      </div>
+    </div>
+
+    <!-- 탭2: 보험일기 (기존 wl 유지) -->
+    <div class="rc-pane" id="rc-diary">
+      <div class="rc-hint">보험 이야기, 상담 기회, 가족·지인 보험 점검처럼 나중에 정리할 내용을 남기는 공간입니다.</div>
+      <div class="wl-q">오늘 일상 속에서 어떤 보험 이야기가 있었나요?</div>
+      <div class="wl-q-sub">가볍게 적어두면 나중에 상담 기회, 고객 안내문, 대표 확인, 콘텐츠 소재로 정리할 수 있습니다.</div>
+      <div class="wl-type">
+        <button onclick="wlPickType('오늘의 보험 이야기',this)"><svg class="ei" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 20l1-4.2A8.5 8.5 0 1 1 21 11.5"/></svg> 오늘의 보험 이야기</button>
+        <button onclick="wlPickType('내·가족 보험 점검',this)"><svg class="ei" viewBox="0 0 24 24"><circle cx="8" cy="9" r="2.5"/><circle cx="16" cy="9" r="2.5"/><path d="M3 19v-.5a4 4 0 0 1 8 0V19M13 19v-.5a4 4 0 0 1 8 0V19"/></svg> 내·가족 보험 점검</button>
+        <button onclick="wlPickType('지인 상담 기회',this)"><svg class="ei" viewBox="0 0 24 24"><path d="M9 17H7A5 5 0 0 1 7 7h1"/><path d="M15 7h2a5 5 0 0 1 0 10h-1"/><path d="M8 12h8"/></svg> 지인 보험 상담 기회</button>
+      </div>
+      <div class="wl-fld"><label>작성자</label><input id="wl_author" placeholder="작성자"></div>
+      <div class="wl-row">
+        <div class="wl-fld"><label>카테고리</label><select id="wl_cat">
+          <option>상담</option><option>계약</option><option>청구</option><option>전산</option><option>가망고객</option><option>아이디어</option><option>시스템</option><option>기타</option>
+        </select></div>
+        <div class="wl-fld"><label>생성 날짜</label><input type="date" id="wl_date"></div>
+      </div>
+      <div class="wl-fld"><label>제목</label><input id="wl_title" placeholder="한 줄 제목"></div>
+      <div class="wl-fld"><label>내용</label><textarea id="wl_content" placeholder="들은 이야기·느낀 점·점검할 보험·상담 기회"></textarea></div>
+      <div class="wl-fld"><label>다음 행동</label><select id="wl_next">
+        <option>기록만 하기</option><option>상담 후보로 보기</option><option>나중에 연락하기</option><option>보장점검 제안하기</option><option>대표 확인 필요</option><option>콘텐츠 소재로 보관</option>
+      </select></div>
+      <label class="wl-chk"><input type="checkbox" id="wl_flag"> 대표 확인 필요</label>
+      <div class="wl-note">임시 기록형 도구입니다. 중요한 내용은 복사해두면 안전하게 보관할 수 있어요. 새로고침하면 화면 입력 내용은 사라집니다.</div>
+      <div class="wl-btns">
+        <button class="btn btn-p" onclick="wlAdd()">+ 메모 추가</button>
+        <button class="btn btn-g" onclick="wlCopy()">복사</button>
+        <button class="btn btn-g" onclick="wlClear()">비우기</button>
+      </div>
+    </div>
+
+    <!-- 탭3: 퀵메모 -->
+    <div class="rc-pane" id="rc-memo">
+      <div class="rc-hint">짧게 떠오른 생각이나 고객에게 들은 말을 빠르게 남기는 공간입니다. 길게 정리할 보험 이야기는 보험일기에 남기세요.</div>
+      <div class="rc-fld"><label>메모 제목</label><input id="mm_title" placeholder="메모 제목"></div>
+      <div class="rc-fld"><label>메모 내용</label><textarea id="mm_content" placeholder="떠오른 생각·들은 말·확인할 것"></textarea></div>
+      <div class="rc-row">
+        <div class="rc-fld"><label>메모 유형</label><select id="mm_type"><option>고객에게 들은 말</option><option>상담 아이디어</option><option>확인 필요</option><option>콘텐츠 소재</option><option>대표 확인</option><option>기타</option></select></div>
+        <div class="rc-fld"><label>연결 업무</label><select id="mm_link"><option>상담</option><option>고객관리</option><option>계약관리</option><option>보험일기</option><option>청구</option><option>기타</option></select></div>
+      </div>
+      <div class="rc-note">임시 기록형 도구입니다. 중요한 내용은 복사해두면 안전하게 보관할 수 있어요. 새로고침하면 화면 입력 내용은 사라집니다.</div>
+      <div class="rc-btns">
+        <button class="btn btn-p" onclick="memoAdd()">+ 퀵메모 추가</button>
+        <button class="btn btn-g" onclick="memoReset()">입력 비우기</button>
+        <button class="btn btn-g" onclick="memoCopy()">퀵메모 복사</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /app-screen -->
+
+<div id="toast" role="status" aria-live="polite"></div>
+<footer>WD 우리동네 보험관리 키트 v1.14 · 로그인·고객관리 저장형 1단계 · 상담·계약·기록센터 저장은 2단계 예정</footer>
+
+<script>
+/* ── v0.7 보험 기초 상담 데이터 (특정 상품 추천 아님 · 지급/보장 단정 금지) ── */
+var INSUR_GROUPS=[
+ {g:'보험 구조', open:true, items:[
+  {k:'life_loss', t:'생명보험 vs 손해보험', d:'생명보험은 주로 사람의 생명·건강(사망·진단 등)에 대비하고, 손해보험은 실제로 발생한 손해(의료비·재물·배상 등)를 보상하는 구조입니다.\n같은 듯 보장 방식과 약관이 다르므로, 무엇에 대비하려는지에 따라 맞는 쪽이 달라집니다.', q:'지금 가장 걱정되는 부분이 생명·건강 쪽인가요, 실제 비용·손해 쪽인가요?'},
+  {k:'protect_save', t:'보장성 vs 저축성', d:'보장성보험은 사고·질병 같은 위험에 대비하는 데 초점이 있고, 저축성보험은 만기 환급·자금 마련 성격이 강합니다.\n목적이 다르므로, 보장이 필요한지 저축이 필요한지 먼저 정리하는 것이 좋습니다.', q:'지금 필요하신 게 위험 대비(보장)인가요, 자금 마련(저축)인가요?'},
+  {k:'renew_vs', t:'갱신형 vs 비갱신형', d:'갱신형은 처음 보험료가 낮을 수 있지만 일정 기간마다 다시 계산되어 오를 수 있습니다.\n비갱신형은 처음 보험료가 높을 수 있지만 납입기간 동안 크게 변하지 않아 예측이 쉽습니다.\n지금 보험료만 보지 말고 앞으로의 변화까지 함께 보는 것이 중요합니다.', q:'보험료가 오를 수 있어도 시작 부담이 낮은 쪽이 좋으신가요, 일정하게 유지되는 쪽이 좋으신가요?'},
+  {k:'surr_vs', t:'무해지 vs 표준형', d:'무해지형은 납입 중 해지하면 환급금이 없거나 적은 대신 보험료를 낮춘 구조입니다.\n표준형은 보험료가 높을 수 있지만 중간 해지 시 환급 구조가 상대적으로 안정적입니다.\n중간에 해지할 가능성이 낮은 분께 무해지형이 맞는지 확인이 필요합니다.', q:'중간에 해지할 가능성이 있으신가요, 끝까지 유지할 계획이신가요?'},
+  {k:'exam_vs', t:'일반심사 vs 간편심사', d:'일반심사는 건강 고지 항목이 많지만 조건이 좋을 수 있고, 간편심사는 병력·약 복용 이력이 있어도 간단한 질문으로 가입할 수 있는 대신 보험료가 높을 수 있습니다.\n어느 쪽이 유리한지는 건강 상태에 따라 다르므로 비교가 필요합니다.', q:'최근 병원 진료나 약 복용 이력이 있으신가요?'},
+  {k:'notice', t:'고지의무', d:'고지의무는 청약 전 병원 진료·검사·약 복용·치료 이력 등을 사실대로 알리는 것입니다.\n정확한 고지는 나중에 보험금을 안전하게 받기 위한 과정이며, 누락 시 불이익이 생길 수 있습니다.', q:'최근 5년 이내 진료·검사·약 복용·입원·수술 이력이 있으신가요?'},
+  {k:'exempt', t:'면책기간·감액기간', d:'면책기간은 가입 후 일정 기간 보장이 되지 않는 기간이고, 감액기간은 일정 기간 안에 보험금이 줄어 지급되는 기간입니다.\n담보·상품마다 기간과 조건이 다르므로 약관에서 반드시 확인해야 합니다.', q:'(약관 확인 필요) 이 담보의 면책·감액기간을 함께 확인해볼까요?'}
+ ]},
+ {g:'납입·환급 구조', open:false, items:[
+  {k:'premium', t:'보험료', d:'보험료는 지금 낼 수 있는 금액도 중요하지만, 앞으로 계속 유지할 수 있는지도 함께 봐야 합니다.\n보험은 오래 유지해야 의미가 있어, 생활비와 예산 안에서 무리 없는 선을 찾는 것이 중요합니다.', q:'매월 부담 없이 오래 유지할 수 있는 보험료는 어느 정도인가요?'},
+  {k:'pay_period', t:'납입기간', d:'납입기간은 보험료를 내는 기간입니다(예: 10년·20년납).\n짧으면 매월 부담이 크고, 길면 총 납입액이 늘 수 있어 생활 계획에 맞게 보는 것이 좋습니다.', q:'보험료를 몇 년 동안 납입하는 게 부담이 적으실까요?'},
+  {k:'cover_period', t:'보장기간', d:'보장기간은 보장을 받는 기간입니다(예: 80세·100세 만기·종신).\n납입기간과 다를 수 있으므로, 언제까지 보장받고 싶은지를 기준으로 확인합니다.', q:'언제까지 보장받는 것이 안심이 되실까요?'},
+  {k:'month_year', t:'월납·연납', d:'월납은 매월, 연납은 1년에 한 번 납입하는 방식입니다.\n연납이 약간 유리할 수 있지만 목돈이 필요해, 납입 흐름에 맞는 쪽을 고르면 됩니다.', q:'매월 나눠 내는 게 편하신가요, 1년에 한 번이 편하신가요?'},
+  {k:'full_short', t:'전기납·단기납', d:'전기납은 보장기간 내내 납입하고, 단기납은 정해진 기간만 내고 이후 보장이 이어지는 구조입니다.\n총 납입액과 매월 부담이 달라지므로 비교가 필요합니다.', q:'납입을 일찍 끝내는 쪽이 좋으신가요, 나눠 내는 쪽이 좋으신가요?'},
+  {k:'pure', t:'순수보장형', d:'순수보장형은 만기 환급금이 없거나 적은 대신 보험료가 낮은 구조입니다.\n환급보다 보장에 집중하고 싶은 경우 맞는지 확인합니다.', q:'만기 환급보다 보험료를 낮추는 것이 더 중요하신가요?'},
+  {k:'maturity', t:'만기환급형', d:'만기환급형은 만기까지 유지하면 낸 보험료의 일부 또는 전부를 돌려받을 수 있는 구조로, 보험료가 높은 편입니다.\n환급 조건은 약관에 따라 다르므로 확인이 필요합니다.', q:'보험료가 더 들더라도 만기에 돌려받는 구조를 원하시나요?'},
+  {k:'surrender', t:'해지환급금', d:'해지환급금은 중간에 해지할 때 돌려받는 금액입니다.\n납입 초기에는 적거나 없을 수 있고, 상품·시점에 따라 크게 다르므로 약관과 예시표로 확인해야 합니다.', q:'(약관 확인 필요) 중간 해지 가능성을 함께 살펴볼까요?'},
+  {k:'nosurr_type', t:'무해지환급형', d:'무해지환급형은 납입 중 해지 시 환급금이 없거나 매우 적은 대신 보험료를 낮춘 구조입니다.\n끝까지 유지할 수 있을 때 유리하므로, 유지 가능성을 함께 봐야 합니다.', q:'끝까지 유지할 계획이 확실하신가요?'},
+  {k:'lowsurr_type', t:'저해지환급형', d:'저해지환급형은 납입 기간 중 환급금을 낮춘 대신 보험료를 줄인 구조로, 무해지형과 표준형의 중간 성격입니다.\n환급 조건이 상품마다 다르므로 비교가 필요합니다.', q:'보험료와 중간 환급 중 어느 쪽을 더 중요하게 보시나요?'}
+ ]},
+ {g:'담보별 설명', open:false, items:[
+  {k:'death', t:'사망', d:'사망보장은 피보험자가 사망했을 때 약관에서 정한 금액을 지급하는 보장입니다.\n일반사망·질병사망·재해사망 등 원인에 따라 보장이 나뉘므로 약관 기준 확인이 필요합니다.', q:'남은 가족의 생활 보장이 필요한 상황인가요?'},
+  {k:'disability', t:'후유장해', d:'후유장해는 질병·상해로 약관상 장해 상태가 남았을 때 지급률에 따라 보험금을 받는 보장입니다.\n장해 분류와 지급률 기준이 약관마다 다릅니다.', q:'(약관 확인 필요) 장해 지급률 기준을 함께 확인해볼까요?'},
+  {k:'cancer', t:'암', d:'암 진단비는 약관에서 정한 암으로 진단 확정 시 정해진 금액을 받는 보장입니다.\n일반암·소액암·유사암 분류, 면책·감액기간이 상품마다 달라 확인이 필요합니다.', q:'가족력이나 특별히 걱정되는 부분이 있으신가요?'},
+  {k:'brain', t:'뇌혈관질환', d:'뇌졸중·뇌출혈·뇌혈관질환 등 보장 범위가 상품마다 다릅니다.\n어디까지 보장되는지(범위)와 진단 기준을 약관에서 확인해야 합니다.', q:'(약관 확인 필요) 보장 범위가 어디까지인지 함께 볼까요?'},
+  {k:'heart', t:'심장질환', d:'급성심근경색·허혈성심장질환 등 보장 범위가 상품마다 다릅니다.\n범위가 넓을수록 보험료가 오를 수 있어 비교가 필요합니다.', q:'(약관 확인 필요) 심장 담보의 보장 범위를 확인해볼까요?'},
+  {k:'dementia', t:'치매', d:'치매보장은 약관에서 정한 치매 진단(중증도 척도 등) 기준 충족 시 지급되는 보장입니다.\n경증·중증 구분과 진단 기준이 상품마다 다릅니다.', q:'부모님 등 가족 중 치매를 걱정하시는 분이 있으신가요?'},
+  {k:'silson', t:'실손의료비', d:'실손의료비는 실제로 부담한 의료비 일부를 보장하는 보험입니다.\n모든 병원비가 전부 보장되는 것은 아니며, 자기부담금·보장 제외 항목을 약관에서 확인해야 합니다.', q:'실손보험은 현재 유지 중이신가요?'},
+  {k:'surgery', t:'수술비', d:'수술비는 약관에서 정한 수술을 받았을 때 지급 여부가 결정되는 보장입니다.\n수술명·수술분류표·약관 기준에 따라 달라집니다.', q:'과거 수술 이력이 있으신가요?'},
+  {k:'hospital', t:'입원비', d:'입원비는 입원 일수나 약관 기준에 따라 지급 여부가 결정됩니다.\n입원 사유·기간·면책기간을 함께 확인해야 합니다.', q:'최근 입원하신 적이 있으신가요?'},
+  {k:'treat', t:'치료비', d:'치료비는 통원·처치 등 약관에서 정한 치료에 대해 지급되는 보장입니다.\n보장 항목과 한도가 상품마다 다르므로 확인이 필요합니다.', q:'자주 가는 진료나 통원이 있으신가요?'},
+  {k:'driver', t:'운전자', d:'운전자보험은 교통사고 시 형사·행정·민사 관련 비용(벌금·변호사선임·교통사고처리지원금 등)을 보장합니다.\n자동차보험과 보장 영역이 다르므로 중복·공백을 확인합니다.', q:'운전을 자주 하시나요? 현재 운전자보험이 있으신가요?'},
+  {k:'legal', t:'법률·배상책임', d:'일상생활배상책임 등은 일상에서 타인에게 입힌 손해를 약관 기준으로 보상합니다.\n자기부담금·보장 대상이 정해져 있어 확인이 필요합니다.', q:'아이·반려동물 등 일상 배상 위험이 있으신가요?'},
+  {k:'dental', t:'치아·화상·골절', d:'치아(보철·충전 등)·화상·골절 등은 약관에서 정한 진단·처치 기준에 따라 지급되는 보장입니다.\n면책기간·보장 범위가 상품마다 다릅니다.', q:'(약관 확인 필요) 해당 담보의 면책·보장 범위를 확인해볼까요?'}
+ ]}
+];
+var INSUR_BASIC={};
+INSUR_GROUPS.forEach(function(grp){grp.items.forEach(function(it){INSUR_BASIC[it.k]=it;});});
+var INSUR_BAN=['무조건 좋습니다','이게 제일 좋습니다','무조건 나옵니다','보험료는 절대 안 오릅니다','다 보장됩니다','걱정하지 마세요, 다 됩니다'];
+var INSUR_ALT=['고객님 상황에 맞는지 함께 확인해보겠습니다.','약관 기준에 따라 달라질 수 있습니다.','장단점을 비교해서 선택하시는 게 좋습니다.','유지 가능성을 함께 봐야 합니다.'];
+var _csCur='';
+function csInitGroups(){
+  var box=document.getElementById('basic_groups'); if(!box||box.children.length) return;
+  INSUR_GROUPS.forEach(function(grp,gi){
+    var cards=grp.items.map(function(it){return '<button class="basic-card" onclick="csBasic(\''+it.k+'\',this)">'+csEsc(it.t)+'</button>';}).join('');
+    var wrap=document.createElement('div'); wrap.className='bg-group';
+    wrap.innerHTML='<button class="bg-head'+(grp.open?' open':'')+'" onclick="csGroupToggle('+gi+',this)"><span>'+csEsc(grp.g)+' <span style="font-weight:600;color:var(--muted);font-size:11px;">('+grp.items.length+')</span></span><span class="bg-arrow">▾</span></button>'
+      +'<div class="bg-body'+(grp.open?' open':'')+'"><div class="basic-grid">'+cards+'</div></div>';
+    box.appendChild(wrap);
+  });
+}
+function csGroupToggle(gi,head){
+  var body=head.nextElementSibling;
+  if(body){ body.classList.toggle('open'); head.classList.toggle('open'); }
+}
+function csEsc(s){return String(s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}).replace(/\n/g,'<br>');}
+function csBasic(key,btn){
+  _csCur=key;
+  document.querySelectorAll('.basic-card').forEach(function(b){b.classList.remove('on');});
+  if(btn) btn.classList.add('on');
+  var d=INSUR_BASIC[key]; if(!d) return;
+  var box=document.getElementById('cs_box'); box.classList.remove('empty');
+  box.innerHTML=''
+    +'<div class="bb-title">'+csEsc(d.t)+'</div>'
+    +'<div class="bb-sec"><div class="bb-h"><svg class="ei" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 20l1-4.2A8.5 8.5 0 1 1 21 11.5"/></svg> 고객에게 쉽게 설명</div><div class="bb-txt">'+csEsc(d.d)+'</div></div>'
+    +'<div class="bb-sec"><div class="bb-h"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 1 1 3.6 2.2c-.8.4-1.1.9-1.1 1.8"/><path d="M12 17h.01"/></svg> 설계사가 확인할 질문</div><div class="bb-txt">'+csEsc(d.q)+'</div></div>'
+    +'<div class="bb-warn">'
+      +'<div class="bb-h" style="color:var(--red);"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg> 주의할 표현</div><div class="bb-ban">'+INSUR_BAN.map(function(x){return '· '+csEsc(x);}).join('<br>')+'</div>'
+      +'<div class="bb-h" style="color:var(--green);margin-top:9px;"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> 대신 이렇게</div><div class="bb-alt">'+INSUR_ALT.map(function(x){return '· '+csEsc(x);}).join('<br>')+'</div>'
+    +'</div>'
+    +'<div class="btn-row" style="margin-top:13px;">'
+      +'<button class="btn btn-p" onclick="csCopyDesc()"><svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> 고객 설명문 복사</button>'
+      +'<button class="btn btn-g" onclick="csCopyQ()"><svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 1 1 3.6 2.2c-.8.4-1.1.9-1.1 1.8"/><path d="M12 17h.01"/></svg> 추가 질문 복사</button>'
+    +'</div>';
+}
+function csCopyDesc(){ if(!_csCur){showToast('카드를 먼저 선택하세요');return;} copyText(INSUR_BASIC[_csCur].d,'고객 설명문을 복사했습니다'); }
+function csCopyQ(){ if(!_csCur){showToast('카드를 먼저 선택하세요');return;} copyText(INSUR_BASIC[_csCur].q,'추가 질문을 복사했습니다'); }
+
+/* ── v0.6 설계사 전체 로그인 (메모리만, localStorage·sessionStorage 미사용) ──
+   계정은 정적 배열. 비밀번호 변경 기능은 이번 버전 제외. */
+var _currentUser = '';
+async function appLogin(){
+  var email=(document.getElementById('login-id').value||'').trim();
+  var pw=(document.getElementById('login-pw').value||'').trim();
+  if(!email||!pw){ showToast('이메일과 비밀번호를 입력해 주세요'); return; }
+  if(!sb){ showToast('서버 연결이 준비되지 않았습니다'); return; }
+  showToast('로그인 중...');
+  var res=await sb.auth.signInWithPassword({email:email, password:pw});
+  if(res.error){ showToast('이메일 또는 비밀번호가 맞지 않습니다'); return; }
+  var uid=res.data.user.id;
+  var pr=await sb.from('kit_profiles').select('name,role').eq('id',uid).single();
+  if(pr.error||!pr.data){ showToast('계정 권한 정보를 찾을 수 없습니다'); await sb.auth.signOut(); return; }
+  window._currentUid=uid; window._currentRole=pr.data.role; window._currentUser=pr.data.name; _currentUser=pr.data.name;
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-screen').style.display='block';
+  var ht=document.getElementById('hero-title'), hs=document.getElementById('hero-sub');
+  if(ht) ht.textContent=pr.data.name+'님, 어떤 보험 업무를 시작할까요?';
+  if(hs) hs.textContent='고객과의 상담에서 필요한 정보를 선택하고, 체계적으로 기록하여 업무에 활용하세요.';
+  var pn=document.getElementById('profile-name'); if(pn) pn.textContent=pr.data.name+(pr.data.role==='admin'?' (관리자)':'');
+  document.getElementById('login-pw').value='';
+  applyRoleUI();
+  showTab('home');
+  if(typeof rcRenderHome==='function') rcRenderHome();
+}
+var _PROFILES=[];
+function applyRoleUI(){
+  var isAdmin=(window._currentRole==='admin');
+  var frm=document.getElementById('ps_form_wrap'); if(frm) frm.style.display='';
+  var note=document.getElementById('ps_admin_note'); if(note) note.style.display=isAdmin?'':'none';
+  ['ps_owner_wrap','ps_filter','qc_owner_wrap','hq_owner_wrap'].forEach(function(id){ var e=document.getElementById(id); if(e) e.style.display=isAdmin?'':'none'; });
+  loadProfiles();
+}
+async function loadProfiles(){
+  if(!sb) return;
+  var res=await sb.from('kit_profiles').select('id,name');
+  if(res.error){ console.error('담당자 목록 로드 실패', res.error); return; }
+  _PROFILES=res.data||[];
+  var optSel='<option value="">담당자 선택</option>'+_PROFILES.map(function(p){return '<option value="'+p.id+'">'+psEsc(p.name)+'</option>';}).join('');
+  ['ps_owner','qc_owner','hq_owner'].forEach(function(id){ var s=document.getElementById(id); if(s) s.innerHTML=optSel; });
+  var f=document.getElementById('ps_filter');
+  if(f){ f.innerHTML='<option value="">전체 고객</option>'+_PROFILES.map(function(p){return '<option value="'+p.id+'">'+psEsc(p.name)+' 고객</option>';}).join(''); }
+}
+function profName(uid){ for(var i=0;i<_PROFILES.length;i++){ if(_PROFILES[i].id===uid) return _PROFILES[i].name; } return ''; }
+async function appLogout(){
+  if(sb) await sb.auth.signOut();
+  window._currentUid=''; window._currentRole=''; window._currentUser=''; _currentUser='';
+  document.getElementById('app-screen').style.display='none';
+  document.getElementById('login-screen').style.display='block';
+  showToast('로그아웃되었습니다');
+}
+
+/* ── 고객관리 (Supabase 저장형 · kit_customers · RLS로 본인/관리자 분리) ── */
+function psEsc(s){return String(s||'').replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function psVal(id){var e=document.getElementById(id);return e?(e.value||'').trim():'';}
+function psChk(id){var e=document.getElementById(id);return e?!!e.checked:false;}
+var _CUSTOMERS=[];
+async function psAdd(){
+  var name=psVal('ps_name');
+  if(!name){ showToast('고객명을 입력해 주세요'); return; }
+  if(!sb){ showToast('서버 연결이 준비되지 않았습니다'); return; }
+  var isAdmin=(window._currentRole==='admin');
+  var row={
+    customer_name:name, phone:psVal('ps_tel')||null, birth_year:psVal('ps_birth')||null,
+    gender:psVal('ps_gender')||null, relation:psVal('ps_rel')||null,
+    consult_route:psVal('ps_route')||null, address_summary:psVal('ps_addr')||null,
+    customer_status:psVal('ps_status')||null, interest_situation:psVal('ps_interest')||null,
+    next_action:psVal('ps_next')||null, next_contact_date:psVal('ps_nextdate')||null,
+    memo:psVal('ps_memo')||null, need_id_verify:psChk('ps_verify'), need_insurer_check:psChk('ps_insurer')
+  };
+  if(isAdmin){
+    var ow=psVal('ps_owner');
+    if(!ow){ showToast('담당자를 선택해 주세요'); return; }
+    row.owner_id=ow;
+  }
+  var res=await sb.from('kit_customers').insert(row);
+  if(res.error){ showToast('저장 실패: '+res.error.message); console.error(res.error); return; }
+  psReset(); showToast('고객을 등록했습니다'); psRender();
+}
+function psReset(){
+  ['ps_name','ps_tel','ps_birth','ps_route','ps_addr','ps_nextdate','ps_memo'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  ['ps_owner','ps_gender','ps_rel','ps_status','ps_interest','ps_next'].forEach(function(id){var e=document.getElementById(id);if(e)e.selectedIndex=0;});
+  ['ps_verify','ps_insurer'].forEach(function(id){var e=document.getElementById(id);if(e)e.checked=false;});
+}
+async function psRender(){
+  var box=document.getElementById('ps_list'); if(!box) return;
+  if(!sb){ box.innerHTML='<div class="ps-empty">서버 연결이 준비되지 않았습니다.</div>'; return; }
+  if(!_PROFILES.length){ await loadProfiles(); }
+  var res=await sb.from('kit_customers').select('*').order('created_at',{ascending:false});
+  if(res.error){ box.innerHTML='<div class="ps-empty">불러오기 실패: '+psEsc(res.error.message)+'</div>'; return; }
+  _CUSTOMERS=res.data||[];
+  var q=psVal('ps_search').toLowerCase();
+  var list=_CUSTOMERS;
+  if(q){ list=list.filter(function(c){ return ((c.customer_name||'')+(c.phone||'')+(c.memo||'')).toLowerCase().indexOf(q)>=0; }); }
+  var fil=psVal('ps_filter');
+  if(fil){ list=list.filter(function(c){ return c.owner_id===fil; }); }
+  var cnt=document.getElementById('ps_count'); if(cnt) cnt.textContent='전체 '+_CUSTOMERS.length+'명';
+  if(!list.length){ box.innerHTML='<div class="cm-empty">'+(q||fil?'조건에 맞는 고객이 없습니다.':'아직 등록된 고객이 없습니다. 위에서 등록해 보세요.')+'</div>'; return; }
+  var isAdmin=(window._currentRole==='admin');
+  box.innerHTML='';
+  list.forEach(function(p){
+    var el=document.createElement('div'); el.className='cm-cust';
+    var owner=profName(p.owner_id);
+    var meta=[];
+    if(p.birth_year) meta.push(psEsc(p.birth_year)+'년생');
+    if(p.gender) meta.push(psEsc(p.gender));
+    if(p.relation) meta.push(psEsc(p.relation));
+    var tags='';
+    if(p.interest_situation) tags+='<span class="cm-tag">'+psEsc(p.interest_situation)+'</span>';
+    if(p.next_action) tags+='<span class="cm-tag next">▶ '+psEsc(p.next_action)+'</span>';
+    if(p.need_id_verify) tags+='<span class="cm-tag flag">인증필요</span>';
+    if(p.need_insurer_check) tags+='<span class="cm-tag flag">전산확인</span>';
+    var foot=[];
+    if(p.address_summary) foot.push('📍 '+psEsc(p.address_summary));
+    if(p.next_contact_date) foot.push('🗓 '+psEsc(p.next_contact_date));
+    if(p.consult_route) foot.push('🔗 '+psEsc(p.consult_route));
+    el.innerHTML=
+      '<div class="cm-cust-top">'
+        +(owner?'<span class="cm-owner">담당 '+psEsc(owner)+'</span>':'<span></span>')
+        +(p.customer_status?'<span class="cm-tag st">'+psEsc(p.customer_status)+'</span>':'')
+      +'</div>'
+      +'<div class="cm-cust-name">'+psEsc(p.customer_name)+'</div>'
+      +(p.phone?'<div class="cm-cust-tel">'+psEsc(p.phone)+'</div>':'')
+      +(meta.length?'<div class="cm-cust-meta">'+meta.join(' · ')+'</div>':'')
+      +(tags?'<div class="cm-cust-tags">'+tags+'</div>':'')
+      +(p.memo?'<div class="cm-cust-memo">'+psEsc(p.memo)+'</div>':'')
+      +(foot.length?'<div class="cm-cust-foot">'+foot.map(function(f){return '<span>'+f+'</span>';}).join('')+'</div>':'')
+      +(isAdmin?'':'<button class="cm-del" onclick="psDelete(\''+p.id+'\')">삭제</button>');
+    box.appendChild(el);
+  });
+}
+async function psDelete(id){
+  if(!confirm('이 고객을 삭제할까요?')) return;
+  if(!sb){ showToast('서버 연결이 준비되지 않았습니다'); return; }
+  var res=await sb.from('kit_customers').delete().eq('id',id);
+  if(res.error){ showToast('삭제 실패: '+res.error.message); return; }
+  showToast('삭제했습니다'); psRender();
+}
+/* ── 빠른 고객등록 (기록센터 탭 · kit_customers 저장) ── */
+function qcVal(id){var e=document.getElementById(id);return e?(e.value||'').trim():'';}
+function qcChk(id){var e=document.getElementById(id);return e?!!e.checked:false;}
+async function qcAdd(){
+  var name=qcVal('qc_name');
+  if(!name){ showToast('고객명을 입력해 주세요'); return; }
+  if(!sb){ showToast('서버 연결이 준비되지 않았습니다'); return; }
+  var isAdmin=(window._currentRole==='admin');
+  var row={ customer_name:name, phone:qcVal('qc_tel')||null,
+    interest_situation:qcVal('qc_interest')||null, next_action:qcVal('qc_next')||null,
+    memo:qcVal('qc_memo')||null, need_id_verify:qcChk('qc_verify'), need_insurer_check:qcChk('qc_insurer') };
+  if(isAdmin){ var ow=qcVal('qc_owner'); if(!ow){ showToast('담당자를 선택해 주세요'); return; } row.owner_id=ow; }
+  var res=await sb.from('kit_customers').insert(row);
+  if(res.error){ showToast('저장 실패: '+res.error.message); console.error(res.error); return; }
+  qcReset(); showToast('고객을 등록했습니다 ([고객관리]에서 확인)'); if(typeof psRender==='function') psRender();
+}
+function qcReset(){
+  ['qc_name','qc_tel','qc_memo'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  ['qc_owner','qc_interest','qc_next'].forEach(function(id){var e=document.getElementById(id);if(e)e.selectedIndex=0;});
+  ['qc_verify','qc_insurer'].forEach(function(id){var e=document.getElementById(id);if(e)e.checked=false;});
+}
+
+/* ── 홈 우측 초간단 빠른 고객등록 (hq_ · kit_customers 저장 · 직원=본인 자동/관리자=선택) ── */
+async function hqAdd(){
+  var name=psVal('hq_name');
+  if(!name){ showToast('고객명을 입력해 주세요'); return; }
+  if(!sb){ showToast('서버 연결이 준비되지 않았습니다'); return; }
+  var isAdmin=(window._currentRole==='admin');
+  var row={ customer_name:name, phone:psVal('hq_tel')||null };
+  if(isAdmin){ var ow=psVal('hq_owner'); if(!ow){ showToast('담당자를 선택해 주세요'); return; } row.owner_id=ow; }
+  var res=await sb.from('kit_customers').insert(row);
+  if(res.error){ showToast('저장 실패: '+res.error.message); console.error(res.error); return; }
+  hqReset(); showToast('고객을 등록했습니다 ([고객관리]에서 확인)'); if(typeof psRender==='function') psRender();
+}
+function hqReset(){
+  ['hq_name','hq_tel'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  var o=document.getElementById('hq_owner'); if(o) o.selectedIndex=0;
+}
+
+/* ── v0.9 상황별 업무 가이드 (자료 대행 아님 · 만드는 방법 안내 · 저장 없음) ── */
+var GUIDE_DATA=[
+  {k:'proposal', ic:'<svg class="ei" viewBox="0 0 24 24"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/><path d="M14 6l3 3"/></svg>', t:'제안서 만드는 방법', when:'고객 니즈를 파악한 뒤 설계안을 제시할 때',
+   steps:['상담에서 니즈·예산·기존보험을 먼저 확인합니다.','설계·계약 메뉴에서 설계의뢰문을 작성해 매니저에게 전달합니다.','받은 설계안의 보험료·납입/보장기간·주요보장·갱신여부를 검토합니다.','보험 기초 카드(상담)로 고객 눈높이 설명을 준비합니다.'],
+   tips:['지급·보장을 단정하지 말고 "약관 조건 충족 시" 전제를 유지합니다.','특정 상품을 "무조건 좋다"로 권하지 않습니다.'], linkTab:'design', linkLabel:'설계·계약으로'},
+  {k:'after', ic:'<svg class="ei" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>', t:'계약 후 안내장 만드는 방법', when:'계약 완료 후 고객에게 핵심을 정리해드릴 때',
+   steps:['상품명·보험료·납입/보장기간·주요보장을 정리합니다.','청약 철회·품질보증 기간을 안내합니다.','다음 점검 시점과 문의 경로를 안내합니다.'],
+   tips:['보장 과장·지급 단정 표현을 쓰지 않습니다.'], linkTab:'lib', linkLabel:'문장·프롬프트로'},
+  {k:'katalk', ic:'<svg class="ei" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 20l1-4.2A8.5 8.5 0 1 1 21 11.5"/></svg>', t:'상담 후 고객 카톡 만드는 방법', when:'상담 직후 고객에게 정리 메시지를 보낼 때',
+   steps:['상담 방향을 한 줄로 정리합니다.','고객이 걱정한 부분을 그대로 적습니다.','다음 확인 사항을 안내합니다.','부담 없는 톤으로 마무리합니다.'],
+   tips:['"무조건/확정/당연히" 같은 표현은 피합니다.'], linkTab:'lib', linkLabel:'문장·프롬프트로'},
+  {k:'design_req', ic:'<svg class="ei" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg>', t:'설계의뢰문 만드는 방법', when:'매니저에게 설계를 의뢰할 때',
+   steps:['고객 개인정보는 최소화합니다(이니셜·요약).','희망보장·월 예산은 고객 말 그대로 적습니다.','고지사항은 상세 병력 대신 요약으로 적습니다.','매니저가 설계하기 쉽게 항목별로 정리합니다.'],
+   tips:['승인 확정처럼 보이는 표현은 쓰지 않습니다.'], linkTab:'design', linkLabel:'설계·계약 3단계로'},
+  {k:'underwrite', ic:'<svg class="ei" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>', t:'인수문의문 만드는 방법', when:'병력·직업 등으로 인수 가능 여부를 확인할 때',
+   steps:['고지 대상을 요약합니다(상세 병력은 금지, 요약).','직업·나이·희망 상품을 적습니다.','전산·연락처에서 담당 매니저를 확인합니다.','매니저에게 인수 가능 여부를 문의합니다.'],
+   tips:['"가입 가능"을 미리 단정하지 않습니다. 인수는 보험사 심사 결과입니다.'], linkTab:'hub', linkLabel:'전산·연락처로'},
+  {k:'silson', ic:'<svg class="ei" viewBox="0 0 24 24"><path d="M4 21V8l8-5 8 5v13"/><path d="M12 9v6M9 12h6"/></svg>', t:'실손24 안내하는 방법', when:'고객이 실손보험금을 직접 청구하도록 도울 때',
+   steps:['실손24는 고객이 직접 진행하는 것이 가장 안전하다고 안내합니다.','본인인증 → 진료내역 선택 → 서류 전자전송 → 보험사 접수 순서를 알려줍니다.','어려워하면 화면 기준으로 단계만 안내합니다.'],
+   tips:['"제가 청구해드릴게요" 같은 대행 표현은 쓰지 않습니다.','지급 여부는 약관·심사 결과에 따라 결정됨을 전제합니다.'], linkTab:'claim', linkLabel:'청구·문제보고로'},
+  {k:'hidden', ic:'<svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9l1.5 6L12 11l1.5 4L15 9M8 12h8"/></svg>', t:'숨은보험금 안내하는 방법', when:'고객이 숨은·미청구 보험금을 확인하려 할 때',
+   steps:['조회는 고객이 직접 할 수 있다고 안내합니다.','결과 해석·청구 가능성 검토는 별도 자문 영역임을 구분해 설명합니다.','필요하면 자문 진행 방식을 안내합니다.'],
+   tips:['청구 대행처럼 보이는 표현은 쓰지 않습니다.'], linkTab:'claim', linkLabel:'청구·문제보고로'},
+  {k:'claim_msg', ic:'<svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="m5 5 4 4M15 15l4 4M19 5l-4 4M9 15l-4 4"/></svg>', t:'보험금청구 안내문 만드는 방법', when:'고객의 청구 문의에 안전하게 안내할 때',
+   steps:['청구 유형을 확인합니다.','필요 서류는 확인 후 안내한다고 적습니다.','지급 여부는 약관·심사 결과에 따라 결정됨을 포함합니다.'],
+   tips:['"무조건 나옵니다 / 제가 받아드릴게요"는 금지입니다.'], linkTab:'claim', linkLabel:'청구·문제보고 3단계로'},
+  {k:'notice', ic:'<svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>', t:'고지사항 재확인 문장 만드는 방법', when:'청약 전 고지 누락을 방지할 때',
+   steps:['최근 병원 진료·약 복용·입원·수술 이력을 다시 확인합니다.','고지 의무와 누락 시 불이익을 정확히 안내합니다.','고객이 알린 내용을 요약해 기록합니다.'],
+   tips:['겁주지 말되, 고지 누락의 불이익은 정확히 전달합니다.'], linkTab:'lib', linkLabel:'문장·프롬프트로'},
+  {k:'riskcheck', ic:'<svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>', t:'위험표현 검사하는 방법', when:'고객에게 보낼 문장을 점검할 때',
+   steps:['작성한 고객 안내문을 준비합니다.','문장·프롬프트의 "금지표현 검사 프롬프트"를 복사합니다.','AI에 안내문을 넣어 위험 표현을 점검·교정합니다.'],
+   tips:['지급 단정·과장·오해·개인정보·민원 가능 표현을 중점 점검합니다.'], linkTab:'lib', linkLabel:'문장·프롬프트로'},
+  {k:'mgr', ic:'<svg class="ei" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L17 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>', t:'원수사 매니저 문의문 만드는 방법', when:'보험사 매니저에게 업무를 요청할 때',
+   steps:['보험사·건명·요청내용을 명확히 적습니다.','전산·연락처에서 담당 매니저를 확인합니다.','업무요청 문장을 복사해 전달합니다.'],
+   tips:['고객 민감정보는 최소화해 전달합니다.'], linkTab:'hub', linkLabel:'전산·연락처로'},
+  {k:'sites', ic:'<svg class="ei" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18"/></svg>', t:'금융/보험 사이트 찾기', when:'공식 조회·확인 사이트가 필요할 때',
+   steps:['실손 청구는 실손24(공식)에서 진행합니다.','보험사 공식 사이트·전산은 전산·연락처 허브에서 확인합니다.','공시·조회는 보험개발원·생명/손해보험협회·금융감독원 등 공식 기관을 이용합니다.'],
+   tips:['출처가 불확실한 사이트는 이용하지 않습니다. 정확한 주소는 전산·연락처 허브에 등록해 두고 쓰면 안전합니다.'], linkTab:'hub', linkLabel:'전산·연락처로'}
+];
+function gdEsc(s){return String(s||'').replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+function gdInit(){
+  var g=document.getElementById('gd_grid'); if(!g||g.children.length) return;
+  GUIDE_DATA.forEach(function(d){
+    var b=document.createElement('button'); b.className='gd-card';
+    b.onclick=function(){ gdShow(d.k,b); };
+    b.innerHTML='<span class="gi">'+d.ic+'</span><span class="gn">'+gdEsc(d.t)+'</span>';
+    g.appendChild(b);
+  });
+}
+function gdShow(key,btn){
+  var d=null; for(var i=0;i<GUIDE_DATA.length;i++){ if(GUIDE_DATA[i].k===key){ d=GUIDE_DATA[i]; break; } }
+  if(!d) return;
+  document.querySelectorAll('#gd_grid .gd-card').forEach(function(x){x.classList.remove('on');});
+  if(btn) btn.classList.add('on');
+  var box=document.getElementById('gd_box'); box.classList.remove('empty');
+  var steps=d.steps.map(function(s){return '<li>'+gdEsc(s)+'</li>';}).join('');
+  var tips=d.tips.map(function(s){return '<li>'+gdEsc(s)+'</li>';}).join('');
+  box.innerHTML=''
+    +'<div class="gd-title">'+d.ic+' '+gdEsc(d.t)+'</div>'
+    +'<div class="gd-when"><svg class="ei" viewBox="0 0 24 24"><path d="M12 21s-6-5.7-6-10a6 6 0 0 1 12 0c0 4.3-6 10-6 10"/><circle cx="12" cy="11" r="2.2"/></svg> '+gdEsc(d.when)+'</div>'
+    +'<div class="gd-h"><svg class="ei" viewBox="0 0 24 24"><path d="M7 3v18M17 3v18M7 8h10M7 13h10M7 18h10"/></svg> 만드는 단계</div><ol class="gd-steps">'+steps+'</ol>'
+    +'<div class="gd-h"><svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 체크포인트</div><ul class="gd-tips">'+tips+'</ul>'
+    +(d.linkTab?'<div class="gd-go"><button class="btn btn-p" onclick="gdGo(\''+d.linkTab+'\')">'+gdEsc(d.linkLabel)+' →</button></div>':'');
+}
+function gdGo(tab){ if(typeof showTab==='function') showTab(tab); }
+
+/* ── v1.1 업무일지 (비저장 · 세션 누적 · localStorage/sessionStorage/Supabase 미사용) ── */
+var WORK_LOGS = [];
+var _wlSeq = 1;
+function wlEsc(s){return String(s||'').replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function wlG(id){var e=document.getElementById(id);return e?(e.value||'').trim():'';}
+function wlToday(){var t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
+function wlToggle(){ var p=document.getElementById('wl-panel'); if(p.classList.contains('on')) wlClose(); else wlOpen(); }
+function wlOpen(){
+  var p=document.getElementById('wl-panel'); p.classList.add('on');
+  var a=document.getElementById('wl_author'); if(a && !a.value) a.value=(typeof _currentUser!=='undefined'?_currentUser:'')||'';
+  var d=document.getElementById('wl_date'); if(d && !d.value) d.value=wlToday();
+}
+function wlClose(){ document.getElementById('wl-panel').classList.remove('on'); }
+
+/* ── v1.9 빠른 기록센터 (비저장 · JS 메모리만) ── */
+var _rcLastTab='task';
+function rcOpen(tab){
+  var p=document.getElementById('wl-panel'); if(p) p.classList.add('on');
+  var a=document.getElementById('wl_author'); if(a && !a.value) a.value=(typeof _currentUser!=='undefined'?_currentUser:'')||'';
+  var d=document.getElementById('wl_date'); if(d && !d.value) d.value=wlToday();
+  rcSwitch(tab|| _rcLastTab ||'task');
+}
+function rcClose(){ var p=document.getElementById('wl-panel'); if(p) p.classList.remove('on'); }
+function rcSwitch(tab){
+  document.querySelectorAll('.rc-tab').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-rc')===tab); });
+  document.querySelectorAll('.rc-pane').forEach(function(p){ p.classList.remove('on'); });
+  var el=document.getElementById('rc-'+tab); if(el) el.classList.add('on');
+  _rcLastTab=tab;
+}
+/* 오늘의 할 일 */
+var TODAY_TASKS=[]; var _tkSeq=1;
+function tkG(id){var e=document.getElementById(id);return e?(e.value||'').trim():'';}
+function taskAdd(){
+  var t=tkG('tk_title'); if(!t){ showToast('할 일 제목을 입력하세요'); return; }
+  TODAY_TASKS.unshift({id:_tkSeq++,title:t,time:tkG('tk_time'),target:tkG('tk_target'),type:tkG('tk_type'),status:tkG('tk_status'),memo:tkG('tk_memo')});
+  taskReset(); taskRenderHome(); taskRenderCenter(); showToast('오늘의 할 일에 추가했습니다');
+}
+function taskReset(){ ['tk_title','tk_time','tk_target','tk_memo'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';}); var s=document.getElementById('tk_status');if(s)s.selectedIndex=0; var y=document.getElementById('tk_type');if(y)y.selectedIndex=0; }
+function taskFmt(o){ return '[오늘의 할 일] '+o.title+(o.time?' ('+o.time+')':'')+'\n유형: '+(o.type||'')+' / 상태: '+(o.status||'')+(o.target?' / 대상: '+o.target:'')+(o.memo?'\n메모: '+o.memo:''); }
+function taskCopyAll(){ if(!TODAY_TASKS.length){ showToast('복사할 할 일이 없습니다'); return; } copyText(TODAY_TASKS.map(taskFmt).join('\n\n'),'할 일 '+TODAY_TASKS.length+'건을 복사했습니다'); }
+function taskRenderHome(){
+  var box=document.getElementById('home-task-list'); if(!box) return;
+  if(!TODAY_TASKS.length){ box.innerHTML='<div class="side-empty">오늘 할 일을 하나 남겨두면 홈에서 바로 확인할 수 있어요.</div>'; return; }
+  box.innerHTML=TODAY_TASKS.slice(0,3).map(function(o){
+    var dot=o.status==='완료'?'done':(o.status==='진행중'?'':'wait');
+    return '<div class="side-item"><span class="side-dot '+dot+'"></span><div class="side-itx"><div class="side-itt">'+wlEsc(o.title)+'</div><div class="side-isb">'+wlEsc(o.type||'')+(o.target?' · '+wlEsc(o.target):'')+' · '+wlEsc(o.status||'')+'</div></div>'+(o.time?'<span class="side-itm">'+wlEsc(o.time)+'</span>':'')+'</div>';
+  }).join('');
+}
+/* 퀵메모 */
+var QUICK_MEMOS=[]; var _mmSeq=1;
+function mmG(id){var e=document.getElementById(id);return e?(e.value||'').trim():'';}
+function memoAdd(){
+  var t=mmG('mm_title'), c=mmG('mm_content');
+  if(!t && !c){ showToast('메모 제목이나 내용을 입력하세요'); return; }
+  QUICK_MEMOS.unshift({id:_mmSeq++,title:t,content:c,type:mmG('mm_type'),link:mmG('mm_link')});
+  memoReset(); memoRenderHome(); memoRenderCenter(); showToast('퀵메모에 추가했습니다');
+}
+function memoReset(){ ['mm_title','mm_content'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';}); var a=document.getElementById('mm_type');if(a)a.selectedIndex=0; var b=document.getElementById('mm_link');if(b)b.selectedIndex=0; }
+function memoFmt(o){ return '[퀵메모] '+(o.title||'(제목 없음)')+'\n'+(o.content||'')+'\n유형: '+(o.type||'')+' / 연결: '+(o.link||''); }
+function memoCopy(){ if(!QUICK_MEMOS.length){ showToast('복사할 퀵메모가 없습니다'); return; } copyText(QUICK_MEMOS.map(memoFmt).join('\n\n'),'퀵메모 '+QUICK_MEMOS.length+'건을 복사했습니다'); }
+function memoRenderHome(){
+  var box=document.getElementById('home-memo-list'); if(!box) return;
+  if(!QUICK_MEMOS.length){ box.innerHTML='<div class="side-empty">떠오른 생각이나 고객에게 들은 말을 짧게 남겨두세요.</div>'; return; }
+  var o=QUICK_MEMOS[0];
+  box.innerHTML='<div class="memo-box">'+(o.title?'<b>'+wlEsc(o.title)+'</b><br>':'')+wlEsc(o.content||'')+'</div>';
+}
+function rcRenderHome(){ taskRenderHome(); memoRenderHome(); diaryRenderHome(); }
+
+/* ── v1.10 기록센터 본화면 3분류 + 홈 최근 보험일기 ── */
+function wcSwitch(tab){
+  document.querySelectorAll('.wc-tab').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-wc')===tab); });
+  document.querySelectorAll('.wc-pane').forEach(function(p){ p.classList.remove('on'); });
+  var el=document.getElementById('wc-'+tab); if(el) el.classList.add('on');
+  if(tab==='diary' && typeof wlRender==='function') wlRender();
+}
+function taskRenderCenter(){
+  var box=document.getElementById('wc_task_list'); if(!box) return;
+  if(!TODAY_TASKS.length){ box.innerHTML='<div class="wc-empty">오늘 할 일을 하나 남겨두면 홈에서 바로 확인할 수 있어요.<br>위 [빠른 기록센터에서 할 일 추가]를 눌러보세요.</div>'; return; }
+  box.innerHTML=TODAY_TASKS.slice(0,5).map(function(o){
+    return '<div class="wc-item"><div class="wc-item-top"><span class="wc-item-tt">'+wlEsc(o.title)+'</span>'
+      +'<span class="wc-tag b">'+wlEsc(o.type||'')+'</span><span class="wc-tag">'+wlEsc(o.status||'')+'</span></div>'
+      +'<div class="wc-item-meta">'+(o.time?'시간 '+wlEsc(o.time):'')+(o.target?(o.time?' · ':'')+'대상 '+wlEsc(o.target):'')+'</div>'
+      +(o.memo?'<div class="wc-item-memo">'+wlEsc(o.memo)+'</div>':'')
+      +'<div class="wc-item-btns"><button onclick="taskCopyOne('+o.id+')">복사</button><button class="del" onclick="taskDelete('+o.id+')">삭제</button></div></div>';
+  }).join('');
+}
+function taskFind(id){ for(var i=0;i<TODAY_TASKS.length;i++){ if(TODAY_TASKS[i].id===id) return TODAY_TASKS[i]; } return null; }
+function taskCopyOne(id){ var o=taskFind(id); if(o) copyText(taskFmt(o),'할 일을 복사했습니다'); }
+function taskDelete(id){ TODAY_TASKS=TODAY_TASKS.filter(function(o){return o.id!==id;}); taskRenderCenter(); taskRenderHome(); showToast('할 일을 삭제했습니다'); }
+function memoRenderCenter(){
+  var box=document.getElementById('wc_memo_list'); if(!box) return;
+  if(!QUICK_MEMOS.length){ box.innerHTML='<div class="wc-empty">떠오른 생각이나 고객에게 들은 말을 짧게 남겨두세요.<br>위 [빠른 기록센터에서 퀵메모 추가]를 눌러보세요.</div>'; return; }
+  box.innerHTML=QUICK_MEMOS.slice(0,5).map(function(o){
+    return '<div class="wc-item"><div class="wc-item-top"><span class="wc-item-tt">'+wlEsc(o.title||'(제목 없음)')+'</span>'
+      +'<span class="wc-tag b">'+wlEsc(o.type||'')+'</span>'+(o.link?'<span class="wc-tag">'+wlEsc(o.link)+'</span>':'')+'</div>'
+      +(o.content?'<div class="wc-item-memo">'+wlEsc(o.content)+'</div>':'')
+      +'<div class="wc-item-btns"><button onclick="memoCopyOne('+o.id+')">복사</button><button class="del" onclick="memoDelete('+o.id+')">삭제</button></div></div>';
+  }).join('');
+}
+function memoFind(id){ for(var i=0;i<QUICK_MEMOS.length;i++){ if(QUICK_MEMOS[i].id===id) return QUICK_MEMOS[i]; } return null; }
+function memoCopyOne(id){ var o=memoFind(id); if(o) copyText(memoFmt(o),'퀵메모를 복사했습니다'); }
+function memoDelete(id){ QUICK_MEMOS=QUICK_MEMOS.filter(function(o){return o.id!==id;}); memoRenderCenter(); memoRenderHome(); showToast('퀵메모를 삭제했습니다'); }
+function diaryRenderHome(){
+  var box=document.getElementById('home-diary-list'); if(!box) return;
+  if(typeof WORK_LOGS==='undefined' || !WORK_LOGS.length){ box.innerHTML='<div class="side-empty">아직 작성된 보험일기가 없습니다. 빠른 기록센터에서 오늘의 보험 이야기를 남겨보세요.</div>'; return; }
+  box.innerHTML=WORK_LOGS.slice(0,2).map(function(o){
+    return '<div class="diary-item"><div class="diary-itt">'+wlEsc(o.title||o.type||'보험일기')+'</div><div class="diary-isb">'+wlEsc(o.content||'')+'</div></div>';
+  }).join('');
+}
+function rcRenderCenter(){ taskRenderCenter(); memoRenderCenter(); if(typeof wlRender==='function') wlRender(); }
+var _wlType='';
+function wlPickType(t,btn){
+  if(_wlType===t){ _wlType=''; if(btn) btn.classList.remove('on'); return; }
+  _wlType=t;
+  document.querySelectorAll('.wl-type button').forEach(function(b){b.classList.remove('on');});
+  if(btn) btn.classList.add('on');
+}
+function wlClear(){ ['wl_title','wl_content'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';}); var c=document.getElementById('wl_flag'); if(c)c.checked=false; var nx=document.getElementById('wl_next'); if(nx)nx.selectedIndex=0; _wlType=''; document.querySelectorAll('.wl-type button').forEach(function(b){b.classList.remove('on');}); showToast('입력칸을 비웠습니다'); }
+function wlFmt(o){
+  return '[보험일기]\n작성자: '+o.author+(o.type?'\n유형: '+o.type:'')+'\n카테고리: '+o.cat+'\n제목: '+o.title+'\n내용: '+o.content+(o.next?'\n다음 행동: '+o.next:'')+'\n생성일: '+o.date+(o.flag?'\n<svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 대표 확인 필요':'');
+}
+function wlAdd(){
+  var title=wlG('wl_title'), content=wlG('wl_content');
+  if(!title && !content){ showToast('제목이나 내용을 입력해 주세요'); return; }
+  WORK_LOGS.unshift({
+    id:_wlSeq++, author:wlG('wl_author'), cat:document.getElementById('wl_cat').value,
+    type:_wlType, next:document.getElementById('wl_next').value,
+    title:title, content:content, date:wlG('wl_date')||wlToday(),
+    flag:document.getElementById('wl_flag').checked
+  });
+  wlRender();
+  ['wl_title','wl_content'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  var c=document.getElementById('wl_flag'); if(c)c.checked=false;
+  var nx=document.getElementById('wl_next'); if(nx)nx.selectedIndex=0;
+  _wlType=''; document.querySelectorAll('.wl-type button').forEach(function(b){b.classList.remove('on');});
+  if(typeof diaryRenderHome==='function') diaryRenderHome();
+  showToast('보험일기에 추가했습니다');
+}
+function wlCopy(){
+  var title=wlG('wl_title'), content=wlG('wl_content');
+  if(!title && !content){ showToast('제목이나 내용을 입력해 주세요'); return; }
+  var o={author:wlG('wl_author'),type:_wlType,cat:document.getElementById('wl_cat').value,title:title,content:content,next:document.getElementById('wl_next').value,date:wlG('wl_date')||wlToday(),flag:document.getElementById('wl_flag').checked};
+  copyText(wlFmt(o),'보험일기를 복사했습니다');
+}
+function wlRender(){
+  var box=document.getElementById('wlog_list'); if(!box) return;
+  if(!WORK_LOGS.length){ box.innerHTML='<div class="wlog-empty">아직 작성된 보험일기가 없습니다.<br>오른쪽 아래 <svg class="ei" viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.5.5 1 1.2 1 2h6c0-.8.5-1.5 1-2A6 6 0 0 0 12 3"/></svg> 버튼으로 오늘의 보험 이야기를 남겨보세요.</div>'; return; }
+  box.innerHTML='';
+  WORK_LOGS.forEach(function(o){
+    var el=document.createElement('div'); el.className='wlog-card';
+    el.innerHTML='<div class="wlog-meta"><span class="wlog-date"><svg class="ei" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg> '+wlEsc(o.date)+'</span>'+(o.type?'<span class="wlog-type">'+wlEsc(o.type)+'</span>':'')+'<span class="wlog-cat">'+wlEsc(o.cat)+'</span><span class="wlog-author">'+wlEsc(o.author)+'</span>'+(o.flag?'<span class="wlog-flag"><svg class="ei" viewBox="0 0 24 24"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg> 대표 확인 필요</span>':'')+'</div>'
+      +(o.title?'<div class="wlog-title">'+wlEsc(o.title)+'</div>':'')
+      +(o.content?'<div class="wlog-content">'+wlEsc(o.content)+'</div>':'')
+      +(o.next?'<div class="wlog-next">▶ '+wlEsc(o.next)+'</div>':'')
+      +'<div class="wlog-btns"><button class="wlog-b g" onclick="wlCardCopy('+o.id+')">복사</button><button class="wlog-b del" onclick="wlDelete('+o.id+')">삭제</button></div>';
+    box.appendChild(el);
+  });
+}
+function wlFind(id){ for(var i=0;i<WORK_LOGS.length;i++){ if(WORK_LOGS[i].id===id) return WORK_LOGS[i]; } return null; }
+function wlCardCopy(id){ var o=wlFind(id); if(!o) return; copyText(wlFmt(o),'보험일기를 복사했습니다'); }
+function wlDelete(id){ WORK_LOGS=WORK_LOGS.filter(function(o){return o.id!==id;}); wlRender(); showToast('보험일기를 삭제했습니다'); }
+function wlCopyAll(){
+  if(!WORK_LOGS.length){ showToast('복사할 보험일기가 없습니다'); return; }
+  var all=WORK_LOGS.map(wlFmt).join('\n\n────────\n\n');
+  copyText(all,'오늘 보험일기 '+WORK_LOGS.length+'건을 복사했습니다');
+}
+
+/* ── v1.4 고객관리(계약고객) (비저장 복사형 · localStorage/sessionStorage/Supabase 미사용) ── */
+var POLICIES = [];
+var _pmSeq = 1;
+var PM_FIELDS=[
+  ['pm_name','고객명'],['pm_rel','관계'],['pm_contact','연락처'],['pm_age','생년/연령대'],['pm_route','상담 경로'],['pm_role','계약자/피보험자'],
+  ['pm_insurer','보험사'],['pm_product','상품명'],['pm_join','가입일'],['pm_maturity','만기/보장기간'],
+  ['pm_premium','월 보험료'],['pm_payperiod','납입기간'],['pm_renew','갱신 여부'],['pm_status','납입 상태'],
+  ['pm_coverage','주요 보장'],['pm_join_reason','가입 이유'],['pm_choice_reason','선택 이유'],['pm_next','다음 점검일'],['pm_check','확인 필요']
+];
+function pmEsc(s){return String(s||'').replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function pmG(id){var e=document.getElementById(id);return e?(e.value||'').trim():'';}
+function pmAdd(){
+  var name=pmG('pm_name');
+  if(!name){ showToast('대상자명을 입력해 주세요'); return; }
+  var o={id:_pmSeq++};
+  PM_FIELDS.forEach(function(p){ o[p[0]]=pmG(p[0]); });
+  POLICIES.unshift(o);
+  pmRender(); pmReset();
+  showToast('계약고객 기록을 추가했습니다');
+}
+function pmReset(){
+  PM_FIELDS.forEach(function(p){
+    var e=document.getElementById(p[0]); if(!e) return;
+    if(e.tagName==='SELECT') e.selectedIndex=0; else e.value='';
+  });
+}
+var PM_NOTE='주의:\n· 실제 보장내용·만기·갱신 여부·해지환급금·지급 조건은 반드시 보험사 전산, 고객 인증 자료, 약관 기준으로 확인 필요\n· 이 메모만으로 보장 여부나 보험금 지급 여부를 판단하지 않음';
+function pmFmt(o){
+  return '[계약고객 관리 기록]'
+    +'\n고객명: '+(o.pm_name||'')
+    +'\n관계: '+(o.pm_rel||'')
+    +'\n연락처: '+(o.pm_contact||'')
+    +'\n생년/연령대: '+(o.pm_age||'')
+    +'\n상담 경로: '+(o.pm_route||'')
+    +'\n계약자/피보험자: '+(o.pm_role||'')
+    +'\n보험사: '+(o.pm_insurer||'')
+    +'\n상품명: '+(o.pm_product||'')
+    +'\n가입일: '+(o.pm_join||'')
+    +'\n만기/보장기간: '+(o.pm_maturity||'')
+    +'\n월 보험료: '+(o.pm_premium||'')
+    +'\n납입기간: '+(o.pm_payperiod||'')
+    +'\n갱신 여부: '+(o.pm_renew||'')
+    +'\n납입 상태: '+(o.pm_status||'')
+    +'\n주요 보장: '+(o.pm_coverage||'')
+    +'\n가입 이유: '+(o.pm_join_reason||'')
+    +'\n선택 이유: '+(o.pm_choice_reason||'')
+    +'\n다음 점검일: '+(o.pm_next||'')
+    +'\n확인 필요: '+(o.pm_check||'')
+    +'\n'+PM_NOTE;
+}
+function pmRow(k,v){ return v?'<div class="pm-row"><span class="k">'+k+'</span><span class="v">'+pmEsc(v)+'</span></div>':''; }
+function pmRender(){
+  var box=document.getElementById('pm_list'); if(!box) return;
+  if(!POLICIES.length){ box.innerHTML='<div class="pm-empty">아직 작성된 계약고객 기록이 없습니다.<br>위에서 입력 후 [메모 추가]를 누르세요.</div>'; return; }
+  box.innerHTML='';
+  POLICIES.forEach(function(o){
+    var el=document.createElement('div'); el.className='pm-card';
+    el.innerHTML='<div class="pm-top"><span class="pm-name">'+pmEsc(o.pm_name)+'</span>'+(o.pm_rel?'<span class="pm-rel">'+pmEsc(o.pm_rel)+'</span>':'')+'</div>'
+      +'<div class="pm-rows">'
+        +pmRow('연락처',o.pm_contact)+pmRow('생년/연령',o.pm_age)+pmRow('상담 경로',o.pm_route)+pmRow('계약구분',o.pm_role)
+        +pmRow('보험사',o.pm_insurer)+pmRow('상품명',o.pm_product)
+        +pmRow('월 보험료',o.pm_premium)+pmRow('갱신 여부',o.pm_renew)+pmRow('납입 상태',o.pm_status)
+        +pmRow('가입일',o.pm_join)+pmRow('만기/보장',o.pm_maturity)+pmRow('납입기간',o.pm_payperiod)
+        +pmRow('주요 보장',o.pm_coverage)+pmRow('가입 이유',o.pm_join_reason)+pmRow('선택 이유',o.pm_choice_reason)
+        +pmRow('다음 점검',o.pm_next)
+      +'</div>'
+      +(o.pm_check?'<div class="pm-chk"><svg class="ei" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg> '+pmEsc(o.pm_check)+'</div>':'')
+      +'<div class="pm-btns"><button class="pm-b g" onclick="pmCardCopy('+o.id+')">복사</button><button class="pm-b del" onclick="pmDelete('+o.id+')">삭제</button></div>';
+    box.appendChild(el);
+  });
+}
+function pmFind(id){ for(var i=0;i<POLICIES.length;i++){ if(POLICIES[i].id===id) return POLICIES[i]; } return null; }
+function pmCardCopy(id){ var o=pmFind(id); if(!o) return; copyText(pmFmt(o),'계약고객 기록을 복사했습니다'); }
+function pmDelete(id){ POLICIES=POLICIES.filter(function(o){return o.id!==id;}); pmRender(); showToast('계약고객 기록을 삭제했습니다'); }
+function pmCopyAll(){
+  if(!POLICIES.length){ showToast('복사할 계약고객 기록이 없습니다'); return; }
+  copyText(POLICIES.map(pmFmt).join('\n\n────────\n\n'),'계약고객 기록 '+POLICIES.length+'건을 복사했습니다');
+}
+
+/* ── 탭 전환 ── */
+function toggleMobileMenu(){
+  var bar=document.getElementById('tabBar');
+  if(bar) bar.classList.toggle('mobile-open');
+}
+function showTab(t){
+  ['home','start','prospect','consult','design','claim','lib','guide','worklog','policy','hub'].forEach(function(k){
+    var v=document.getElementById('view-'+k); if(v) v.classList.toggle('on',k===t);
+  });
+  document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('on',b.dataset.t===t);});
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(t==='hub') hubRender(hubQv());
+  if(t==='prospect') psRender();
+  if(t==='guide') gdInit();
+  if(t==='consult') csInitGroups();
+  if(t==='home' && typeof rcRenderHome==='function') rcRenderHome();
+  if(t==='policy') pmRender();
+  if(t==='worklog'){ if(typeof rcRenderCenter==='function') rcRenderCenter(); else wlRender(); }
+  var bar=document.getElementById('tabBar');
+  if(bar && window.innerWidth<=880){ bar.classList.remove('mobile-open'); }
+}
+function routeTo(t){ showTab(t); showToast('진행판으로 이동했습니다 — 1단계부터 시작하세요'); }
+
+/* ── pill 선택 ── */
+function pickPill(el,storeId){
+  var grid=el.parentElement;
+  grid.querySelectorAll('.pill').forEach(function(p){p.classList.remove('on');});
+  el.classList.add('on');
+  var s=document.getElementById(storeId); if(s) s.value=el.textContent.trim();
+}
+
+/* ── 단계 이동 ── */
+var _stepNow={c:1,d:1,r:1};
+function goStep(panel,n){
+  _stepNow[panel]=n;
+  for(var i=1;i<=6;i++){
+    var pane=document.getElementById(panel+'-'+i);
+    if(pane) pane.classList.toggle('on',i===n);
+  }
+  var bar=document.getElementById('steps-'+panel);
+  if(bar){var btns=bar.querySelectorAll('.step-btn');btns.forEach(function(b,idx){b.classList.toggle('on',idx===n-1);});}
+}
+function stepMove(panel,dir){
+  var n=_stepNow[panel]+dir;
+  if(n<1)n=1; if(n>6)n=6;
+  goStep(panel,n);
+  var card=document.getElementById('view-'+(panel==='c'?'consult':panel==='d'?'design':'claim'));
+  if(card) card.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ── 체크리스트 ── */
+function toggleChk(el){ el.classList.toggle('checked'); }
+
+/* ── 입력값 ── */
+function val(id){ var e=document.getElementById(id); return e&&e.value.trim()? e.value.trim() : ''; }
+function v(id){ return val(id)||'—'; }
+
+/* ── 결과 박스 복사 ── */
+function copyOut(id,msg){
+  var el=document.getElementById(id);
+  if(!el||el.classList.contains('empty')){ showToast('먼저 문장을 만들어 주세요'); return; }
+  copyText(el.textContent,msg);
+}
+function copySnip(btn){
+  var body=btn.closest('.snip').querySelector('.sbody');
+  if(body) copyText(body.textContent,'복사했습니다 — AI 또는 카톡에 붙여넣으세요');
+}
+
+/* ── 라이브러리 카테고리 ── */
+function libCat(c,btn){
+  ['a','b','c','d'].forEach(function(k){var p=document.getElementById('lib-'+k);if(p)p.style.display=(k===c)?'block':'none';});
+  document.querySelectorAll('.cat-btn').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+}
+
+/* ── 문장 생성 ── */
+function setOut(id,text){ var el=document.getElementById(id); el.textContent=text; el.classList.remove('empty'); }
+
+function buildConsultMsg(){
+  var t='[상담 정리 안내]\n고객님, 오늘 상담 내용 정리드립니다.\n\n'
+    +'· 상담 방향: '+v('c_type')+'\n'
+    +'· 걱정하신 부분: '+v('c_worry')+'\n'
+    +'· 희망 보장: '+v('c_want')+'\n'
+    +'· 다음 확인 사항: 약관·인수 기준 확인 후 안내\n\n'
+    +'정확한 보장 내용은 약관과 인수 기준 확인 후 안내드리겠습니다.';
+  setOut('c_out',t); showToast('안내문을 만들었습니다 — 표현 확인 후 복사하세요');
+}
+function buildConsultReport(){
+  var t='[상담후보고]\n'
+    +'고객명: '+v('c_name')+'\n'
+    +'상담유형: '+(v('c_sit')!=='—'?v('c_sit'):v('c_type'))+'\n'
+    +'상담결과: 진행 / 보류 / 거절\n'
+    +'고객 반응: '+v('c_worry')+'\n'
+    +'다음 일정: \n'
+    +'확인이 필요한 사항: '+v('c_etc');
+  setOut('c_rep',t); copyText(t,'상담 후 보고문을 복사했습니다');
+}
+function buildDesignReq(){
+  var t='[설계의뢰]\n안녕하세요 매니저님, WD WAVE 소속 설계사입니다.\n아래 건 설계 부탁드립니다.\n\n'
+    +'고객: '+v('d_name')+'\n'
+    +'나이/성별: '+v('d_age')+'\n'
+    +'직업: '+v('d_job')+'\n'
+    +'상담유형: '+(v('d_sit')!=='—'?v('d_sit'):v('d_type'))+'\n'
+    +'희망보장: '+v('d_want')+'\n'
+    +'월 예산: '+v('d_budget')+'\n'
+    +'기존 보험: '+v('d_exist')+'\n'
+    +'고지사항: '+v('d_notice')+'\n'
+    +'요청 보험사: '+v('d_company')+'\n\n'
+    +'확인 부탁드립니다.';
+  setOut('d_out',t); showToast('설계의뢰문을 만들었습니다 — 확인 후 복사하세요');
+}
+function buildClaimMsg(){
+  var t='고객님, 청구에 필요한 서류를 확인해 안내드리겠습니다.\n\n'
+    +'· 청구 유형: '+v('r_type')+'\n'
+    +'· 필요 서류: (확인 후 안내)\n'
+    +'· 확인할 내용: '+v('r_ask')+'\n\n'
+    +'보험금은 약관 조건 충족 시 지급 여부가 결정되며, 정확한 지급 여부는 보험사 심사 후 확인됩니다.';
+  setOut('r_out',t); showToast('청구 안내문을 만들었습니다 — 확인 후 복사하세요');
+}
+function buildClaimReport(){
+  var t='[문제보고]\n'
+    +'건명: '+v('r_type')+'\n'
+    +'고객명: '+v('r_name')+'\n'
+    +'발생일시: '+v('r_when')+'\n'
+    +'상황 요약: '+v('r_said')+'\n'
+    +'현재 상태: '+v('r_state')+'\n'
+    +'제가 안내한 내용: '+v('r_guide')+'\n'
+    +'고객 요청: '+v('r_said')+'\n'
+    +'확인이 필요한 질문: '+v('r_ask');
+  setOut('r_rep',t); showToast('대표 보고문을 만들었습니다 — 확인 후 복사하세요');
+}
+
+/* ── AI 프롬프트 생성 (입력값 삽입) ── */
+function _cInfo(){
+  return '- 고객: '+v('c_name')+'\n- 나이/성별: '+v('c_age')+'\n- 상담유형: '+(v('c_sit')!=='—'?v('c_sit'):v('c_type'))
+    +'\n- 희망보장: '+v('c_want')+'\n- 월 예산: '+v('c_budget')+'\n- 기존 보험: '+v('c_exist')
+    +'\n- 걱정하는 부분: '+v('c_worry')+'\n- 특이사항: '+v('c_etc');
+}
+function _dInfo(){
+  return '- 고객: '+v('d_name')+'\n- 나이/성별: '+v('d_age')+'\n- 직업: '+v('d_job')
+    +'\n- 상담유형: '+(v('d_sit')!=='—'?v('d_sit'):v('d_type'))+'\n- 희망보장: '+v('d_want')
+    +'\n- 월 예산: '+v('d_budget')+'\n- 기존 보험: '+v('d_exist')+'\n- 고지사항: '+v('d_notice')+'\n- 요청 보험사: '+v('d_company');
+}
+function _rInfo(){
+  return '- 고객: '+v('r_name')+'\n- 발생일시: '+v('r_when')+'\n- 보험사: '+v('r_company')
+    +'\n- 문제유형: '+(v('r_sit')!=='—'?v('r_sit'):v('r_type'))+'\n- 고객이 한 말: '+v('r_said')
+    +'\n- 내가 안내한 내용: '+v('r_guide')+'\n- 현재 상태: '+v('r_state')+'\n- 확인 필요 질문: '+v('r_ask');
+}
+var PROMPTS={
+  c_p1:function(){return '아래 고객 상담 내용을 바탕으로 보험설계사 관점에서 상담 내용을 정리해줘.\n\n정리 형식:\n1. 고객의 핵심 니즈\n2. 우선 확인해야 할 보장\n3. 추가로 물어봐야 할 질문\n4. 설계의뢰 시 넣어야 할 요청사항\n5. 고객에게 설명할 쉬운 문장\n6. 주의해야 할 표현\n\n주의:\n- 보험금 지급 여부를 단정하지 마\n- 과장 표현을 쓰지 마\n- 민감정보는 포함하지 마\n- "약관 조건 충족 시"라는 전제를 유지해줘\n\n고객 상담 내용:\n'+_cInfo();},
+  c_p2:function(){return '아래 상담 내용을 고객에게 보낼 메시지로 정리해줘.\n\n요청:\n1. 짧은 카톡용\n2. 정중한 설명용\n3. 상담 후 요약용\n\n주의:\n- 지급 단정 표현 금지\n- 과장 표현 금지\n- 무조건/확정/당연히 같은 표현 금지\n- 고객이 부담스럽지 않게 작성\n\n상담 내용:\n'+_cInfo();},
+  c_p3:function(){return '아래 고객 안내문에서 보험영업상 위험한 표현을 찾아줘.\n\n검사 항목:\n1. 지급 단정 표현\n2. 과장 표현\n3. 고객 오해 가능 표현\n4. 개인정보 위험 표현\n5. 민원으로 이어질 수 있는 표현\n\n문제가 있으면 안전한 문장으로 고쳐줘.\n\n고객 안내문:\n'+(val('c_out')||_cInfo());},
+  d_p1:function(){return '아래 고객 정보를 바탕으로 원수사 매니저에게 보낼 설계의뢰 문장을 정리해줘.\n\n요청:\n- 개인정보는 최소화\n- 희망보장과 예산은 고객 말 그대로 유지\n- 매니저가 설계하기 쉽게 항목별로 정리\n- 불필요한 감정 표현 제거\n\n고객 정보:\n'+_dInfo();},
+  d_p2:function(){return '아래 계약 진행 내용을 기준으로 계약 전 확인해야 할 리스크를 점검해줘.\n\n점검 항목:\n1. 고지사항 누락 가능성\n2. 고객 오해 가능성\n3. 보장 설명 부족 가능성\n4. 보험료 부담 가능성\n5. 대표 확인이 필요한 사항\n\n주의:\n- 가입을 강요하는 표현은 쓰지 마\n- 승인 확정처럼 보이는 표현은 쓰지 마\n\n계약 내용:\n'+_dInfo();},
+  d_p3:function(){return '아래 내용을 대표에게 보고하기 좋게 사실 중심으로 정리해줘.\n형식: 1.고객 2.진행상황 3.확인 필요 사항 4.대표 판단 요청\n주의: 감정 표현 줄이고, 사실과 추측을 구분.\n\n내용:\n'+_dInfo();},
+  r_p1:function(){return '아래 고객의 보험금청구 문의 내용을 바탕으로 고객에게 보낼 안전한 안내문을 만들어줘.\n\n반드시 지킬 것:\n- "보험금은 약관 조건 충족 시 지급 여부가 결정됩니다"라는 취지를 포함\n- 지급 확정 표현 금지\n- 무조건/당연히/확정 같은 단어 금지\n- 고객이 불안하지 않도록 친절하게 작성\n\n청구 문의 내용:\n'+_rInfo();},
+  r_p2:function(){return '아래 문제 상황을 대표에게 보고하기 좋게 사실 중심으로 정리해줘.\n\n정리 형식:\n1. 발생일시\n2. 고객 요청\n3. 내가 안내한 내용\n4. 현재 상태\n5. 위험 요소\n6. 즉시 필요한 판단\n7. 고객에게 다음으로 할 말\n\n주의:\n- 감정 표현은 줄여줘\n- 사실과 추측을 구분해줘\n- 고객에게 임의로 약속하지 않는 방향으로 정리해줘\n\n문제 상황:\n'+_rInfo();},
+  r_p3:function(){return '아래 상황에서 민원으로 이어질 수 있는 위험 요소를 점검하고, 고객에게 보낼 안전한 답변 문구를 제안해줘.\n주의: 지급 단정 금지, 문제 축소 금지, 임의 약속 금지.\n\n상황:\n'+_rInfo();}
+};
+function copyPrompt(key){
+  var fn=PROMPTS[key]; if(!fn) return;
+  var text=fn();
+  var pvId=key.charAt(0)+'_ppv';
+  var pv=document.getElementById(pvId); if(pv) pv.textContent=text;
+  copyText(text,'AI 프롬프트를 복사했습니다 — AI에 붙여넣으세요');
+}
+
+/* ── 복사 / 토스트 (LITE 구조) ── */
+function copyText(text,okMsg){
+  function done(){showToast(okMsg);} function fail(){showToast('복사 실패 — 길게 눌러 직접 복사하세요');}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done,function(){legacyCopy(text)?done():fail();});
+  }else{legacyCopy(text)?done():fail();}
+}
+function legacyCopy(text){
+  try{var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();var ok=document.execCommand('copy');document.body.removeChild(ta);return ok;}catch(e){return false;}
+}
+var _toastTimer=null;
+function showToast(msg){
+  var t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');
+  if(_toastTimer)clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(function(){t.classList.remove('on');},2400);
+}
+
+/* ── v0.4 전산·연락처 허브 ──────────────────────────────
+   HUB_DATA: 실제 코드·비번·연락처는 여기에 직접 입력하세요.
+   빈값('')은 화면에서 '미등록'으로 표시되고 해당 버튼은 비활성됩니다.
+   보험사명도 placeholder이니 실제 거래 보험사로 교체하세요.
+   (임의 데이터 생성 안 함 / Supabase·localStorage 미사용) */
+var HUB_DATA=[
+  { kind:'mega',  name:'대전메가종합금융', chiefName:'', chiefTel:'', gmName:'', gmTel:'', esignUrl:'', salesUrl:'', newsUrl:'', memo:'전산·위촉·수수료·자동차 비교견적·업무지원' },
+  { kind:'life',  name:'(생명보험사 입력)', url:'', code:'', pw:'', mgrName:'', mgrTel:'', home:'' },
+  { kind:'loss',  name:'(손해보험사 입력)', url:'', code:'', pw:'', mgrName:'', mgrTel:'', home:'' },
+  { kind:'chief', name:'(지점/총무 입력)',  chiefName:'', chiefTel:'', gmName:'', gmTel:'' }
+];
+var _hubFilter='all';
+function hubQv(){ var e=document.getElementById('hub-srch'); return e?e.value:''; }
+function hubFilter(f,btn){
+  _hubFilter=f;
+  document.querySelectorAll('.hub-fbtn').forEach(function(b){b.classList.remove('on');});
+  if(btn) btn.classList.add('on');
+  hubRender(hubQv());
+}
+function hubRender(q){
+  q=(q||'').trim();
+  var g=document.getElementById('hub-grid'); if(!g) return; g.innerHTML='';
+  var list=HUB_DATA.filter(function(d){
+    if(_hubFilter==='life'&&d.kind!=='life')return false;
+    if(_hubFilter==='loss'&&d.kind!=='loss')return false;
+    if(_hubFilter==='mega'&&d.kind!=='mega')return false;
+    if(_hubFilter==='chief'&&d.kind!=='chief'&&d.kind!=='mega')return false;
+    if(q){
+      var hay=(d.name||'')+' '+(d.mgrName||'')+' '+(d.chiefName||'')+' '+(d.gmName||'')+' '+(d.memo||'');
+      if(hay.indexOf(q)<0)return false;
+    }
+    return true;
+  });
+  if(!list.length){ g.innerHTML='<div class="hub-empty">표시할 항목이 없습니다.<br>HUB_DATA에 보험사를 등록하면 카드로 표시됩니다.</div>'; return; }
+  list.forEach(function(d){ g.appendChild(hubMakeCard(d)); });
+}
+function hubMakeCard(d){
+  var el=document.createElement('div'); var mega=(d.kind==='mega');
+  el.className='hub-card'+(mega?' mega':'');
+  var bcl=d.kind==='mega'?'mega':d.kind==='life'?'life':d.kind==='loss'?'loss':'chief';
+  var blb=d.kind==='mega'?'메가업무지원':d.kind==='life'?'생명보험사':d.kind==='loss'?'손해보험사':'지점/총무';
+  var rows='',btns='';
+  if(mega){
+    rows+=hubRow('업무요청','카카오채널');
+    rows+=hubRow('총무',(d.chiefName||'')+(d.chiefTel?' · '+d.chiefTel:''),!(d.chiefName||d.chiefTel));
+    rows+=hubRow('지점장',(d.gmName||'')+(d.gmTel?' · '+d.gmTel:''),!(d.gmName||d.gmTel));
+    if(d.memo) rows+=hubRow('업무',d.memo);
+    btns+= d.esignUrl? hubBtn('g','메가 전자서명',"hubLink('"+hubJsq(d.esignUrl)+"')") : hubBtn('dis','메가 전자서명',"hubT('메가 전자서명 링크 미등록')");
+    btns+= d.salesUrl? hubBtn('g','메가 영업지원',"hubLink('"+hubJsq(d.salesUrl)+"')") : hubBtn('dis','메가 영업지원',"hubT('메가 영업지원 링크 미등록')");
+    btns+= d.newsUrl? hubBtn('g','월간 소식지',"hubLink('"+hubJsq(d.newsUrl)+"')") : hubBtn('dis','월간 소식지',"hubT('월간 소식지 링크 미등록')");
+    btns+=hubBtn('p','업무요청 복사',"hubCopy('[업무요청] "+hubJsq(d.name)+"\\n요청내용: \\n고객/건명: ','업무요청 문장')");
+    btns+= d.chiefTel? hubBtn('tel','총무 전화',"hubCall('"+d.chiefTel+"')") : hubBtn('dis','총무 전화',"hubT('총무 번호 미등록')");
+    btns+= d.gmTel? hubBtn('tel','지점장 전화',"hubCall('"+d.gmTel+"')") : hubBtn('dis','지점장 전화',"hubT('지점장 번호 미등록')");
+  }else if(d.kind==='chief'){
+    rows+=hubRow('총무',(d.chiefName||'')+(d.chiefTel?' · '+d.chiefTel:''),!(d.chiefName||d.chiefTel));
+    rows+=hubRow('관리자',(d.gmName||'')+(d.gmTel?' · '+d.gmTel:''),!(d.gmName||d.gmTel));
+    if(d.memo) rows+=hubRow('업무',d.memo);
+    btns+= d.chiefTel? hubBtn('tel','총무 전화',"hubCall('"+d.chiefTel+"')") : hubBtn('dis','총무 전화',"hubT('총무 번호 미등록')");
+    btns+= d.gmTel? hubBtn('tel','관리자 전화',"hubCall('"+d.gmTel+"')") : hubBtn('dis','관리자 전화',"hubT('번호 미등록')");
+    btns+=hubBtn('p','업무요청 복사',"hubCopy('[업무요청] "+hubJsq(d.name)+"\\n요청내용: \\n고객/건명: ','업무요청 문장')");
+  }else{
+    rows+=hubRow('전산URL',d.url||'',!d.url);
+    rows+=hubRow('코드',d.code||'',!d.code);
+    rows+=hubRpw(d);
+    rows+=hubRow('매니저',(d.mgrName||'')+(d.mgrTel?' · '+d.mgrTel:''),!(d.mgrName||d.mgrTel));
+    rows+=hubRow('홈페이지',d.home||'',!d.home);
+    btns+= d.url? hubBtn('p','전산 열기',"hubLink('"+hubJsq(d.url)+"')") : hubBtn('dis','전산 열기',"hubT('전산 URL 미등록')");
+    btns+= d.home? hubBtn('g','홈페이지',"hubLink('"+hubJsq(d.home)+"')") : hubBtn('dis','홈페이지',"hubT('홈페이지 미등록')");
+    btns+= d.code? hubBtn('g','코드 복사',"hubCopy('"+hubJsq(d.code)+"','코드')") : hubBtn('dis','코드 복사',"hubT('코드 미등록')");
+    btns+= d.pw? hubBtn('g','비번 보기',"hubTogglePw(this)") : hubBtn('dis','비번 보기',"hubT('비번 미등록')");
+    btns+= d.pw? hubBtn('g','비번 복사',"hubCopy('"+hubJsq(d.pw)+"','비밀번호')") : hubBtn('dis','비번 복사',"hubT('비번 미등록')");
+    btns+= d.mgrTel? hubBtn('tel','매니저 전화',"hubCall('"+d.mgrTel+"')") : hubBtn('dis','매니저 전화',"hubT('매니저 번호 미등록')");
+    btns+=hubBtn('p','업무요청 복사',"hubCopy('["+hubJsq(d.name)+" 업무요청]\\n요청내용: \\n고객/건명: ','업무요청 문장')");
+  }
+  el.innerHTML='<div class="hub-ctop"><div><div class="hub-cname">'+hubEsc(d.name)+'</div><span class="hub-badge '+bcl+'">'+blb+'</span></div></div>'
+    +'<div class="hub-rows">'+rows+'</div><div class="hub-btns">'+btns+'</div>';
+  var pwEl=el.querySelector('.hub-pw'); if(pwEl) pwEl.dataset.pw=d.pw||'';
+  return el;
+}
+function hubRow(k,v,dim){ return '<div class="hub-row"><span class="hub-k">'+k+'</span><span class="hub-v'+(dim?' dim':'')+'">'+hubEsc(v||(dim?'미등록':'—'))+'</span></div>'; }
+function hubRpw(d){ return '<div class="hub-row"><span class="hub-k">비번</span><span class="hub-v hub-pw'+(d.pw?' dot':' dim')+'">'+(d.pw?'●●●●●●':'미등록')+'</span></div>'; }
+function hubBtn(cls,label,fn){ return '<button class="hub-b '+cls+'" onclick="'+fn+'">'+label+'</button>'; }
+function hubTogglePw(btn){
+  var card=btn.closest('.hub-card'); var v=card.querySelector('.hub-pw'); if(!v)return;
+  var pw=v.dataset.pw||''; if(!pw){hubT('비번 미등록');return;}
+  if(v.classList.contains('dot')&&v.textContent==='●●●●●●'){v.textContent=pw;v.classList.remove('dot');btn.textContent='비번 숨김';}
+  else{v.textContent='●●●●●●';v.classList.add('dot');btn.textContent='비번 보기';}
+}
+function hubEsc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function hubJsq(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+function hubLink(u){window.open(u,'_blank','noopener');}
+function hubCall(t){location.href='tel:'+t;}
+function hubCopy(text,label){ copyText(text,(label||'복사')+' 복사 완료'); }
+function hubT(m){ showToast(m); }
+</script>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('service-worker.js').catch(function(e){console.warn('SW 등록 실패',e);});});}
+</script>
+</body>
+</html>
