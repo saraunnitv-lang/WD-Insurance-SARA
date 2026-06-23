@@ -755,6 +755,25 @@ svg.tck{width:16px;height:16px;}
 .hub-divider{display:flex;align-items:center;gap:12px;margin:22px 0;}
 .hub-divider::before,.hub-divider::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,#d4d0e8,transparent);}
 .hub-divider span{font-size:10.5px;font-weight:700;color:#b0aac8;letter-spacing:.12em;white-space:nowrap;}
+/* ══════ v26 월간영업자료 섹션 디자인 ══════ */
+.sb-section{border-radius:0 16px 16px 0;border:1.5px solid #e6e4f0;border-left-width:4px;padding:22px 22px 20px;box-shadow:0 3px 14px rgba(30,27,58,.07);margin-bottom:20px;}
+.sb-section:last-of-type{margin-bottom:0;}
+.sb-section-h{font-size:17px;font-weight:900;letter-spacing:-.03em;display:flex;align-items:center;gap:9px;margin-bottom:5px;}
+.sb-section-desc{font-size:12.5px;color:#7a7694;margin-bottom:16px;line-height:1.5;}
+.sb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:11px;}
+@media(max-width:560px){.sb-grid{grid-template-columns:1fr;}}
+.sb-card{background:#fff;border:1.5px solid #e6e4f0;border-radius:13px;padding:15px 16px;display:flex;flex-direction:column;box-shadow:0 1px 5px rgba(30,27,58,.05);}
+.sb-badge{font-size:10px;font-weight:800;border-radius:6px;padding:2px 8px;display:inline-block;margin-bottom:8px;align-self:flex-start;}
+.sb-card-title{font-size:14px;font-weight:900;color:#12103a;margin-bottom:5px;}
+.sb-card-desc{font-size:11.5px;color:#7a7694;line-height:1.55;margin-bottom:12px;flex:1;}
+.sb-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;border-radius:8px;padding:7px 12px;text-decoration:none;border:1.5px solid;}
+/* 섹션별 색상 */
+.sb-section.sb-sales{border-left-color:#2448FF;background:#f7f9ff;}
+.sb-section.sb-sales .sb-section-h{color:#12267a;}
+.sb-section.sb-sichek{border-left-color:#7c3aed;background:#faf7ff;}
+.sb-section.sb-sichek .sb-section-h{color:#4b1ea8;}
+.sb-section.sb-etc{border-left-color:#0891b2;background:#f0fbff;}
+.sb-section.sb-etc .sb-section-h{color:#0e5d74;}
 </style>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1A37D8">
@@ -1761,7 +1780,7 @@ window._currentUid  = '';
   <div class="card">
     <div class="sec-tag">WD ARCHIVE</div>
     <div class="sec-title">WD 자료실</div>
-    <div class="sec-sub">메가종합금융 업무 바로가기, WD 자료 연결(구글드라이브), AI 공부자료를 모아둔 곳입니다.</div>
+    <div class="sec-sub">메가종합금융 업무 바로가기, AI 공부자료를 모아둔 곳입니다.</div>
 
     <!-- 메가종합금융 업무 바로가기 -->
     <div class="hub-section hs-mega" style="margin-top:24px;">
@@ -1782,17 +1801,6 @@ window._currentUid  = '';
         <button class="btn btn-g" onclick="showTab('design')">원수사 총무 요청문 만들기 →</button>
       </div>
       <div class="philosophy-card" style="margin-top:12px;"><div class="ph-title">업무채널 이용 안내</div><div class="ph-body">업무 요청은 워크키트에서 직접 처리하지 않습니다.<br>업무요청서에서 요청문을 만든 뒤 복사하고, 메가넷 로그인 후 업무채널 또는 업무알림방에서 메가종합금융 총무·원수사 총무에게 전달하세요.</div></div>
-    </div>
-
-    <div class="hub-divider"><span>WD 자료</span></div>
-
-    <!-- WD 자료 연결 -->
-    <div class="hub-section hs-link">
-      <div class="std-sub-h"><svg class="ei" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M19 18v3H6.5A2.5 2.5 0 0 1 4 18.5"/></svg> WD 자료 연결</div>
-      <div style="display:flex;gap:9px;flex-wrap:wrap;">
-        <button class="btn btn-g" style="min-height:42px;font-size:13.5px;" onclick="showToast('구글드라이브 보상사례 자료실 — kfcyk20 드라이브 링크 교체 예정입니다.')"><svg class="ei" viewBox="0 0 24 24"><path d="M12 18H3l4.5-8 3 4 4.5-8L21 18z"/></svg> 구글드라이브 보상사례 자료실</button>
-        <button class="btn btn-g" style="min-height:42px;font-size:13.5px;" onclick="showToast('보험세일즈북 원본 — kfcyk20 드라이브 링크 교체 예정입니다.')"><svg class="ei" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> 보험세일즈북 원본 참고자료</button>
-      </div>
     </div>
 
     <div class="hub-divider"><span>AI 학습</span></div>
@@ -1916,91 +1924,85 @@ window._currentUid  = '';
   <div class="card">
     <div class="sec-tag">MONTHLY SALES</div>
     <div class="sec-title">월간영업자료</div>
-    <div class="sec-sub">월간 세일즈북·시책·상품전략 자료를 확인합니다. 매월 업데이트됩니다.</div>
+    <div class="sec-sub">월간 세일즈북, 상품전략, 시책자료, 공지자료를 빠르게 확인합니다.</div>
 
-    <!-- 폴더 바로가기 -->
-    <a href="https://drive.google.com/drive/u/1/folders/16dqQ_TymDaoI_eV_FgTRY_G1HzBVMgbG" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:var(--purple);background:var(--tint);border:1px solid var(--tint-line);border-radius:10px;padding:9px 16px;margin:14px 0 16px;text-decoration:none;">
-      <svg style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-      구글드라이브 폴더 바로가기 — 07_월간영업자료
-    </a>
-
-    <!-- 경고 문구 -->
-    <div class="basic-alert-yellow" style="margin-bottom:18px;">
+    <!-- 참고 안내 -->
+    <div class="basic-alert-yellow" style="margin:16px 0 22px;">
       <svg class="ei" viewBox="0 0 24 24" style="width:16px;height:16px;color:#B8860B;"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0"/><path d="M12 9v4M12 17h.01"/></svg>
       <span>본 자료는 사내 참고용입니다. 고객에게 배포하거나 보험안내자료로 사용하지 않습니다. 실제 안내 전 가입설계서·상품설명서·약관을 반드시 확인하세요.</span>
     </div>
 
-    <!-- 자료 카드 5개 — 날짜 표기 없음 -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:24px;">
-
-      <div style="background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:14px 15px;">
-        <div style="font-size:10px;font-weight:800;color:#3C3489;background:#EEEDFE;border-radius:6px;padding:2px 8px;display:inline-block;margin-bottom:8px;">월간 SalesBook</div>
-        <div style="font-size:13.5px;font-weight:800;color:var(--ink);margin-bottom:6px;">월간SalesBook</div>
-        <div style="font-size:11.5px;color:var(--muted);background:var(--bg);border-radius:8px;padding:6px 9px;line-height:1.55;margin-bottom:10px;">이달 주력 상품 흐름 및 영업 포인트 확인</div>
-        <a href="https://drive.google.com/drive/u/1/folders/16dqQ_TymDaoI_eV_FgTRY_G1HzBVMgbG" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:var(--purple);background:var(--tint);border:1px solid var(--tint-line);border-radius:8px;padding:6px 11px;text-decoration:none;">
-          <svg style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>원본 열기
-        </a>
+    <!-- 묶음 1: Salesbook / 상품전략 -->
+    <div class="sb-section sb-sales">
+      <div class="sb-section-h">
+        <svg style="width:20px;height:20px;fill:none;stroke:#2448FF;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M19 18v3H6.5A2.5 2.5 0 0 1 4 18.5"/></svg>
+        Salesbook / 상품전략
       </div>
-
-      <div style="background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:14px 15px;">
-        <div style="font-size:10px;font-weight:800;color:#085041;background:#E1F5EE;border-radius:6px;padding:2px 8px;display:inline-block;margin-bottom:8px;">상품전략</div>
-        <div style="font-size:13.5px;font-weight:800;color:var(--ink);margin-bottom:6px;">상품전략</div>
-        <div style="font-size:11.5px;color:var(--muted);background:var(--bg);border-radius:8px;padding:6px 9px;line-height:1.55;margin-bottom:10px;">이달 추천 상품 구성 및 설계 방향 참고</div>
-        <a href="https://drive.google.com/drive/u/1/folders/16dqQ_TymDaoI_eV_FgTRY_G1HzBVMgbG" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:var(--purple);background:var(--tint);border:1px solid var(--tint-line);border-radius:8px;padding:6px 11px;text-decoration:none;">
-          <svg style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>원본 열기
-        </a>
+      <div class="sb-section-desc">월간 판매 흐름과 상품 전략을 확인합니다.</div>
+      <div class="sb-grid">
+        <div class="sb-card">
+          <span class="sb-badge" style="background:#EEEDFE;color:#3C3489;">월간 SalesBook</span>
+          <div class="sb-card-title">월간SalesBook</div>
+          <div class="sb-card-desc">이달 주력 상품 흐름 및 영업 포인트 확인</div>
+          <a class="sb-link" href="https://drive.google.com/drive/u/1/folders/1QJi3ZT20QVcAi5hMMgxUxpsCJf0Zsxrd" target="_blank" rel="noopener" style="color:#2448FF;border-color:#c7d2f8;background:#f0f3ff;">
+            <svg style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>원본 열기
+          </a>
+        </div>
+        <div class="sb-card">
+          <span class="sb-badge" style="background:#E1F5EE;color:#085041;">상품전략</span>
+          <div class="sb-card-title">상품전략</div>
+          <div class="sb-card-desc">이달 추천 상품 구성 및 설계 방향 참고</div>
+          <a class="sb-link" href="https://drive.google.com/drive/u/1/folders/1QJi3ZT20QVcAi5hMMgxUxpsCJf0Zsxrd" target="_blank" rel="noopener" style="color:#2448FF;border-color:#c7d2f8;background:#f0f3ff;">
+            <svg style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>원본 열기
+          </a>
+        </div>
       </div>
-
-      <div style="background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:14px 15px;">
-        <div style="font-size:10px;font-weight:800;color:#633806;background:#FAEEDA;border-radius:6px;padding:2px 8px;display:inline-block;margin-bottom:8px;">손보 시책</div>
-        <div style="font-size:13.5px;font-weight:800;color:var(--ink);margin-bottom:6px;">손보시책</div>
-        <div style="font-size:11.5px;color:var(--muted);background:var(--bg);border-radius:8px;padding:6px 9px;line-height:1.55;margin-bottom:10px;">손보사 시책 조건·기간·대상 확인 필수</div>
-        <a href="https://drive.google.com/drive/u/1/folders/16dqQ_TymDaoI_eV_FgTRY_G1HzBVMgbG" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:var(--purple);background:var(--tint);border:1px solid var(--tint-line);border-radius:8px;padding:6px 11px;text-decoration:none;">
-          <svg style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>원본 열기
-        </a>
-      </div>
-
-      <div style="background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:14px 15px;">
-        <div style="font-size:10px;font-weight:800;color:#0C447C;background:#E6F1FB;border-radius:6px;padding:2px 8px;display:inline-block;margin-bottom:8px;">생보 시책</div>
-        <div style="font-size:13.5px;font-weight:800;color:var(--ink);margin-bottom:6px;">생보시책</div>
-        <div style="font-size:11.5px;color:var(--muted);background:var(--bg);border-radius:8px;padding:6px 9px;line-height:1.55;margin-bottom:10px;">생보사 시책 조건·기간·대상 확인 필수</div>
-        <a href="https://drive.google.com/drive/u/1/folders/16dqQ_TymDaoI_eV_FgTRY_G1HzBVMgbG" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:var(--purple);background:var(--tint);border:1px solid var(--tint-line);border-radius:8px;padding:6px 11px;text-decoration:none;">
-          <svg style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>원본 열기
-        </a>
-      </div>
-
-      <div style="background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:14px 15px;">
-        <div style="font-size:10px;font-weight:800;color:#444441;background:#F1EFE8;border-radius:6px;padding:2px 8px;display:inline-block;margin-bottom:8px;">기타공지</div>
-        <div style="font-size:13.5px;font-weight:800;color:var(--ink);margin-bottom:6px;">기타공지</div>
-        <div style="font-size:11.5px;color:var(--muted);background:var(--bg);border-radius:8px;padding:6px 9px;line-height:1.55;margin-bottom:10px;">업무 공지 및 변경 사항 확인</div>
-        <a href="https://drive.google.com/drive/u/1/folders/16dqQ_TymDaoI_eV_FgTRY_G1HzBVMgbG" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:var(--purple);background:var(--tint);border:1px solid var(--tint-line);border-radius:8px;padding:6px 11px;text-decoration:none;">
-          <svg style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>원본 열기
-        </a>
-      </div>
-
     </div>
 
-    <!-- 구분선 -->
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;"><div style="flex:1;height:1px;background:var(--line);"></div><span style="font-size:11px;font-weight:800;color:var(--muted);white-space:nowrap;letter-spacing:.12em;">보험세일즈북 참고자료 — 월간영업자료와 별도 분리</span><div style="flex:1;height:1px;background:var(--line);"></div></div>
+    <!-- 묶음 2: 시책자료 -->
+    <div class="sb-section sb-sichek">
+      <div class="sb-section-h">
+        <svg style="width:20px;height:20px;fill:none;stroke:#7c3aed;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        시책자료
+      </div>
+      <div class="sb-section-desc">손보·생보 시책자료를 확인합니다.</div>
+      <div class="sb-grid">
+        <div class="sb-card">
+          <span class="sb-badge" style="background:#FAEEDA;color:#633806;">손보 시책</span>
+          <div class="sb-card-title">손보시책</div>
+          <div class="sb-card-desc">손보사 시책 조건·기간·대상 확인 필수</div>
+          <a class="sb-link" href="https://drive.google.com/drive/u/1/folders/1ow8LAx3iD07ySiONiHcnRwKNtEmxSXic" target="_blank" rel="noopener" style="color:#7c3aed;border-color:#d8c8f8;background:#f5f0ff;">
+            <svg style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>원본 열기
+          </a>
+        </div>
+        <div class="sb-card">
+          <span class="sb-badge" style="background:#E6F1FB;color:#0C447C;">생보 시책</span>
+          <div class="sb-card-title">생보시책</div>
+          <div class="sb-card-desc">생보사 시책 조건·기간·대상 확인 필수</div>
+          <a class="sb-link" href="https://drive.google.com/drive/u/1/folders/1ow8LAx3iD07ySiONiHcnRwKNtEmxSXic" target="_blank" rel="noopener" style="color:#7c3aed;border-color:#d8c8f8;background:#f5f0ff;">
+            <svg style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>원본 열기
+          </a>
+        </div>
+      </div>
+    </div>
 
-    <!-- 보험세일즈북 분리 박스 -->
-    <div style="background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--muted);border-radius:0 13px 13px 0;padding:15px 17px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <span style="font-size:14px;font-weight:800;color:var(--ink);">보험세일즈북 참고자료</span>
-        <span style="font-size:10px;font-weight:800;color:#5F5E5A;background:#F1EFE8;border-radius:6px;padding:2px 8px;">2024년 기준</span>
+    <!-- 묶음 3: 기타공지 -->
+    <div class="sb-section sb-etc">
+      <div class="sb-section-h">
+        <svg style="width:20px;height:20px;fill:none;stroke:#0891b2;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        기타공지
       </div>
-      <div style="display:flex;gap:8px;align-items:flex-start;background:#FFF8E6;border:1px solid #EF9F27;border-radius:9px;padding:10px 13px;margin-bottom:8px;font-size:12px;color:#633806;line-height:1.65;">
-        <svg style="width:15px;height:15px;fill:none;stroke:#BA7517;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;margin-top:1px;" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <span>본 자료는 WD가 구입한 세일즈북으로, 저작권이 원 제작사에 있습니다. 사내 참고 목적으로만 사용하며 외부 배포·공유·복제는 금지합니다.</span>
+      <div class="sb-section-desc">월간 업무 공지와 기타 안내를 확인합니다.</div>
+      <div class="sb-grid">
+        <div class="sb-card">
+          <span class="sb-badge" style="background:#F1EFE8;color:#444441;">기타공지</span>
+          <div class="sb-card-title">기타공지</div>
+          <div class="sb-card-desc">업무 공지 및 변경 사항 확인</div>
+          <a class="sb-link" href="https://drive.google.com/drive/u/1/folders/1SFOPKpKCckDBc_05fISWfE9NhQO6krTY" target="_blank" rel="noopener" style="color:#0891b2;border-color:#a5d8e8;background:#edfaff;">
+            <svg style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>원본 열기
+          </a>
+        </div>
       </div>
-      <div style="display:flex;gap:8px;align-items:flex-start;background:#FCEBEB;border:1px solid #f0c4be;border-radius:9px;padding:10px 13px;margin-bottom:12px;font-size:12px;color:#7A2A1A;line-height:1.65;">
-        <svg style="width:15px;height:15px;fill:none;stroke:#B3422F;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;margin-top:1px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
-        <span>2024년 기준 자료입니다. 상품 구조·보험료·약관 기준이 변경되었을 수 있습니다. 반드시 최신 약관과 보험사 안내를 함께 확인하세요.</span>
-      </div>
-      <a href="https://drive.google.com/file/d/1P2DTfzCa6zUx-s_7YJVT9D3PbzgdZRkV/view?usp=sharing" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 14px;text-decoration:none;">
-        <svg style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-        보험세일즈북 원본 열기 (구글드라이브)
-      </a>
     </div>
 
   </div>
