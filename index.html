@@ -2451,7 +2451,7 @@ WD WAVE 은퇴 준비 점검 서비스 소개 포함
 <script>
 /* ══ 앱 버전 체크 (배포 후 캐시 대응) ══
    ※ 다음 버전 작업 시 Claude는 이 APP_VERSION 값을 출력 파일 버전에 맞춰 함께 변경할 것 */
-var APP_VERSION='WD_PARTNERS_260630_V68';
+var APP_VERSION='WD_PARTNERS_260630_V69';
 (function checkAppVersionRefresh(){
   try{
     var key='WD_PARTNERS_APP_VERSION';
@@ -3521,8 +3521,9 @@ document.getElementById('det-info-content').innerHTML=
   +'</div>';
 // 소통이력 초기 렌더
 renderCommList();
-// 청구문의기록 초기 렌더
+// 청구문의기록 초기 렌더(캐시) → Supabase 조회 후 재렌더
 renderClaimList();
+loadClaimDsFromSupa(id).then(function(){if(_vid===id)renderClaimList();});
 // 자료전달 초기 렌더
 renderMatList();
 // 탭 전부 기본정보로 리셋
@@ -3560,8 +3561,75 @@ function renderWdList(){var list=getWdList().sort(function(a,b){return b.date.lo
 
 // ══ 청구문의 ══
 function lsClaimD(){return'wlp_claimd_'+_UID+'_'+_vid;}
-function getClaimDs(){try{return JSON.parse(localStorage.getItem(lsClaimD())||'[]');}catch(e){return[];}}
-function saveClaimDs(d){localStorage.setItem(lsClaimD(),JSON.stringify(d));}
+// ══ 청구문의기록 — Supabase 연결 (V69) ══
+// 고객별 캐시(CLAIMD_CACHE_BY_CUST_ID)에서 동기 반환 / 실제 조회는 loadClaimDsFromSupa(custId)(비동기)
+// 저장은 saveClaimDs()가 Supabase 성공 후에만 캐시 갱신. localStorage는 더 이상 청구문의기록 저장에 쓰지 않음(기존 키는 삭제하지 않음).
+var CLAIMD_CACHE_BY_CUST_ID={};
+var _claimdLoadError=false;
+function getClaimDs(){return CLAIMD_CACHE_BY_CUST_ID[_vid]||[];}
+async function loadClaimDsFromSupa(custId){
+  var sb=getSbClient();
+  if(!sb){
+    _claimdLoadError=true;
+    console.error('[claimd load] Supabase client 없음');
+    return {ok:false,reason:'NO_SUPABASE_CLIENT'};
+  }
+  try{
+    var res=await sb.from('wd_partners_claim_records').select('data').eq('uid',_UID).eq('customer_id',custId);
+    if(res.error){
+      _claimdLoadError=true;
+      console.error('[claimd load]',res.error.message);
+      return {ok:false,reason:'LOAD_ERROR'};
+    }
+    CLAIMD_CACHE_BY_CUST_ID[custId]=(res.data||[]).map(function(row){return row.data;});
+    _claimdLoadError=false;
+    return {ok:true};
+  }catch(e){
+    _claimdLoadError=true;
+    console.error('[claimd load]',e&&e.message);
+    return {ok:false,reason:'LOAD_EXCEPTION'};
+  }
+}
+// 저장: 현재 고객(_vid) 기준 배열 d를 uid+customer_id+id로 upsert. 실패 시 캐시 갱신 안 함.
+async function saveClaimDs(d){
+  var sb=getSbClient();
+  if(!sb){
+    alert('청구문의기록 저장 실패: Supabase 연결을 확인해주세요.');
+    return {ok:false,reason:'NO_SUPABASE_CLIENT'};
+  }
+  var custId=_vid;
+  var rows=d.map(function(r){
+    return {
+      uid:_UID,
+      customer_id:custId,
+      id:r.id,
+      date:r.date||'',
+      ins_category:r.insCategory||'',
+      ins_company:r.insCompany||'',
+      claim_type:r.type||'',
+      content:r.content||'',
+      file_name:r.fileName||'',
+      status:r.status||'',
+      data:r,
+      created_at:r.created||new Date().toISOString(),
+      updated_at:r.updated||new Date().toISOString()
+    };
+  });
+  try{
+    var res=await sb.from('wd_partners_claim_records').upsert(rows,{onConflict:'uid,customer_id,id'});
+    if(res.error){
+      console.error('[claimd save]',res.error.message);
+      alert('청구문의기록 저장 실패: '+res.error.message);
+      return {ok:false,reason:'SAVE_ERROR'};
+    }
+    CLAIMD_CACHE_BY_CUST_ID[custId]=d;
+    return {ok:true};
+  }catch(e){
+    console.error('[claimd save]',e&&e.message);
+    alert('청구문의기록 저장 실패: '+(e&&e.message?e.message:'네트워크 오류'));
+    return {ok:false,reason:'SAVE_EXCEPTION'};
+  }
+}
 function openClaimAdd(){
   document.getElementById('modal-claim-rec-t').textContent='청구문의기록 추가';
   document.getElementById('clm-edit-id').value='';
@@ -3604,7 +3672,7 @@ function clmUpdateInsurers(cat){
   if(!list.length){sel.innerHTML='<option value="">보험 구분을 먼저 선택하세요</option>';return;}
   sel.innerHTML='<option value="">보험사 선택</option>'+list.map(function(v){return'<option>'+v+'</option>';}).join('');
 }
-function saveClaimRecord(){
+async function saveClaimRecord(){
   var dt=document.getElementById('clm-date').value;
   var ct=document.getElementById('clm-content').value.trim();
   if(!dt){alert('청구요청날짜를 입력하세요.');return;}
@@ -3623,16 +3691,38 @@ function saveClaimRecord(){
     status:document.getElementById('clm-status').value||'청구접수중',
     updated:new Date().toISOString()
   };
-  var list=getClaimDs();
+  var list=getClaimDs().slice();
   if(eid){list=list.map(function(x){return x.id==eid?Object.assign({},x,rec):x;});}
-  else{rec.created=new Date().toISOString();list.push(rec);}
-  saveClaimDs(list);
+  else{rec.created=new Date().toISOString();list=list.concat([rec]);}
+  var result=await saveClaimDs(list);
+  if(!result.ok)return; // 저장 실패 시 모달 유지, 화면 갱신 안 함
   closeModal('modal-claim-rec');
   renderClaimList();
 }
-function deleteClaimD(id){
+// 공용: Supabase에서 청구문의기록 1건 삭제(성공 시에만 true 반환, 캐시는 호출부에서 갱신)
+async function _claimRecordDeleteFromSupa(id){
+  var sb=getSbClient();
+  if(!sb){alert('청구문의기록 삭제 실패: Supabase 연결을 확인해주세요.');return false;}
+  var custId=_vid;
+  try{
+    var res=await sb.from('wd_partners_claim_records').delete().eq('uid',_UID).eq('customer_id',custId).eq('id',id);
+    if(res.error){
+      console.error('[claimd delete]',res.error.message);
+      alert('청구문의기록 삭제 실패: '+res.error.message);
+      return false;
+    }
+  }catch(e){
+    console.error('[claimd delete]',e&&e.message);
+    alert('청구문의기록 삭제 실패: '+(e&&e.message?e.message:'네트워크 오류'));
+    return false;
+  }
+  CLAIMD_CACHE_BY_CUST_ID[custId]=(CLAIMD_CACHE_BY_CUST_ID[custId]||[]).filter(function(x){return x.id!=id;});
+  return true;
+}
+async function deleteClaimD(id){
   if(!confirm('이 청구문의기록을 삭제하시겠습니까?'))return;
-  saveClaimDs(getClaimDs().filter(function(x){return x.id!=id;}));
+  var ok=await _claimRecordDeleteFromSupa(id);
+  if(!ok)return;
   renderClaimList();
 }
 function clmStatusBadge(s){
@@ -3651,21 +3741,44 @@ function clmStatusSelectInline(id,cur){
   var opts=['청구접수중','청구진행중','보험금지급완료'].map(function(v){return'<option value="'+v+'"'+(v===cur?' selected':'')+'>'+v+'</option>';}).join('');
   return '<select class="clm-status-sel '+cls+'" onclick="event.stopPropagation()" onchange="event.stopPropagation();changeClaimStatusInline('+id+',this.value)">'+opts+'</select>';
 }
-function changeClaimStatusInline(id,newStatus){
+async function changeClaimStatusInline(id,newStatus){
   var list=getClaimDs();
   var idx=list.findIndex(function(x){return x.id==id;});
   if(idx<0)return;
-  list[idx].status=newStatus;
-  list[idx].updated=new Date().toISOString();
-  saveClaimDs(list);
+  var prevRecord=list[idx];
+  var nowIso=new Date().toISOString();
+  var updatedData=Object.assign({},prevRecord,{status:newStatus,updated:nowIso});
+  var sb=getSbClient();
+  if(!sb){alert('청구상태 변경 실패: Supabase 연결을 확인해주세요.');renderClaimList();return;}
+  var custId=_vid;
+  try{
+    var res=await sb.from('wd_partners_claim_records')
+      .update({status:newStatus,data:updatedData,updated_at:nowIso})
+      .eq('uid',_UID).eq('customer_id',custId).eq('id',id);
+    if(res.error){
+      console.error('[claimd status]',res.error.message);
+      alert('청구상태 변경 실패: '+res.error.message);
+      renderClaimList(); // 인라인 select가 이미 바뀐 채 그려졌을 수 있어 원래 상태로 재렌더
+      return;
+    }
+  }catch(e){
+    console.error('[claimd status]',e&&e.message);
+    alert('청구상태 변경 실패: '+(e&&e.message?e.message:'네트워크 오류'));
+    renderClaimList();
+    return;
+  }
+  var newList=list.slice();newList[idx]=updatedData;
+  CLAIMD_CACHE_BY_CUST_ID[custId]=newList;
   renderClaimList();
 }
 function renderClaimList(){
-  var list=getClaimDs().sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
+  var list=getClaimDs().slice().sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
+  var claimErrMsg='청구문의기록을 불러오지 못했습니다. 네트워크 상태를 확인 후 다시 시도해주세요.';
   // 오른쪽 사이드 카드 (기본정보 탭) — 테이블형 한 줄 요약
   var side=document.getElementById('claim-list-side');
   if(side){
-    if(!list.length){side.innerHTML='<div style="font-size:13px;color:var(--s400);padding:8px 0;">기록 없음</div>';}
+    if(_claimdLoadError){side.innerHTML='<div style="font-size:13px;color:var(--rd700);padding:8px 0;">'+claimErrMsg+'</div>';}
+    else if(!list.length){side.innerHTML='<div style="font-size:13px;color:var(--s400);padding:8px 0;">기록 없음</div>';}
     else{
       var rows=list.map(function(x){
         var preview=(x.content||x.note||'').slice(0,12)+((x.content||x.note||'').length>12?'…':'');
@@ -3685,6 +3798,7 @@ function renderClaimList(){
   // 청구문의 탭 리스트 (full)
   var el=document.getElementById('det-claim-list');
   if(!el)return;
+  if(_claimdLoadError){el.innerHTML='<div style="text-align:center;padding:20px 0;font-size:13px;color:var(--rd700);">'+claimErrMsg+'</div>';return;}
   if(!list.length){el.innerHTML='<div style="text-align:center;padding:20px 0;font-size:13px;color:var(--s400);">청구문의기록이 없습니다</div>';return;}
   el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:14px;">'
     +'<thead><tr style="border-bottom:2px solid var(--s200);">'
@@ -3732,10 +3846,12 @@ function claimDetailEdit(){
   closeModal('modal-claim-detail');
   openClaimEdit(_claimDetailId);
 }
-function claimDetailDelete(){
+async function claimDetailDelete(){
   if(!_claimDetailId)return;
   if(!confirm('이 청구문의기록을 삭제하시겠습니까?'))return;
-  saveClaimDs(getClaimDs().filter(function(x){return x.id!=_claimDetailId;}));
+  var id=_claimDetailId;
+  var ok=await _claimRecordDeleteFromSupa(id);
+  if(!ok)return; // 실패 시 모달 유지(삭제된 것처럼 보이지 않게)
   closeModal('modal-claim-detail');
   _claimDetailId=null;
   renderClaimList();
