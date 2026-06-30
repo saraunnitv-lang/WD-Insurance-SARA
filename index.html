@@ -2451,7 +2451,7 @@ WD WAVE 은퇴 준비 점검 서비스 소개 포함
 <script>
 /* ══ 앱 버전 체크 (배포 후 캐시 대응) ══
    ※ 다음 버전 작업 시 Claude는 이 APP_VERSION 값을 출력 파일 버전에 맞춰 함께 변경할 것 */
-var APP_VERSION='WD_PARTNERS_260630_V69';
+var APP_VERSION='WD_PARTNERS_260630_V70';
 (function checkAppVersionRefresh(){
   try{
     var key='WD_PARTNERS_APP_VERSION';
@@ -3187,10 +3187,98 @@ async function saveCustInline(id){
   showDetail(id);
 }
 function lsComm(){return 'wlp_comm_'+_UID+'_'+_vid;}
-function getCommsFor(custId){try{return JSON.parse(localStorage.getItem('wlp_comm_'+_UID+'_'+custId)||'[]');}catch(e){return[];}}
-function saveCommsFor(custId,d){localStorage.setItem('wlp_comm_'+_UID+'_'+custId,JSON.stringify(d));}
-function getComms(){try{return JSON.parse(localStorage.getItem(lsComm())||'[]');}catch(e){return[];}}
-function saveComms(d){localStorage.setItem(lsComm(),JSON.stringify(d));}
+// ══ 고객소통이력 — Supabase 연결 (V70) ══
+// 고객별 캐시(COMM_CACHE_BY_CUST_ID)에서 동기 반환 / 실제 조회는 loadCommsFromSupa(custId)(비동기)
+// 저장은 saveComms()가 Supabase 성공 후에만 캐시 갱신. localStorage는 더 이상 고객소통이력 저장에 쓰지 않음(기존 키는 삭제하지 않음).
+// 주의: 홈 화면 "다음 연락 예정"은 전체 고객 순회로 이 캐시를 쓰지 않고, 별도 전용 쿼리(loadHomeNextContacts)를 사용함(아래 홈 섹션 참고).
+var COMM_CACHE_BY_CUST_ID={};
+var _commLoadError=false;
+function getComms(){return COMM_CACHE_BY_CUST_ID[_vid]||[];}
+function getCommsFor(custId){return COMM_CACHE_BY_CUST_ID[custId]||[];}
+async function loadCommsFromSupa(custId){
+  var sb=getSbClient();
+  if(!sb){
+    _commLoadError=true;
+    console.error('[comm load] Supabase client 없음');
+    return {ok:false,reason:'NO_SUPABASE_CLIENT'};
+  }
+  try{
+    var res=await sb.from('wd_partners_communications').select('data').eq('uid',_UID).eq('customer_id',custId);
+    if(res.error){
+      _commLoadError=true;
+      console.error('[comm load]',res.error.message);
+      return {ok:false,reason:'LOAD_ERROR'};
+    }
+    COMM_CACHE_BY_CUST_ID[custId]=(res.data||[]).map(function(row){return row.data;});
+    _commLoadError=false;
+    return {ok:true};
+  }catch(e){
+    _commLoadError=true;
+    console.error('[comm load]',e&&e.message);
+    return {ok:false,reason:'LOAD_EXCEPTION'};
+  }
+}
+// 저장: 현재 고객(_vid) 기준 배열 d를 uid+customer_id+id로 upsert. 실패 시 캐시 갱신 안 함.
+async function saveComms(d){
+  var sb=getSbClient();
+  if(!sb){
+    alert('고객소통이력 저장 실패: Supabase 연결을 확인해주세요.');
+    return {ok:false,reason:'NO_SUPABASE_CLIENT'};
+  }
+  var custId=_vid;
+  var rows=d.map(function(r){
+    return {
+      uid:_UID,
+      customer_id:custId,
+      id:r.id,
+      type:r.type||'',
+      content:r.content||'',
+      date:r.date||'',
+      file_name:r.fileName||'',
+      next_date:r.nextDate||'',
+      next_content:r.nextContent||'',
+      no_next_contact:!!r.noNextContact,
+      contact_done:!!r.contactDone,
+      data:r,
+      created_at:r.created||new Date().toISOString(),
+      updated_at:r.updated||new Date().toISOString()
+    };
+  });
+  try{
+    var res=await sb.from('wd_partners_communications').upsert(rows,{onConflict:'uid,customer_id,id'});
+    if(res.error){
+      console.error('[comm save]',res.error.message);
+      alert('고객소통이력 저장 실패: '+res.error.message);
+      return {ok:false,reason:'SAVE_ERROR'};
+    }
+    COMM_CACHE_BY_CUST_ID[custId]=d;
+    return {ok:true};
+  }catch(e){
+    console.error('[comm save]',e&&e.message);
+    alert('고객소통이력 저장 실패: '+(e&&e.message?e.message:'네트워크 오류'));
+    return {ok:false,reason:'SAVE_EXCEPTION'};
+  }
+}
+// 공용: Supabase에서 소통이력 1건 삭제(성공 시에만 true 반환, 캐시는 호출부에서 갱신)
+async function _commRecordDeleteFromSupa(id){
+  var sb=getSbClient();
+  if(!sb){alert('고객소통이력 삭제 실패: Supabase 연결을 확인해주세요.');return false;}
+  var custId=_vid;
+  try{
+    var res=await sb.from('wd_partners_communications').delete().eq('uid',_UID).eq('customer_id',custId).eq('id',id);
+    if(res.error){
+      console.error('[comm delete]',res.error.message);
+      alert('고객소통이력 삭제 실패: '+res.error.message);
+      return false;
+    }
+  }catch(e){
+    console.error('[comm delete]',e&&e.message);
+    alert('고객소통이력 삭제 실패: '+(e&&e.message?e.message:'네트워크 오류'));
+    return false;
+  }
+  COMM_CACHE_BY_CUST_ID[custId]=(COMM_CACHE_BY_CUST_ID[custId]||[]).filter(function(x){return x.id!=id;});
+  return true;
+}
 
 function commTypeSelect(btn){
   document.querySelectorAll('#comm-type-btns .comm-type-btn').forEach(function(b){b.classList.remove('sel');});
@@ -3262,7 +3350,7 @@ function openCommEdit(cid){
   openModal('modal-comm');
 }
 
-function saveComm(){
+async function saveComm(){
   var tp=document.getElementById('comm-type-val').value;
   var ct=document.getElementById('comm-content').value.trim();
   var dt=document.getElementById('comm-date').value;
@@ -3274,13 +3362,14 @@ function saveComm(){
   var nc=noNext?'':document.getElementById('comm-next-content').value.trim();
   var cdone=document.getElementById('comm-contact-done-val').value==='true';
   var eid=document.getElementById('comm-edit-id').value;
-  var list=getComms();
+  var list=getComms().slice();
   if(eid){
     list=list.map(function(x){return x.id==eid?{id:x.id,type:tp,content:ct,date:dt,fileName:fn,nextDate:nd,nextContent:nc,noNextContact:noNext,contactDone:cdone,created:x.created,updated:new Date().toISOString()}:x;});
   }else{
-    list.push({id:Date.now(),type:tp,content:ct,date:dt,fileName:fn,nextDate:nd,nextContent:nc,noNextContact:noNext,contactDone:cdone,created:new Date().toISOString(),updated:new Date().toISOString()});
+    list=list.concat([{id:Date.now(),type:tp,content:ct,date:dt,fileName:fn,nextDate:nd,nextContent:nc,noNextContact:noNext,contactDone:cdone,created:new Date().toISOString(),updated:new Date().toISOString()}]);
   }
-  saveComms(list);
+  var result=await saveComms(list);
+  if(!result.ok)return; // 저장 실패 시 모달 유지, 화면 갱신 안 함
   // 다음연락예정일 → 고객 c.next 업데이트 (홈 연결)
   if(nd&&_vid){
     var cs=getCusts().slice();var idx=cs.findIndex(function(x){return x.id==_vid;});
@@ -3291,9 +3380,10 @@ function saveComm(){
   renderCommList();
 }
 
-function deleteComm(cid){
+async function deleteComm(cid){
   if(!confirm('이 소통이력을 삭제할까요?'))return;
-  saveComms(getComms().filter(function(x){return x.id!=cid;}));
+  var ok=await _commRecordDeleteFromSupa(cid);
+  if(!ok)return;
   renderCommList();
 }
 
@@ -3304,7 +3394,8 @@ function toggleCommItem(el){
 function renderCommList(){
   var wrap=document.getElementById('comm-list-wrap');
   if(!wrap)return;
-  var list=getComms().sort(function(a,b){return(b.date||b.created||'').localeCompare(a.date||a.created||'');});
+  if(_commLoadError){wrap.innerHTML='<div style="font-size:13px;color:var(--rd700);padding:8px 0;">고객소통이력을 불러오지 못했습니다. 네트워크 상태를 확인 후 다시 시도해주세요.</div>';return;}
+  var list=getComms().slice().sort(function(a,b){return(b.date||b.created||'').localeCompare(a.date||a.created||'');});
   if(!list.length){wrap.innerHTML='<div style="font-size:13px;color:var(--s400);padding:8px 0;">기록 없음</div>';return;}
   var rows=list.map(function(x){
     var contentPreview=(x.content||'').slice(0,16)+((x.content||'').length>16?'…':'');
@@ -3345,24 +3436,24 @@ function openCommDetail(cid){
   });
   openModal('modal-comm-detail');
 }
-function toggleCommContactInline(cid){
-  var list=getComms();
+async function toggleCommContactInline(cid){
+  var list=getComms().slice();
   var idx=list.findIndex(function(x){return x.id==cid;});
   if(idx<0)return;
-  list[idx].contactDone=!list[idx].contactDone;
-  list[idx].updated=new Date().toISOString();
-  saveComms(list);
+  list[idx]=Object.assign({},list[idx],{contactDone:!list[idx].contactDone,updated:new Date().toISOString()});
+  var result=await saveComms(list);
+  if(!result.ok)return; // 실패 시 화면 갱신 안 함(바뀐 것처럼 보이지 않게)
   renderCommList();
   renderHomeCusts();
 }
-function cdStatusSelect(btn,isDone){
+async function cdStatusSelect(btn,isDone){
   if(!_commDetailId)return;
-  var list=getComms();
+  var list=getComms().slice();
   var idx=list.findIndex(function(x){return x.id==_commDetailId;});
   if(idx<0)return;
-  list[idx].contactDone=isDone;
-  list[idx].updated=new Date().toISOString();
-  saveComms(list);
+  list[idx]=Object.assign({},list[idx],{contactDone:isDone,updated:new Date().toISOString()});
+  var result=await saveComms(list);
+  if(!result.ok)return; // 실패 시 버튼 선택 상태 바꾸지 않음
   document.querySelectorAll('#cd-status-btns .contact-status-btn').forEach(function(b){b.classList.remove('sel-wait','sel-done');});
   btn.classList.add(isDone?'sel-done':'sel-wait');
   renderCommList();
@@ -3373,10 +3464,12 @@ function commDetailEdit(){
   closeModal('modal-comm-detail');
   openCommEdit(_commDetailId);
 }
-function commDetailDelete(){
+async function commDetailDelete(){
   if(!_commDetailId)return;
   if(!confirm('이 고객소통이력을 삭제하시겠습니까?'))return;
-  saveComms(getComms().filter(function(x){return x.id!=_commDetailId;}));
+  var id=_commDetailId;
+  var ok=await _commRecordDeleteFromSupa(id);
+  if(!ok)return; // 실패 시 모달 유지(삭제된 것처럼 보이지 않게)
   closeModal('modal-comm-detail');
   _commDetailId=null;
   renderCommList();
@@ -3519,8 +3612,9 @@ document.getElementById('det-info-content').innerHTML=
   +'</div>'
   +'</div>'
   +'</div>';
-// 소통이력 초기 렌더
+// 소통이력 초기 렌더(캐시) → Supabase 조회 후 재렌더
 renderCommList();
+loadCommsFromSupa(id).then(function(){if(_vid===id)renderCommList();});
 // 청구문의기록 초기 렌더(캐시) → Supabase 조회 후 재렌더
 renderClaimList();
 loadClaimDsFromSupa(id).then(function(){if(_vid===id)renderClaimList();});
@@ -3992,41 +4086,85 @@ function renderHomeCusts(){
     if(!cs.length){el.innerHTML='<div style="text-align:center;padding:10px 0;font-size:12px;color:var(--s400);">등록된 고객이 없어요</div>';}
     else{el.innerHTML=cs.map(function(c){return'<div onclick="goPage(\'cust\');showDetail('+c.id+')" style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--s100);cursor:pointer;" onmouseover="this.style.background=\'var(--s50)\'" onmouseout="this.style.background=\'\'">'+'<div style="font-weight:800;font-size:13px;min-width:52px;flex-shrink:0;">'+esc(c.name)+'</div>'+'<div style="font-size:11px;color:var(--s500);min-width:82px;flex-shrink:0;">'+esc(c.birth||'-')+'</div>'+'<div style="font-size:11px;color:var(--s600);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(c.phone||'-')+'</div>'+'<span style="display:inline-block;padding:2px 6px;border-radius:10px;background:var(--lav);color:var(--purple);font-size:10px;font-weight:700;flex-shrink:0;">'+esc(normalizeCustomerType(c.ctype))+'</span>'+'</div>';}).join('');}
   }
-  // ── 다음 연락 예정 (고객소통이력 nextDate 기준, 전체 고객 순회, 연락유무 미체크만) ──
-  var nx=[];
-  cs.forEach(function(c){
-    var comms=getCommsFor(c.id);
-    comms.forEach(function(x){
-      if(x.nextDate&&!x.contactDone&&!x.noNextContact){
-        nx.push({custId:c.id,custName:c.name,custCtype:normalizeCustomerType(c.ctype),custPhone:c.phone||'',commId:x.id,commType:x.type||'',commContent:x.content||'',nextDate:x.nextDate,nextContent:x.nextContent||'',contactDone:false});
-      }
-    });
-  });
-  nx.sort(function(a,b){return (a.nextDate||'').localeCompare(b.nextDate||'');});
-  var nel=document.getElementById('home-next');
-  if(nel){
-    if(!nx.length){nel.innerHTML='<div style="text-align:center;padding:10px 0;font-size:12px;color:var(--s400);">예정된 연락이 없어요</div>';}
-    else{
-      nel.innerHTML='<table style="width:100%;border-collapse:collapse;">'
-        +'<thead><tr style="border-bottom:2px solid var(--s200);">'
-        +'<th style="text-align:left;padding:7px 6px;font-size:12px;color:var(--s400);font-weight:700;">고객명</th>'
-        +'<th style="text-align:left;padding:7px 6px;font-size:12px;color:var(--s400);font-weight:700;">다음연락예정일</th>'
-        +'<th style="text-align:left;padding:7px 6px;font-size:12px;color:var(--s400);font-weight:700;">다음연락내용</th>'
-        +'<th style="text-align:center;padding:7px 6px;font-size:12px;color:var(--s400);font-weight:700;">연락유무</th>'
-        +'</tr></thead><tbody>'
-        +nx.map(function(x,i){
-          return '<tr class="nc-row" onclick="openNextContactDetail('+i+')">'
-            +'<td style="padding:9px 6px;font-weight:700;font-size:14px;">'+esc(x.custName)+'</td>'
-            +'<td style="padding:9px 6px;font-size:13px;color:var(--sk700);font-weight:600;white-space:nowrap;">'+esc(x.nextDate)+'</td>'
-            +'<td style="padding:9px 6px;font-size:13px;color:var(--s600);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+esc(x.nextContent)+'">'+esc(x.nextContent||'-')+'</td>'
-            +'<td style="padding:9px 6px;text-align:center;">'
-            +'<input type="checkbox" style="width:15px;height:15px;accent-color:var(--purple);cursor:pointer;" onclick="event.stopPropagation();toggleHomeContactDone('+x.custId+','+x.commId+',this.checked)">'
-            +'</td></tr>';
-        }).join('')
-        +'</tbody></table>';
-    }
+  // ── 다음 연락 예정: 전체 고객 순회/전체 소통이력 로드 금지 — 홈 전용 쿼리만 사용 (V70) ──
+  renderHomeNextSection(); // 지금 캐시(window._homeNextList)로 즉시 1회 표시
+  loadHomeNextContacts().then(function(){renderHomeNextSection();});
+}
+/* ══ 다음 연락 예정 — 홈 전용 조회 (V70) ══ */
+// 전체 소통이력을 불러오지 않고, next_date가 있고 미연락인 항목만 조회. 고객명은 이미 로드된 고객 캐시(getCusts())에서 매칭.
+var _homeNextLoadError=false;
+async function loadHomeNextContacts(){
+  var sb=getSbClient();
+  if(!sb){
+    _homeNextLoadError=true;
+    console.error('[home next-contacts load] Supabase client 없음');
+    window._homeNextList=[];
+    return {ok:false,reason:'NO_SUPABASE_CLIENT'};
   }
-  window._homeNextList=nx;
+  try{
+    var res=await sb.from('wd_partners_communications')
+      .select('id,customer_id,type,content,next_date,next_content')
+      .eq('uid',_UID)
+      .eq('contact_done',false)
+      .eq('no_next_contact',false)
+      .not('next_date','is',null)
+      .neq('next_date','');
+    if(res.error){
+      _homeNextLoadError=true;
+      console.error('[home next-contacts load]',res.error.message);
+      window._homeNextList=[];
+      return {ok:false,reason:'LOAD_ERROR'};
+    }
+    var custs=getCusts();
+    var nx=(res.data||[]).map(function(row){
+      var c=custs.find(function(x){return x.id==row.customer_id;});
+      return {
+        custId:row.customer_id,
+        custName:c?c.name:'(고객정보 확인 필요)',
+        custCtype:c?normalizeCustomerType(c.ctype):'-',
+        custPhone:c?(c.phone||''):'',
+        commId:row.id,
+        commType:row.type||'',
+        commContent:row.content||'',
+        nextDate:row.next_date,
+        nextContent:row.next_content||'',
+        contactDone:false
+      };
+    });
+    nx.sort(function(a,b){return (a.nextDate||'').localeCompare(b.nextDate||'');});
+    window._homeNextList=nx;
+    _homeNextLoadError=false;
+    return {ok:true};
+  }catch(e){
+    _homeNextLoadError=true;
+    console.error('[home next-contacts load]',e&&e.message);
+    window._homeNextList=[];
+    return {ok:false,reason:'LOAD_EXCEPTION'};
+  }
+}
+function renderHomeNextSection(){
+  var nx=window._homeNextList||[];
+  var nel=document.getElementById('home-next');
+  if(!nel)return;
+  if(_homeNextLoadError){nel.innerHTML='<div style="text-align:center;padding:10px 0;font-size:12px;color:var(--rd700);">다음 연락 예정을 불러오지 못했습니다. 네트워크 상태를 확인해주세요.</div>';return;}
+  if(!nx.length){nel.innerHTML='<div style="text-align:center;padding:10px 0;font-size:12px;color:var(--s400);">예정된 연락이 없어요</div>';return;}
+  nel.innerHTML='<table style="width:100%;border-collapse:collapse;">'
+    +'<thead><tr style="border-bottom:2px solid var(--s200);">'
+    +'<th style="text-align:left;padding:7px 6px;font-size:12px;color:var(--s400);font-weight:700;">고객명</th>'
+    +'<th style="text-align:left;padding:7px 6px;font-size:12px;color:var(--s400);font-weight:700;">다음연락예정일</th>'
+    +'<th style="text-align:left;padding:7px 6px;font-size:12px;color:var(--s400);font-weight:700;">다음연락내용</th>'
+    +'<th style="text-align:center;padding:7px 6px;font-size:12px;color:var(--s400);font-weight:700;">연락유무</th>'
+    +'</tr></thead><tbody>'
+    +nx.map(function(x,i){
+      return '<tr class="nc-row" onclick="openNextContactDetail('+i+')">'
+        +'<td style="padding:9px 6px;font-weight:700;font-size:14px;">'+esc(x.custName)+'</td>'
+        +'<td style="padding:9px 6px;font-size:13px;color:var(--sk700);font-weight:600;white-space:nowrap;">'+esc(x.nextDate)+'</td>'
+        +'<td style="padding:9px 6px;font-size:13px;color:var(--s600);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+esc(x.nextContent)+'">'+esc(x.nextContent||'-')+'</td>'
+        +'<td style="padding:9px 6px;text-align:center;">'
+        +'<input type="checkbox" style="width:15px;height:15px;accent-color:var(--purple);cursor:pointer;" onclick="event.stopPropagation();toggleHomeContactDone('+x.custId+','+x.commId+',this.checked)">'
+        +'</td></tr>';
+    }).join('')
+    +'</tbody></table>';
 }
 /* ══ 다음 연락 예정 상세 모달 ══ */
 function openNextContactDetail(idx){
@@ -4055,16 +4193,38 @@ function ndGoCust(){
   showDetail(_nextDetailCustId);
 }
 var _nextDetailCustId=null,_nextDetailCommId=null;
-function toggleHomeContactDone(custId,commId,checked){
-  var list=getCommsFor(custId);
-  var idx=list.findIndex(function(x){return x.id==commId;});
-  if(idx<0)return;
-  list[idx].contactDone=checked;
-  list[idx].updated=new Date().toISOString();
-  saveCommsFor(custId,list);
-  renderHomeCusts();
-  // 현재 고객상세 화면이 같은 고객을 보고 있으면 같이 갱신
+// 체크박스 연락완료 처리 — 해당 communication record 1건만 Supabase update (전체 재저장 아님)
+async function toggleHomeContactDone(custId,commId,checked){
+  var sb=getSbClient();
+  if(!sb){alert('연락완료 처리 실패: Supabase 연결을 확인해주세요.');return;}
+  try{
+    var fetchRes=await sb.from('wd_partners_communications').select('data').eq('uid',_UID).eq('customer_id',custId).eq('id',commId).single();
+    if(fetchRes.error){
+      console.error('[comm contact-done fetch]',fetchRes.error.message);
+      alert('연락완료 처리 실패: '+fetchRes.error.message);
+      return;
+    }
+    var nowIso=new Date().toISOString();
+    var updatedData=Object.assign({},fetchRes.data.data,{contactDone:checked,updated:nowIso});
+    var res=await sb.from('wd_partners_communications')
+      .update({contact_done:checked,data:updatedData,updated_at:nowIso})
+      .eq('uid',_UID).eq('customer_id',custId).eq('id',commId);
+    if(res.error){
+      console.error('[comm contact-done update]',res.error.message);
+      alert('연락완료 처리 실패: '+res.error.message);
+      return;
+    }
+  }catch(e){
+    console.error('[comm contact-done]',e&&e.message);
+    alert('연락완료 처리 실패: '+(e&&e.message?e.message:'네트워크 오류'));
+    return;
+  }
+  // 성공 후에만 갱신 — 고객상세 캐시(같은 고객을 보고 있을 때만), 홈 다음연락예정 목록
+  if(COMM_CACHE_BY_CUST_ID[custId]){
+    COMM_CACHE_BY_CUST_ID[custId]=COMM_CACHE_BY_CUST_ID[custId].map(function(x){return x.id==commId?Object.assign({},x,{contactDone:checked,updated:new Date().toISOString()}):x;});
+  }
   if(_vid==custId){renderCommList();}
+  loadHomeNextContacts().then(function(){renderHomeNextSection();});
 }
 
 // ══ 탭 전환 ══
