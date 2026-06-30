@@ -2451,7 +2451,7 @@ WD WAVE 은퇴 준비 점검 서비스 소개 포함
 <script>
 /* ══ 앱 버전 체크 (배포 후 캐시 대응) ══
    ※ 다음 버전 작업 시 Claude는 이 APP_VERSION 값을 출력 파일 버전에 맞춰 함께 변경할 것 */
-var APP_VERSION='WD_PARTNERS_260630_V70';
+var APP_VERSION='WD_PARTNERS_260630_V71';
 (function checkAppVersionRefresh(){
   try{
     var key='WD_PARTNERS_APP_VERSION';
@@ -4533,14 +4533,100 @@ var _designDetailId=null;
 var _designGenerated=false;
 var _designReqSaved=false;
 function lsDesignReqs(){return'wlp_dreqs_'+_UID;}
-function getDesignReqs(){try{return JSON.parse(localStorage.getItem(lsDesignReqs())||'[]');}catch(e){return[];}}
-function saveDesignReqsAll(d){localStorage.setItem(lsDesignReqs(),JSON.stringify(d));}
+// ══ 설계의뢰내역 — Supabase 연결 (V71) ══
+// wlp_dreqs_{UID}는 고객별 키가 아니라 설계사 1명의 전체 의뢰내역이 한 배열에 담기는 구조.
+// DESIGN_REQ_CACHE(메모리 배열)에서 동기 반환 / 실제 조회는 loadDesignReqsFromSupa()(비동기)
+// 저장은 saveDesignReqsAll()이 Supabase 성공 후에만 캐시 갱신. localStorage는 더 이상 쓰지 않음(기존 키는 삭제하지 않음).
+var DESIGN_REQ_CACHE=[];
+var _designReqLoadError=false;
+function getDesignReqs(){return DESIGN_REQ_CACHE;}
+async function loadDesignReqsFromSupa(){
+  var sb=getSbClient();
+  if(!sb){
+    _designReqLoadError=true;
+    console.error('[design-req load] Supabase client 없음');
+    return {ok:false,reason:'NO_SUPABASE_CLIENT'};
+  }
+  try{
+    var res=await sb.from('wd_partners_design_requests').select('data').eq('uid',_UID).order('created_at',{ascending:true});
+    if(res.error){
+      _designReqLoadError=true;
+      console.error('[design-req load]',res.error.message);
+      return {ok:false,reason:'LOAD_ERROR'};
+    }
+    DESIGN_REQ_CACHE=(res.data||[]).map(function(row){return row.data;});
+    _designReqLoadError=false;
+    return {ok:true};
+  }catch(e){
+    _designReqLoadError=true;
+    console.error('[design-req load]',e&&e.message);
+    return {ok:false,reason:'LOAD_EXCEPTION'};
+  }
+}
+// 저장: 전체 배열 d를 uid+id 기준 upsert. 실패 시 캐시 갱신 안 함.
+async function saveDesignReqsAll(d){
+  var sb=getSbClient();
+  if(!sb){
+    alert('설계의뢰내역 저장 실패: Supabase 연결을 확인해주세요.');
+    return {ok:false,reason:'NO_SUPABASE_CLIENT'};
+  }
+  var rows=d.map(function(r){
+    return {
+      uid:_UID,
+      id:r.id,
+      customer_id:r.custId||null,
+      customer_name:r.custName||'',
+      ins_type:r.insType||'',
+      done:!!r.done,
+      date:r.date||'',
+      data:r,
+      created_at:r.created||new Date().toISOString(),
+      updated_at:r.updated||new Date().toISOString()
+    };
+  });
+  try{
+    var res=await sb.from('wd_partners_design_requests').upsert(rows,{onConflict:'uid,id'});
+    if(res.error){
+      console.error('[design-req save]',res.error.message);
+      alert('설계의뢰내역 저장 실패: '+res.error.message);
+      return {ok:false,reason:'SAVE_ERROR'};
+    }
+    DESIGN_REQ_CACHE=d;
+    return {ok:true};
+  }catch(e){
+    console.error('[design-req save]',e&&e.message);
+    alert('설계의뢰내역 저장 실패: '+(e&&e.message?e.message:'네트워크 오류'));
+    return {ok:false,reason:'SAVE_EXCEPTION'};
+  }
+}
+// 공용: Supabase에서 설계의뢰내역 1건 삭제(성공 시에만 true 반환, 캐시는 호출부에서 갱신)
+async function _designReqDeleteFromSupa(id){
+  var sb=getSbClient();
+  if(!sb){alert('설계의뢰내역 삭제 실패: Supabase 연결을 확인해주세요.');return false;}
+  try{
+    var res=await sb.from('wd_partners_design_requests').delete().eq('uid',_UID).eq('id',id);
+    if(res.error){
+      console.error('[design-req delete]',res.error.message);
+      alert('설계의뢰내역 삭제 실패: '+res.error.message);
+      return false;
+    }
+  }catch(e){
+    console.error('[design-req delete]',e&&e.message);
+    alert('설계의뢰내역 삭제 실패: '+(e&&e.message?e.message:'네트워크 오류'));
+    return false;
+  }
+  DESIGN_REQ_CACHE=DESIGN_REQ_CACHE.filter(function(x){return x.id!=id;});
+  return true;
+}
 
 function swDesignMain(btn,id){
   ['dm-work','dm-list'].forEach(function(t){var el=document.getElementById(t);if(el)el.style.display=t===id?'':'none';});
   document.getElementById('design-main-tabs').querySelectorAll('.itab').forEach(function(b){b.classList.remove('on');});
   btn.classList.add('on');
-  if(id==='dm-list')renderDesignReqList();
+  if(id==='dm-list'){
+    renderDesignReqList(); // 캐시로 즉시 1회 표시
+    loadDesignReqsFromSupa().then(function(){renderDesignReqList();});
+  }
 }
 
 function openDesignCustPick(){
@@ -4640,8 +4726,8 @@ function dwRenderCoStatus(){
   var allDone=_designCos.every(function(c){return c.status==='전달완료';});
   document.getElementById('dw-co-all-done').style.display=allDone?'':'none';
   if(allDone&&_designGenerated&&!_designReqSaved){
-    saveDesignReq();
-    _designReqSaved=true;
+    _designReqSaved=true; // 중복 자동저장 방지를 위해 먼저 잠금 — 실패 시 아래에서 복구
+    saveDesignReq().then(function(ok){if(!ok)_designReqSaved=false;});
   }
 }
 function dwGenerateReq(){
@@ -4693,11 +4779,11 @@ function renderDesignPreview(){
     +'설계부탁드립니다.\n감사합니다:)';
   document.getElementById('dw-preview-text').textContent=txt;
 }
-function saveDesignReq(){
-  if(!_designCustId){alert('고객을 먼저 선택하세요.');return;}
+async function saveDesignReq(){
+  if(!_designCustId){alert('고객을 먼저 선택하세요.');return false;}
   var c=getCusts().find(function(x){return x.id==_designCustId;})||{};
   var allDone=_designCos.length>0&&_designCos.every(function(x){return x.status==='전달완료';});
-  var list=getDesignReqs();
+  var list=getDesignReqs().slice();
   var rec={
     custId:_designCustId,custName:c.name||'',
     feeMin:document.getElementById('dw-fee-min').value.trim(),
@@ -4714,21 +4800,27 @@ function saveDesignReq(){
     companies:_designCos.slice(),
     done:allDone
   };
+  var isNew=!_designEditId;
+  var newId=null;
   if(_designEditId){
     var old=list.find(function(x){return x.id===_designEditId;})||{};
     rec.id=_designEditId;rec.date=old.date||today();rec.created=old.created||new Date().toISOString();rec.updated=new Date().toISOString();
     list=list.map(function(x){return x.id===_designEditId?rec:x;});
   }else{
-    rec.id=Date.now();rec.date=today();rec.created=new Date().toISOString();
-    list.push(rec);
-    _designEditId=rec.id;
+    newId=Date.now();
+    rec.id=newId;rec.date=today();rec.created=new Date().toISOString();
+    list=list.concat([rec]);
   }
-  saveDesignReqsAll(list);
+  var result=await saveDesignReqsAll(list);
+  if(!result.ok)return false; // 저장 실패 시 _designEditId 변경하지 않음(성공처럼 보이지 않게)
+  if(isNew)_designEditId=newId;
   toast();
+  return true;
 }
 function renderDesignReqList(){
   var list=getDesignReqs().slice().sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
   var el=document.getElementById('design-req-list');if(!el)return;
+  if(_designReqLoadError){el.innerHTML='<div style="text-align:center;padding:24px;font-size:13px;color:var(--rd700);">설계의뢰내역을 불러오지 못했습니다. 네트워크 상태를 확인 후 다시 시도해주세요.</div>';return;}
   if(!list.length){el.innerHTML='<div style="text-align:center;padding:24px;font-size:13px;color:var(--s400);">설계의뢰 내역이 없습니다</div>';return;}
   el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12px;">'
     +'<thead><tr style="border-bottom:2px solid var(--s200);">'
@@ -4791,15 +4883,18 @@ function editDesignReq(id){
   _designReqSaved=!!x.done;
   dwRenderCoStatus();
 }
-function deleteDesignReq(id){
+async function deleteDesignReq(id){
   if(!confirm('이 설계의뢰 기록을 삭제하시겠습니까?'))return;
-  saveDesignReqsAll(getDesignReqs().filter(function(x){return x.id!==id;}));
+  var ok=await _designReqDeleteFromSupa(id);
+  if(!ok)return; // 실패 시 화면 갱신하지 않음(삭제된 것처럼 보이지 않게)
   renderDesignReqList();
 }
-function designReqDetailDelete(){
+async function designReqDetailDelete(){
   if(_designDetailId===null)return;
   if(!confirm('이 설계의뢰 기록을 삭제하시겠습니까?'))return;
-  saveDesignReqsAll(getDesignReqs().filter(function(x){return x.id!==_designDetailId;}));
+  var id=_designDetailId;
+  var ok=await _designReqDeleteFromSupa(id);
+  if(!ok)return; // 실패 시 모달 유지
   closeModal('modal-design-req-detail');
   _designDetailId=null;
   renderDesignReqList();
