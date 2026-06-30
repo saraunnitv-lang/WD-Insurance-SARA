@@ -2451,7 +2451,7 @@ WD WAVE 은퇴 준비 점검 서비스 소개 포함
 <script>
 /* ══ 앱 버전 체크 (배포 후 캐시 대응) ══
    ※ 다음 버전 작업 시 Claude는 이 APP_VERSION 값을 출력 파일 버전에 맞춰 함께 변경할 것 */
-var APP_VERSION='WD_PARTNERS_260630_V72';
+var APP_VERSION='WD_PARTNERS_260630_V73';
 (function checkAppVersionRefresh(){
   try{
     var key='WD_PARTNERS_APP_VERSION';
@@ -3777,16 +3777,73 @@ function clmUpdateInsurers(cat){
   if(!list.length){sel.innerHTML='<option value="">보험 구분을 먼저 선택하세요</option>';return;}
   sel.innerHTML='<option value="">보험사 선택</option>'+list.map(function(v){return'<option>'+v+'</option>';}).join('');
 }
+// ══ 청구문의기록 첨부파일 — Supabase Storage 연결 (V73) ══
+// bucket: wd-partners-attachments (private, 정책은 사전에 사라님이 직접 SQL Editor에서 생성)
+// 경로: {uid}/{customer_id}/claims/{record_id}/file.{ext} — 원본 파일명은 경로에 쓰지 않음(한글 파일명 InvalidKey 방지),
+//   원본 파일명은 metadata(file_name)에만 보존.
+var CLAIM_ATTACH_ALLOWED_EXT=['pdf','jpg','jpeg','png','heic','webp'];
+var CLAIM_ATTACH_MAX_SIZE=10*1024*1024; // 10MB
+function _claimAttachExt(file){
+  var name=file&&file.name||'';
+  return name.indexOf('.')>=0?name.split('.').pop().toLowerCase():'';
+}
+function validateClaimAttachFile(file){
+  var ext=_claimAttachExt(file);
+  if(CLAIM_ATTACH_ALLOWED_EXT.indexOf(ext)<0){
+    return {ok:false,message:'첨부할 수 없는 파일 형식입니다. PDF, JPG, PNG, HEIC, WEBP 파일만 가능합니다.'};
+  }
+  if(file.size>CLAIM_ATTACH_MAX_SIZE){
+    return {ok:false,message:'파일 용량이 10MB를 초과합니다. 10MB 이하 파일만 첨부할 수 있습니다.'};
+  }
+  return {ok:true};
+}
+async function uploadClaimAttachment(recordId,file){
+  var sb=getSbClient();
+  if(!sb){console.error('[claim attachment upload] Supabase client 없음');return {ok:false,reason:'NO_SUPABASE_CLIENT'};}
+  var ext=_claimAttachExt(file);
+  var path=_UID+'/'+_vid+'/claims/'+recordId+'/file.'+ext;
+  try{
+    var res=await sb.storage.from('wd-partners-attachments').upload(path,file,{upsert:true});
+    if(res.error){
+      console.error('[claim attachment upload]',res.error.message);
+      return {ok:false,reason:'UPLOAD_ERROR'};
+    }
+    return {ok:true,path:path};
+  }catch(e){
+    console.error('[claim attachment upload]',e&&e.message);
+    return {ok:false,reason:'UPLOAD_EXCEPTION'};
+  }
+}
+async function getClaimAttachmentUrl(filePath){
+  var sb=getSbClient();
+  if(!sb)return null;
+  try{
+    var res=await sb.storage.from('wd-partners-attachments').createSignedUrl(filePath,60); // 60초 유효
+    if(res.error){console.error('[claim attachment signed-url]',res.error.message);return null;}
+    return (res.data&&res.data.signedUrl)?res.data.signedUrl:null;
+  }catch(e){
+    console.error('[claim attachment signed-url]',e&&e.message);
+    return null;
+  }
+}
+async function openClaimAttachment(filePath){
+  if(!filePath){alert('첨부파일 정보를 찾을 수 없습니다.');return;}
+  var url=await getClaimAttachmentUrl(filePath);
+  if(!url){alert('첨부파일을 여는 데 실패했습니다. 잠시 후 다시 시도해주세요.');return;}
+  window.open(url,'_blank','noopener');
+}
 async function saveClaimRecord(){
   var dt=document.getElementById('clm-date').value;
   var ct=document.getElementById('clm-content').value.trim();
   if(!dt){alert('청구요청날짜를 입력하세요.');return;}
   if(!ct){alert('청구내용을 입력하세요.');return;}
   var fi=document.getElementById('clm-file');
-  var fn=document.getElementById('clm-file-name').value||(fi&&fi.files&&fi.files[0]?fi.files[0].name:'');
+  var newFile=(fi&&fi.files&&fi.files[0])?fi.files[0]:null;
+  var fn=document.getElementById('clm-file-name').value||(newFile?newFile.name:'');
   var eid=document.getElementById('clm-edit-id').value;
+  var recId=eid||Date.now();
   var rec={
-    id:eid||Date.now(),
+    id:recId,
     date:dt,
     insCategory:document.getElementById('clm-ins-cat').value,
     insCompany:document.getElementById('clm-insurer').value,
@@ -3796,6 +3853,27 @@ async function saveClaimRecord(){
     status:document.getElementById('clm-status').value||'청구접수중',
     updated:new Date().toISOString()
   };
+  // 이번 저장에서 새로 선택된 파일이 있을 때만 검증/업로드 (기존 첨부는 Object.assign으로 그대로 유지됨)
+  if(newFile){
+    var check=validateClaimAttachFile(newFile);
+    if(!check.ok){
+      alert(check.message);
+      rec.fileName=''; // 검증 실패 — 파일 없이 저장
+    }else{
+      var up=await uploadClaimAttachment(recId,newFile);
+      if(up.ok){
+        rec.fileName=newFile.name;
+        rec.file_name=newFile.name;
+        rec.file_path=up.path;
+        rec.file_size=newFile.size;
+        rec.file_type=newFile.type;
+        rec.uploaded_at=new Date().toISOString();
+      }else{
+        alert('첨부파일 업로드에 실패했습니다. 기록은 파일 없이 저장됩니다.');
+        rec.fileName='';
+      }
+    }
+  }
   var list=getClaimDs().slice();
   if(eid){list=list.map(function(x){return x.id==eid?Object.assign({},x,rec):x;});}
   else{rec.created=new Date().toISOString();list=list.concat([rec]);}
@@ -3876,6 +3954,14 @@ async function changeClaimStatusInline(id,newStatus){
   CLAIMD_CACHE_BY_CUST_ID[custId]=newList;
   renderClaimList();
 }
+// 첨부 셀: Storage에 실제 업로드된 파일(file_path)이 있으면 클릭 가능한 다운로드 버튼, 없으면 텍스트만(또는 '-')
+function clmAttachCell(x){
+  if(x.file_path){
+    var label=x.fileName||x.file_name||'첨부파일';
+    return '<button class="btn-sm" style="font-size:11px;padding:3px 8px;" onclick="event.stopPropagation();openClaimAttachment(\''+x.file_path+'\')">📎 '+esc(label)+'</button>';
+  }
+  return x.fileName?('📎 '+esc(x.fileName)):'-';
+}
 function renderClaimList(){
   var list=getClaimDs().slice().sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
   var claimErrMsg='청구문의기록을 불러오지 못했습니다. 네트워크 상태를 확인 후 다시 시도해주세요.';
@@ -3923,7 +4009,7 @@ function renderClaimList(){
         +'<td style="padding:12px 6px;white-space:nowrap;">'+esc(x.type||'-')+'</td>'
         +'<td style="padding:12px 6px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+esc(x.content||x.note||'')+'">'+esc(preview||'-')+'</td>'
         +'<td style="padding:12px 6px;white-space:nowrap;">'+clmStatusSelectInline(x.id,x.status)+'</td>'
-        +'<td style="padding:12px 6px;white-space:nowrap;font-size:12px;color:var(--s400);">'+(x.fileName?'📎 '+esc(x.fileName):'-')+'</td>'
+        +'<td style="padding:12px 6px;white-space:nowrap;font-size:12px;color:var(--s400);">'+clmAttachCell(x)+'</td>'
         +'<td style="padding:12px 6px;text-align:center;white-space:nowrap;">'
         +'<button class="btn-sm" style="background:var(--s100);color:var(--s700);margin-right:4px;font-size:13px;" onclick="openClaimDetail('+x.id+')">보기</button>'
         +'<button class="btn-sm p" style="margin-right:4px;font-size:13px;" onclick="openClaimEdit('+x.id+')">수정</button>'
@@ -3942,7 +4028,9 @@ function openClaimDetail(id){
   document.getElementById('cld-company').textContent=item.insCompany||'-';
   document.getElementById('cld-type').textContent=item.type||'-';
   document.getElementById('cld-content').textContent=item.content||item.note||'-';
-  document.getElementById('cld-file').textContent=item.fileName?('📎 '+item.fileName):'첨부 없음';
+  document.getElementById('cld-file').innerHTML=item.file_path
+    ?'<button class="btn-sm p" style="font-size:12px;" onclick="openClaimAttachment(\''+item.file_path+'\')">📎 '+esc(item.fileName||item.file_name||'첨부파일')+' 열기</button>'
+    :(item.fileName?('📎 '+esc(item.fileName)):'첨부 없음');
   document.getElementById('cld-status').innerHTML=clmStatusBadge(item.status);
   openModal('modal-claim-detail');
 }
