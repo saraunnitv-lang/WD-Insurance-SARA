@@ -2451,7 +2451,7 @@ WD WAVE 은퇴 준비 점검 서비스 소개 포함
 <script>
 /* ══ 앱 버전 체크 (배포 후 캐시 대응) ══
    ※ 다음 버전 작업 시 Claude는 이 APP_VERSION 값을 출력 파일 버전에 맞춰 함께 변경할 것 */
-var APP_VERSION='WD_PARTNERS_260630_V73';
+var APP_VERSION='WD_PARTNERS_260630_V74';
 (function checkAppVersionRefresh(){
   try{
     var key='WD_PARTNERS_APP_VERSION';
@@ -3197,6 +3197,62 @@ async function saveCustInline(id){
   renderCustList();renderHomeCusts();
   showDetail(id);
 }
+// ══ 고객소통이력/자료전달 첨부파일 — Supabase Storage 연결 (V74) ══
+// 청구문의기록(V73)과 같은 bucket(wd-partners-attachments)을 쓰되, 경로 prefix만 다름.
+// V73의 validateClaimAttachFile/uploadClaimAttachment 등은 그대로 두고 건드리지 않음 — 여기는 별도 신규 헬퍼.
+var ATTACH_ALLOWED_EXT=['pdf','jpg','jpeg','png','heic','webp'];
+var ATTACH_MAX_SIZE=10*1024*1024; // 10MB
+function _attachExt(file){
+  var name=file&&file.name||'';
+  return name.indexOf('.')>=0?name.split('.').pop().toLowerCase():'';
+}
+function validateAttachFile(file){
+  var ext=_attachExt(file);
+  if(ATTACH_ALLOWED_EXT.indexOf(ext)<0){
+    return {ok:false,message:'첨부할 수 없는 파일 형식입니다. PDF, JPG, PNG, HEIC, WEBP 파일만 가능합니다.'};
+  }
+  if(file.size>ATTACH_MAX_SIZE){
+    return {ok:false,message:'파일 용량이 10MB를 초과합니다. 10MB 이하 파일만 첨부할 수 있습니다.'};
+  }
+  return {ok:true};
+}
+async function uploadCommAttachment(recordId,file){
+  var sb=getSbClient();
+  if(!sb){console.error('[comm attachment upload] Supabase client 없음');return {ok:false,reason:'NO_SUPABASE_CLIENT'};}
+  var ext=_attachExt(file);
+  var path=_UID+'/'+_vid+'/communications/'+recordId+'/file.'+ext;
+  try{
+    var res=await sb.storage.from('wd-partners-attachments').upload(path,file,{upsert:true});
+    if(res.error){console.error('[comm attachment upload]',res.error.message);return {ok:false,reason:'UPLOAD_ERROR'};}
+    return {ok:true,path:path};
+  }catch(e){console.error('[comm attachment upload]',e&&e.message);return {ok:false,reason:'UPLOAD_EXCEPTION'};}
+}
+async function uploadMatAttachment(recordId,file){
+  var sb=getSbClient();
+  if(!sb){console.error('[mat attachment upload] Supabase client 없음');return {ok:false,reason:'NO_SUPABASE_CLIENT'};}
+  var ext=_attachExt(file);
+  var path=_UID+'/'+_vid+'/materials/'+recordId+'/file.'+ext;
+  try{
+    var res=await sb.storage.from('wd-partners-attachments').upload(path,file,{upsert:true});
+    if(res.error){console.error('[mat attachment upload]',res.error.message);return {ok:false,reason:'UPLOAD_ERROR'};}
+    return {ok:true,path:path};
+  }catch(e){console.error('[mat attachment upload]',e&&e.message);return {ok:false,reason:'UPLOAD_EXCEPTION'};}
+}
+async function getAttachmentSignedUrl(filePath){
+  var sb=getSbClient();
+  if(!sb)return null;
+  try{
+    var res=await sb.storage.from('wd-partners-attachments').createSignedUrl(filePath,60); // 60초 유효
+    if(res.error){console.error('[attachment signed-url]',res.error.message);return null;}
+    return (res.data&&res.data.signedUrl)?res.data.signedUrl:null;
+  }catch(e){console.error('[attachment signed-url]',e&&e.message);return null;}
+}
+async function openStorageAttachment(filePath){
+  if(!filePath){alert('첨부파일 정보를 찾을 수 없습니다.');return;}
+  var url=await getAttachmentSignedUrl(filePath);
+  if(!url){alert('첨부파일을 여는 데 실패했습니다. 잠시 후 다시 시도해주세요.');return;}
+  window.open(url,'_blank','noopener');
+}
 function lsComm(){return 'wlp_comm_'+_UID+'_'+_vid;}
 // ══ 고객소통이력 — Supabase 연결 (V70) ══
 // 고객별 캐시(COMM_CACHE_BY_CUST_ID)에서 동기 반환 / 실제 조회는 loadCommsFromSupa(custId)(비동기)
@@ -3367,17 +3423,41 @@ async function saveComm(){
   var dt=document.getElementById('comm-date').value;
   if(!ct){alert('소통내용을 입력하세요.');return;}
   var fi=document.getElementById('comm-file');
-  var fn=document.getElementById('comm-file-name').value||(fi&&fi.files&&fi.files[0]?fi.files[0].name:'');
+  var newFile=(fi&&fi.files&&fi.files[0])?fi.files[0]:null;
   var noNext=document.getElementById('comm-no-next').checked;
   var nd=noNext?'':(document.getElementById('comm-next-date').value||'').slice(0,10);
   var nc=noNext?'':document.getElementById('comm-next-content').value.trim();
   var cdone=document.getElementById('comm-contact-done-val').value==='true';
   var eid=document.getElementById('comm-edit-id').value;
   var list=getComms().slice();
+  var prev=eid?(list.find(function(x){return x.id==eid;})||{}):{};
+  var recId=eid||Date.now();
+  // 첨부 메타데이터: 기본은 기존 값 유지(텍스트만 수정하는 경우 첨부가 사라지지 않게)
+  var fn=document.getElementById('comm-file-name').value||(newFile?newFile.name:(prev.fileName||''));
+  var meta={file_name:prev.file_name,file_path:prev.file_path,file_size:prev.file_size,file_type:prev.file_type,uploaded_at:prev.uploaded_at};
+  if(newFile){
+    var check=validateAttachFile(newFile);
+    if(!check.ok){
+      alert(check.message);
+      fn=prev.file_path?(prev.fileName||''):''; // 기존 유효 첨부 있으면 유지, 없으면 빈 값(파일 없는 것처럼)
+    }else{
+      var up=await uploadCommAttachment(recId,newFile);
+      if(up.ok){
+        fn=newFile.name;
+        meta={file_name:newFile.name,file_path:up.path,file_size:newFile.size,file_type:newFile.type,uploaded_at:new Date().toISOString()};
+      }else{
+        alert('첨부파일 업로드에 실패했습니다. 기록은 파일 없이 저장됩니다.');
+        fn=prev.file_path?(prev.fileName||''):'';
+      }
+    }
+  }
+  var rec=Object.assign({id:recId,type:tp,content:ct,date:dt,fileName:fn,nextDate:nd,nextContent:nc,noNextContact:noNext,contactDone:cdone,updated:new Date().toISOString()},meta);
   if(eid){
-    list=list.map(function(x){return x.id==eid?{id:x.id,type:tp,content:ct,date:dt,fileName:fn,nextDate:nd,nextContent:nc,noNextContact:noNext,contactDone:cdone,created:x.created,updated:new Date().toISOString()}:x;});
+    rec.created=prev.created||new Date().toISOString();
+    list=list.map(function(x){return x.id==eid?rec:x;});
   }else{
-    list=list.concat([{id:Date.now(),type:tp,content:ct,date:dt,fileName:fn,nextDate:nd,nextContent:nc,noNextContact:noNext,contactDone:cdone,created:new Date().toISOString(),updated:new Date().toISOString()}]);
+    rec.created=new Date().toISOString();
+    list=list.concat([rec]);
   }
   var result=await saveComms(list);
   if(!result.ok)return; // 저장 실패 시 모달 유지, 화면 갱신 안 함
@@ -3402,6 +3482,14 @@ function toggleCommItem(el){
   el.classList.toggle('open');
 }
 
+// 첨부 셀: Storage에 실제 업로드된 파일(file_path)이 있으면 클릭 가능한 다운로드 버튼, 없으면 텍스트만(또는 '-')
+function commAttachCell(x){
+  if(x.file_path){
+    var label=x.fileName||x.file_name||'첨부파일';
+    return '<button class="btn-sm" style="font-size:11px;padding:3px 8px;" onclick="event.stopPropagation();openStorageAttachment(\''+x.file_path+'\')">📎 '+esc(label)+'</button>';
+  }
+  return x.fileName?('📎 '+esc(x.fileName)):'-';
+}
 function renderCommList(){
   var wrap=document.getElementById('comm-list-wrap');
   if(!wrap)return;
@@ -3418,11 +3506,12 @@ function renderCommList(){
       +'<td style="white-space:nowrap;">'+esc((x.date||'').slice(0,10))+'</td>'
       +'<td><span class="comm-row-tag">'+esc(x.type||'-')+'</span></td>'
       +'<td title="'+esc(x.content||'')+'">'+esc(contentPreview||'-')+'</td>'
+      +'<td style="white-space:nowrap;font-size:11px;">'+commAttachCell(x)+'</td>'
       +'<td style="text-align:center;">'+doneBadge+'</td>'
       +'</tr>';
   }).join('');
   wrap.innerHTML='<div class="rec-scroll-3"><table class="rec-tbl"><thead><tr>'
-    +'<th>소통일</th><th>소통구분</th><th>소통내용</th><th style="text-align:center;">다음연락유무</th>'
+    +'<th>소통일</th><th>소통구분</th><th>소통내용</th><th>첨부</th><th style="text-align:center;">다음연락유무</th>'
     +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 
@@ -3435,7 +3524,9 @@ function openCommDetail(cid){
   document.getElementById('cd-date').textContent=item.date?item.date.replace('T',' '):'-';
   document.getElementById('cd-type').textContent=item.type||'-';
   document.getElementById('cd-content').textContent=item.content||'-';
-  document.getElementById('cd-file').textContent=item.fileName?('📎 '+item.fileName):'첨부 없음';
+  document.getElementById('cd-file').innerHTML=item.file_path
+    ?'<button class="btn-sm p" style="font-size:12px;" onclick="openStorageAttachment(\''+item.file_path+'\')">📎 '+esc(item.fileName||item.file_name||'첨부파일')+' 열기</button>'
+    :(item.fileName?('📎 '+esc(item.fileName)):'첨부 없음');
   document.getElementById('cd-next-date').textContent=item.noNextContact?'필요없음':(item.nextDate||'-');
   document.getElementById('cd-no-next').textContent=item.noNextContact?'예':'아니오';
   document.getElementById('cd-next-content').textContent=item.noNextContact?'-':(item.nextContent||'-');
@@ -4053,17 +4144,17 @@ async function claimDetailDelete(){
 // ══ 전달자료 탭 ══
 /* ══ 자료전달 (고객 객체 c.matLogs 배열 기반, 기존 구조 재사용) ══ */
 function _matGetCust(){return getCusts().find(function(x){return x.id==_vid;});}
-function _matSaveLogs(c,logs){
+async function _matSaveLogs(c,logs){
   var cs=getCusts();
   var idx=cs.findIndex(function(x){return x.id===c.id;});
-  if(idx<0)return;
+  if(idx<0)return {ok:false,reason:'CUSTOMER_NOT_FOUND'};
   var updated=Object.assign({},c,{
     matLogs:logs,
     mat:logs.map(function(x){return '['+(x.date||'-')+'] '+(x.content||'');}).join('\n'),
     updated:new Date().toISOString()
   });
   var newCs=cs.slice();newCs[idx]=updated;
-  saveCusts(newCs);
+  return await saveCusts(newCs);
 }
 function openMatAdd(){
   document.getElementById('modal-mat-rec-t').textContent='자료전달 기록 추가';
@@ -4085,29 +4176,56 @@ function openMatRecordEdit(id){
   document.getElementById('mat-file-name').value=item.fileName||'';
   openModal('modal-mat-rec');
 }
-function saveMatRecord(){
+async function saveMatRecord(){
   var c=_matGetCust();if(!c)return;
   var dt=document.getElementById('mat-date').value||today();
   var ct=document.getElementById('mat-content').value.trim();
   if(!ct){alert('전달자료를 입력하세요.');return;}
   var fi=document.getElementById('mat-file');
-  var fn=document.getElementById('mat-file-name').value||(fi&&fi.files&&fi.files[0]?fi.files[0].name:'');
+  var newFile=(fi&&fi.files&&fi.files[0])?fi.files[0]:null;
   var eid=document.getElementById('mat-edit-id').value;
-  var logs=cstMatLogs(c);
-  if(eid){
-    logs=logs.map(function(x){return x.id==eid?{id:x.id,date:dt,content:ct,fileName:fn,created:x.created,updated:new Date().toISOString()}:x;});
-  }else{
-    logs.push({id:Date.now(),date:dt,content:ct,fileName:fn,created:new Date().toISOString(),updated:new Date().toISOString()});
+  var logs=cstMatLogs(c).slice();
+  var prev=eid?(logs.find(function(x){return x.id==eid;})||{}):{};
+  var recId=eid||Date.now();
+  // 첨부 메타데이터: 기본은 기존 값 유지(텍스트만 수정하는 경우 첨부가 사라지지 않게)
+  var fn=document.getElementById('mat-file-name').value||(newFile?newFile.name:(prev.fileName||''));
+  var meta={file_name:prev.file_name,file_path:prev.file_path,file_size:prev.file_size,file_type:prev.file_type,uploaded_at:prev.uploaded_at};
+  if(newFile){
+    var check=validateAttachFile(newFile);
+    if(!check.ok){
+      alert(check.message);
+      fn=prev.file_path?(prev.fileName||''):'';
+    }else{
+      var up=await uploadMatAttachment(recId,newFile);
+      if(up.ok){
+        fn=newFile.name;
+        meta={file_name:newFile.name,file_path:up.path,file_size:newFile.size,file_type:newFile.type,uploaded_at:new Date().toISOString()};
+      }else{
+        alert('첨부파일 업로드에 실패했습니다. 기록은 파일 없이 저장됩니다.');
+        fn=prev.file_path?(prev.fileName||''):'';
+      }
+    }
   }
-  _matSaveLogs(c,logs);
+  var rec=Object.assign({id:recId,date:dt,content:ct,fileName:fn,updated:new Date().toISOString()},meta);
+  if(eid){
+    rec.created=prev.created||new Date().toISOString();
+    logs=logs.map(function(x){return x.id==eid?rec:x;});
+  }else{
+    rec.created=new Date().toISOString();
+    logs=logs.concat([rec]);
+  }
+  var result=await _matSaveLogs(c,logs);
+  if(!result||!result.ok)return; // 저장 실패 시 모달 유지(성공처럼 보이지 않게)
   closeModal('modal-mat-rec');
   renderMatList();
 }
-function deleteMatRecord(id){
-  var c=_matGetCust();if(!c)return;
+async function deleteMatRecord(id){
+  var c=_matGetCust();if(!c)return false;
   var logs=cstMatLogs(c).filter(function(x){return x.id!=id;});
-  _matSaveLogs(c,logs);
+  var result=await _matSaveLogs(c,logs);
+  if(!result||!result.ok)return false;
   renderMatList();
+  return true;
 }
 var _matDetailId=null;
 function openMatDetail(id){
@@ -4117,7 +4235,9 @@ function openMatDetail(id){
   _matDetailId=id;
   document.getElementById('mtd-date').textContent=item.date||'-';
   document.getElementById('mtd-content').textContent=item.content||'-';
-  document.getElementById('mtd-file').textContent=item.fileName?('📎 '+item.fileName):'첨부 없음';
+  document.getElementById('mtd-file').innerHTML=item.file_path
+    ?'<button class="btn-sm p" style="font-size:12px;" onclick="openStorageAttachment(\''+item.file_path+'\')">📎 '+esc(item.fileName||item.file_name||'첨부파일')+' 열기</button>'
+    :(item.fileName?('📎 '+esc(item.fileName)):'첨부 없음');
   openModal('modal-mat-detail');
 }
 function matDetailEdit(){
@@ -4125,12 +4245,21 @@ function matDetailEdit(){
   closeModal('modal-mat-detail');
   openMatRecordEdit(_matDetailId);
 }
-function matDetailDelete(){
+async function matDetailDelete(){
   if(!_matDetailId)return;
   if(!confirm('이 자료전달 기록을 삭제하시겠습니까?'))return;
-  deleteMatRecord(_matDetailId);
+  var ok=await deleteMatRecord(_matDetailId);
+  if(!ok)return; // 실패 시 모달 유지(삭제된 것처럼 보이지 않게)
   closeModal('modal-mat-detail');
   _matDetailId=null;
+}
+// 첨부 셀: Storage에 실제 업로드된 파일(file_path)이 있으면 클릭 가능한 다운로드 버튼, 없으면 텍스트만(또는 '-')
+function matAttachCell(x){
+  if(x.file_path){
+    var label=x.fileName||x.file_name||'첨부파일';
+    return '<button class="btn-sm" style="font-size:11px;padding:3px 8px;" onclick="event.stopPropagation();openStorageAttachment(\''+x.file_path+'\')">📎 '+esc(label)+'</button>';
+  }
+  return x.fileName?('📎 '+esc(x.fileName)):'-';
 }
 function renderMatList(){
   var c=_matGetCust();if(!c)return;
@@ -4169,7 +4298,7 @@ function renderMatList(){
       return'<tr style="border-bottom:1px solid var(--s100);">'
         +'<td style="padding:12px 6px;white-space:nowrap;font-weight:700;color:var(--primary);">'+esc(x.date||'-')+'</td>'
         +'<td style="padding:12px 6px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+esc(x.content||'')+'">'+esc(preview||'-')+'</td>'
-        +'<td style="padding:12px 6px;white-space:nowrap;font-size:12px;color:var(--s400);">'+(x.fileName?'📎 '+esc(x.fileName):'-')+'</td>'
+        +'<td style="padding:12px 6px;white-space:nowrap;font-size:12px;color:var(--s400);">'+matAttachCell(x)+'</td>'
         +'<td style="padding:12px 6px;text-align:center;white-space:nowrap;">'
         +'<button class="btn-sm" style="background:var(--s100);color:var(--s700);margin-right:4px;font-size:13px;" onclick="openMatDetail('+x.id+')">보기</button>'
         +'<button class="btn-sm p" style="margin-right:4px;font-size:13px;" onclick="openMatRecordEdit('+x.id+')">수정</button>'
