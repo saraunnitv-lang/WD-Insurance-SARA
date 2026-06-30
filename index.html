@@ -2447,10 +2447,11 @@ WD WAVE 은퇴 준비 점검 서비스 소개 포함
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ══ 앱 버전 체크 (배포 후 캐시 대응) ══
    ※ 다음 버전 작업 시 Claude는 이 APP_VERSION 값을 출력 파일 버전에 맞춰 함께 변경할 것 */
-var APP_VERSION='WD_PARTNERS_260630_V55';
+var APP_VERSION='WD_PARTNERS_260630_V65';
 (function checkAppVersionRefresh(){
   try{
     var key='WD_PARTNERS_APP_VERSION';
@@ -2559,6 +2560,27 @@ var USERS={
 };
 var LS_U='wlp_users',LS_S='wlp_session';
 var _UID=null,_ROLE='planner';
+
+// ══ Supabase 연결 (계정별 프로젝트 분리 — A안) ══
+// V65 범위: WD23000(최윤경) 1개 계정만 연결. 형민/지영은 추후 별도 작업.
+// ⚠ 보안 주의: 이 anon key는 WD23000 text UID와 함께 RLS 정책으로 제한되어 있으나,
+//   이는 Supabase Auth 기반 인증이 아니라 "개인 Supabase 프로젝트 안에서의 운영 편의 구조"임.
+var SUPABASE_CONFIG_BY_UID={
+  WD23000:{
+    url:'https://tiwgzmmizmkbvbyfgmyw.supabase.co',
+    anonKey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpd2d6bW1pem1rYnZieWZnbXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4MjE5ODIsImV4cCI6MjA5NzM5Nzk4Mn0.4c5iuLkZ37a46dB6vA6jN8vTwOV_kS1-4IHPcrB2aTM'
+  }
+};
+var _sbClient=null,_sbClientUid=null;
+function getSbClient(){
+  if(!_UID||!SUPABASE_CONFIG_BY_UID[_UID])return null;
+  if(_sbClient&&_sbClientUid===_UID)return _sbClient;
+  if(!window.supabase||!window.supabase.createClient)return null;
+  var cfg=SUPABASE_CONFIG_BY_UID[_UID];
+  _sbClient=window.supabase.createClient(cfg.url,cfg.anonKey);
+  _sbClientUid=_UID;
+  return _sbClient;
+}
 
 function getUsers(){try{return JSON.parse(localStorage.getItem(LS_U)||'null');}catch(e){return null;}}
 function initU(){var u=getUsers();if(!u){localStorage.setItem(LS_U,JSON.stringify(USERS));return USERS;}Object.keys(USERS).forEach(function(k){if(!u[k])u[k]=USERS[k];});localStorage.setItem(LS_U,JSON.stringify(u));return u;}
@@ -3871,23 +3893,49 @@ function hubSystemLinkBtn(c){
   }
   return '<span class="hs-dash">링크 확인 필요</span>';
 }
-// 코드/ID/PW: 개인별 Supabase 저장 구조 확정 전까지 등록 전 기본값만 표시 (실제 저장 기능 없음)
+// ══ 업무전산 코드/ID/PW — Supabase 저장 연결 (V65) ══
+// 저장 대상: wd_partners_hub_system_accounts (최윤경 WD23000 개인 Supabase 전용)
+// 주의: localStorage에는 절대 저장하지 않음(메모리 캐시 HUB_SYSTEM_SAVED만 사용, 새로고침 시 재조회)
+var HUB_SYSTEM_SAVED={};
+function hubSystemSavedKey(companyType,companyName){return companyType+'|'+companyName;}
+function hubSystemCompanyType(type){return type==='nonlife'?'손해보험':'생명보험';}
+async function loadHubSystemAccounts(){
+  HUB_SYSTEM_SAVED={};
+  var sb=getSbClient();
+  if(!sb)return {ok:false,reason:'NO_SUPABASE_CLIENT'};
+  try{
+    var res=await sb.from('wd_partners_hub_system_accounts').select('*').eq('uid',_UID);
+    if(res.error){console.error('[hub-system load]',res.error.message);return {ok:false,reason:'LOAD_ERROR'};}
+    (res.data||[]).forEach(function(row){
+      HUB_SYSTEM_SAVED[hubSystemSavedKey(row.company_type,row.company_name)]=row;
+    });
+    return {ok:true};
+  }catch(e){console.error('[hub-system load]',e&&e.message);return {ok:false,reason:'LOAD_EXCEPTION'};}
+}
 function hubSystemCardId(type,idx){return 'hs-card-'+type+'-'+idx;}
 function hubSystemCardView(c,type,idx){
+  var saved=HUB_SYSTEM_SAVED[hubSystemSavedKey(hubSystemCompanyType(type),c.name)];
+  var codeRow=saved&&saved.carrier_code?esc(saved.carrier_code):'<span class="hs-dash">미등록</span>';
+  var idRow=saved&&saved.login_id?esc(saved.login_id):'<span class="hs-dash">미등록</span>';
+  var pwRow=saved&&saved.login_pw?'********':'<span class="hs-dash">-</span>';
   return '<div class="hs-card-top"><div class="hs-name">'+esc(c.name)+'</div>'
     +'<button class="hs-edit-btn" onclick="hubSystemEditCard(\''+type+'\','+idx+')">수정</button></div>'
     +'<div class="hs-row"><span class="hs-label">🌐 접속전산</span>'+hubSystemLinkBtn(c)+'</div>'
-    +'<div class="hs-row"><span class="hs-label">🔑 코드</span><span class="hs-dash">미등록</span></div>'
-    +'<div class="hs-row"><span class="hs-label">👤 ID</span><span class="hs-dash">미등록</span></div>'
-    +'<div class="hs-row"><span class="hs-label">🔒 PW</span><span class="hs-dash">-</span></div>';
+    +'<div class="hs-row"><span class="hs-label">🔑 코드</span><span>'+codeRow+'</span></div>'
+    +'<div class="hs-row"><span class="hs-label">👤 ID</span><span>'+idRow+'</span></div>'
+    +'<div class="hs-row"><span class="hs-label">🔒 PW</span><span>'+pwRow+'</span></div>';
 }
 function hubSystemCardEdit(c,type,idx){
+  var saved=HUB_SYSTEM_SAVED[hubSystemSavedKey(hubSystemCompanyType(type),c.name)];
+  var codeVal=saved&&saved.carrier_code?esc(saved.carrier_code):'';
+  var idVal=saved&&saved.login_id?esc(saved.login_id):'';
+  var pwPh=saved&&saved.login_pw?'변경 시에만 입력 (비우면 기존 값 유지)':'PW 입력';
   return '<div class="hs-card-top"><div class="hs-name">'+esc(c.name)+'</div></div>'
     +'<div class="hs-row"><span class="hs-label">🌐 접속전산</span>'+hubSystemLinkBtn(c)+'</div>'
-    +'<div class="hs-row hs-edit-row"><span class="hs-label">🔑 코드</span><input type="text" class="hs-input" id="hs-code-'+type+'-'+idx+'" placeholder="코드 입력" autocomplete="off"></div>'
-    +'<div class="hs-row hs-edit-row"><span class="hs-label">👤 ID</span><input type="text" class="hs-input" id="hs-id-'+type+'-'+idx+'" placeholder="ID 입력" autocomplete="off"></div>'
-    +'<div class="hs-row hs-edit-row"><span class="hs-label">🔒 PW</span><input type="password" class="hs-input" id="hs-pw-'+type+'-'+idx+'" placeholder="PW 입력" autocomplete="new-password"></div>'
-    +'<div class="hs-edit-btns"><button class="hs-save-btn" onclick="hubSystemSaveCard(\''+type+'\','+idx+')">저장</button><button class="hs-cancel-btn" onclick="hubSystemCancelEdit(\''+type+'\','+idx+')">취소</button></div>';
+    +'<div class="hs-row hs-edit-row"><span class="hs-label">🔑 코드</span><input type="text" class="hs-input" id="hs-code-'+type+'-'+idx+'" placeholder="코드 입력" autocomplete="off" value="'+codeVal+'"></div>'
+    +'<div class="hs-row hs-edit-row"><span class="hs-label">👤 ID</span><input type="text" class="hs-input" id="hs-id-'+type+'-'+idx+'" placeholder="ID 입력" autocomplete="off" value="'+idVal+'"></div>'
+    +'<div class="hs-row hs-edit-row"><span class="hs-label">🔒 PW</span><input type="password" class="hs-input" id="hs-pw-'+type+'-'+idx+'" placeholder="'+pwPh+'" autocomplete="new-password"></div>'
+    +'<div class="hs-edit-btns"><button class="hs-save-btn" id="hs-save-btn-'+type+'-'+idx+'" onclick="hubSystemSaveCard(\''+type+'\','+idx+')">저장</button><button class="hs-cancel-btn" onclick="hubSystemCancelEdit(\''+type+'\','+idx+')">취소</button></div>';
 }
 function hubSystemEditCard(type,idx){
   var box=document.getElementById(hubSystemCardId(type,idx));if(!box)return;
@@ -3899,29 +3947,57 @@ function hubSystemCancelEdit(type,idx){
   var c=HUB_SYSTEM_DATA[type][idx];if(!c)return;
   box.innerHTML=hubSystemCardView(c,type,idx);
 }
-// 저장 어댑터 — Supabase 연결 전까지는 저장하지 않고 안내만 표시. 연결 후 upsert 로직만 추가하면 됨.
+// 저장: WD23000 Supabase upsert. 실패 시 저장된 것처럼 보이지 않게 명확히 알림.
 async function saveHubSystemAccount(payload){
-  if(!window.supabase||!window.supabase.from){
-    alert('업무전산 저장은 Supabase 연결 후 활성화됩니다.');
+  var sb=getSbClient();
+  if(!sb){
+    alert('업무전산 저장 실패: Supabase 연결을 확인해주세요.');
     return {ok:false,reason:'NO_SUPABASE_CLIENT'};
   }
-  // Supabase 연결 후 이 안에 uid 기준 upsert 로직 추가 예정
+  try{
+    var res=await sb.from('wd_partners_hub_system_accounts')
+      .upsert(payload,{onConflict:'uid,company_type,company_name'});
+    if(res.error){
+      console.error('[hub-system save]',res.error.message);
+      alert('업무전산 저장 실패: '+res.error.message);
+      return {ok:false,reason:'SAVE_ERROR'};
+    }
+    return {ok:true};
+  }catch(e){
+    console.error('[hub-system save]',e&&e.message);
+    alert('업무전산 저장 실패: '+(e&&e.message?e.message:'네트워크 오류'));
+    return {ok:false,reason:'SAVE_EXCEPTION'};
+  }
 }
 async function hubSystemSaveCard(type,idx){
   var c=HUB_SYSTEM_DATA[type][idx];if(!c)return;
+  var companyType=hubSystemCompanyType(type);
+  var savedKey=hubSystemSavedKey(companyType,c.name);
+  var prevSaved=HUB_SYSTEM_SAVED[savedKey];
   var codeEl=document.getElementById('hs-code-'+type+'-'+idx);
   var idEl=document.getElementById('hs-id-'+type+'-'+idx);
   var pwEl=document.getElementById('hs-pw-'+type+'-'+idx);
+  var pwInput=pwEl?pwEl.value:'';
+  // PW를 비워두면 기존 저장값 유지 (평문을 입력창에 다시 노출하지 않기 위함)
+  var pwToSave=pwInput?pwInput:(prevSaved?prevSaved.login_pw:'');
+  var saveBtn=document.getElementById('hs-save-btn-'+type+'-'+idx);
+  if(saveBtn){saveBtn.disabled=true;saveBtn.textContent='저장 중...';}
   var payload={
     uid:_UID,
-    company_type:(type==='nonlife'?'손해보험':'생명보험'),
+    company_type:companyType,
     company_name:c.name,
     carrier_code:codeEl?codeEl.value.trim():'',
     login_id:idEl?idEl.value.trim():'',
-    login_pw:pwEl?pwEl.value:'',
+    login_pw:pwToSave,
     updated_at:new Date().toISOString()
   };
-  await saveHubSystemAccount(payload);
+  var result=await saveHubSystemAccount(payload);
+  if(saveBtn){saveBtn.disabled=false;saveBtn.textContent='저장';}
+  if(!result.ok)return; // 실패 시 카드 갱신하지 않음 (저장 성공처럼 보이지 않게)
+  HUB_SYSTEM_SAVED[savedKey]=payload;
+  var box=document.getElementById(hubSystemCardId(type,idx));
+  if(box)box.innerHTML=hubSystemCardView(c,type,idx);
+  alert('저장되었습니다.');
 }
 function hubSystemCard(c,type,idx){
   return '<div class="hub-system-card" id="'+hubSystemCardId(type,idx)+'">'+hubSystemCardView(c,type,idx)+'</div>';
@@ -3930,10 +4006,12 @@ function hubSystemGrid(list,type){
   if(!list.length)return '<div class="info-box">전산주소는 확정 후 추가될 예정입니다.</div>';
   return '<div class="hub-system-grid">'+list.map(function(c,idx){return hubSystemCard(c,type,idx);}).join('')+'</div>';
 }
-function renderHubSystem(){
+async function renderHubSystem(){
   var box=document.getElementById('hub-system');
   if(!box)return;
   if(!hubSystemAllowed()){box.innerHTML='<div class="card" style="text-align:center;padding:36px;">접근 권한이 없습니다.</div>';return;}
+  box.innerHTML='<div class="card" style="text-align:center;padding:36px;">불러오는 중...</div>';
+  await loadHubSystemAccounts();
   box.innerHTML=
     '<div class="itabs" style="margin-bottom:14px;">'
       +'<button class="itab on" id="hs-nonlife-btn" onclick="swHubSystemTab(this,\'hs-nonlife\')">손해보험</button>'
