@@ -2451,7 +2451,7 @@ WD WAVE 은퇴 준비 점검 서비스 소개 포함
 <script>
 /* ══ 앱 버전 체크 (배포 후 캐시 대응) ══
    ※ 다음 버전 작업 시 Claude는 이 APP_VERSION 값을 출력 파일 버전에 맞춰 함께 변경할 것 */
-var APP_VERSION='WD_PARTNERS_260630_V74';
+var APP_VERSION='WD_PARTNERS_260630_V75';
 (function checkAppVersionRefresh(){
   try{
     var key='WD_PARTNERS_APP_VERSION';
@@ -3667,7 +3667,7 @@ function renderCustStats(){
   var e3=document.getElementById('stat-total-contract');if(e3)e3.textContent=totalContract+'명';
 }
 function showCustList(){document.getElementById('cust-list-pg').style.display='';document.getElementById('cust-det-pg').style.display='none';}
-function swDetTab(btn,id){var tabs=['det-info','det-flow','det-insure','det-design','det-plans','det-contracts','det-claim','det-mat'];tabs.forEach(function(t){var el=document.getElementById(t);if(el)el.style.display=t===id?'':'none';});document.getElementById('det-tabs').querySelectorAll('.itab').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');if(id==='det-flow')renderFlowTab();if(id==='det-insure')renderInsureTabV2();if(id==='det-design')renderDesignTabV2();if(id==='det-plans'){renderPlansList();renderUnderwriteList();renderNblmArea();}if(id==='det-contracts')renderContractsList();if(id==='det-claim')renderClaimList();if(id==='det-mat')renderMatList();}
+function swDetTab(btn,id){var tabs=['det-info','det-flow','det-insure','det-design','det-plans','det-contracts','det-claim','det-mat'];tabs.forEach(function(t){var el=document.getElementById(t);if(el)el.style.display=t===id?'':'none';});document.getElementById('det-tabs').querySelectorAll('.itab').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');if(id==='det-flow')renderFlowTab();if(id==='det-insure')renderInsureTabV2();if(id==='det-design')renderDesignTabV2();if(id==='det-plans'){renderPlansList();renderUnderwriteList();renderNblmArea();}if(id==='det-contracts'){renderContractsList();loadContractsFromSupa(_vid).then(function(){renderContractsList();});}if(id==='det-claim')renderClaimList();if(id==='det-mat')renderMatList();}
 function showDetail(id){_vid=id;var c=getCusts().find(function(x){return x.id==id;});if(!c)return;
 document.getElementById('det-title').textContent=c.name;
 // 기본정보 탭 렌더
@@ -5522,8 +5522,92 @@ function getDreq(){try{return JSON.parse(localStorage.getItem(lsDreq())||'{}');}
 function saveDreq(d){localStorage.setItem(lsDreq(),JSON.stringify(d));}
 function getPlans(){try{return JSON.parse(localStorage.getItem(lsPlans())||'[]');}catch(e){return [];}}
 function savePlans(d){localStorage.setItem(lsPlans(),JSON.stringify(d));}
-function getContracts(){try{return JSON.parse(localStorage.getItem(lsContracts())||'[]');}catch(e){return [];}}
-function saveContracts(d){localStorage.setItem(lsContracts(),JSON.stringify(d));}
+// ══ 가입보험(계약정보) — Supabase 연결 (V75) ══
+// 고객별 캐시(CONTRACT_CACHE_BY_CUST_ID)에서 동기 반환 / 실제 조회는 loadContractsFromSupa(custId)(비동기)
+// 저장은 saveContracts()가 Supabase 성공 후에만 캐시 갱신. localStorage는 더 이상 가입보험 저장에 쓰지 않음(기존 키는 삭제하지 않음).
+var CONTRACT_CACHE_BY_CUST_ID={};
+var _contractLoadError=false;
+function getContracts(){return CONTRACT_CACHE_BY_CUST_ID[_vid]||[];}
+async function loadContractsFromSupa(custId){
+  var sb=getSbClient();
+  if(!sb){
+    _contractLoadError=true;
+    console.error('[contracts load] Supabase client 없음');
+    return {ok:false,reason:'NO_SUPABASE_CLIENT'};
+  }
+  try{
+    var res=await sb.from('wd_partners_contracts').select('data').eq('uid',_UID).eq('customer_id',custId).order('created_at',{ascending:true});
+    if(res.error){
+      _contractLoadError=true;
+      console.error('[contracts load]',res.error.message);
+      return {ok:false,reason:'LOAD_ERROR'};
+    }
+    CONTRACT_CACHE_BY_CUST_ID[custId]=(res.data||[]).map(function(row){return row.data;});
+    _contractLoadError=false;
+    return {ok:true};
+  }catch(e){
+    _contractLoadError=true;
+    console.error('[contracts load]',e&&e.message);
+    return {ok:false,reason:'LOAD_EXCEPTION'};
+  }
+}
+// 저장: 현재 고객(_vid) 기준 배열 d를 uid+id 기준 upsert. id 없는 레코드는 저장 직전 발급. 실패 시 캐시 갱신 안 함.
+async function saveContracts(d){
+  var sb=getSbClient();
+  if(!sb){
+    alert('가입보험 저장 실패: Supabase 연결을 확인해주세요.');
+    return {ok:false,reason:'NO_SUPABASE_CLIENT'};
+  }
+  var custId=_vid;
+  var withIds=d.map(function(r){return r.id!=null?r:Object.assign({},r,{id:Date.now()+Math.floor(Math.random()*1000)});});
+  var rows=withIds.map(function(r){
+    return {
+      id:r.id,
+      uid:_UID,
+      customer_id:custId,
+      insurer:r.insurer||'',
+      product:r.product||'',
+      status:r.status||'',
+      data:r,
+      created_at:r.created||new Date().toISOString(),
+      updated_at:r.updated||new Date().toISOString()
+    };
+  });
+  try{
+    var res=await sb.from('wd_partners_contracts').upsert(rows,{onConflict:'uid,id'});
+    if(res.error){
+      console.error('[contracts save]',res.error.message);
+      alert('가입보험 저장 실패: '+res.error.message);
+      return {ok:false,reason:'SAVE_ERROR'};
+    }
+    CONTRACT_CACHE_BY_CUST_ID[custId]=withIds;
+    return {ok:true};
+  }catch(e){
+    console.error('[contracts save]',e&&e.message);
+    alert('가입보험 저장 실패: '+(e&&e.message?e.message:'네트워크 오류'));
+    return {ok:false,reason:'SAVE_EXCEPTION'};
+  }
+}
+// 공용: Supabase에서 가입보험 1건 삭제(성공 시에만 true 반환, 캐시는 호출부에서 갱신)
+async function _contractDeleteFromSupa(id){
+  var sb=getSbClient();
+  if(!sb){alert('가입보험 삭제 실패: Supabase 연결을 확인해주세요.');return false;}
+  var custId=_vid;
+  try{
+    var res=await sb.from('wd_partners_contracts').delete().eq('uid',_UID).eq('customer_id',custId).eq('id',id);
+    if(res.error){
+      console.error('[contracts delete]',res.error.message);
+      alert('가입보험 삭제 실패: '+res.error.message);
+      return false;
+    }
+  }catch(e){
+    console.error('[contracts delete]',e&&e.message);
+    alert('가입보험 삭제 실패: '+(e&&e.message?e.message:'네트워크 오류'));
+    return false;
+  }
+  CONTRACT_CACHE_BY_CUST_ID[custId]=(CONTRACT_CACHE_BY_CUST_ID[custId]||[]).filter(function(x){return x.id!==id;});
+  return true;
+}
 function getInsChk(){try{return JSON.parse(localStorage.getItem(lsInsChk())||'{}');}catch(e){return {};}}
 function saveInsChk(d){localStorage.setItem(lsInsChk(),JSON.stringify(d));}
 
@@ -6080,16 +6164,17 @@ function ctStatusNorm(v){
   if(map[v])return map[v];
   return v||'계약진행중';
 }
-function ctToggleGuideSentInline(i){
-  var contracts=getContracts();
+async function ctToggleGuideSentInline(i){
+  var contracts=getContracts().slice();
   if(!contracts[i])return;
-  contracts[i].guide_sent=!contracts[i].guide_sent;
-  contracts[i].updated=new Date().toISOString();
-  saveContracts(contracts);
+  contracts[i]=Object.assign({},contracts[i],{guide_sent:!contracts[i].guide_sent,updated:new Date().toISOString()});
+  var result=await saveContracts(contracts);
+  if(!result.ok)return; // 실패 시 화면 갱신하지 않음(바뀐 것처럼 보이지 않게)
   renderContractsList();
 }
 function renderContractsList(){
   var contracts=getContracts(); var el=document.getElementById('det-contracts-list'); if(!el)return;
+  if(_contractLoadError){el.innerHTML='<div style="text-align:center;padding:28px;font-size:13px;color:var(--rd700);">가입보험 목록을 불러오지 못했습니다. 네트워크 상태를 확인 후 다시 시도해주세요.</div>';return;}
   if(!contracts.length){el.innerHTML='<div style="text-align:center;padding:28px;font-size:13px;color:var(--s400);">등록된 가입보험이 없습니다</div>';return;}
   var sColor={'계약완료':'var(--em700)','계약진행중':'var(--sk700)','계약보류':'var(--am700)','계약철회':'var(--rd700)','계약취소':'var(--rd700)','계약해지':'var(--s500)'};
   var rows=contracts.map(function(c,i){
@@ -6197,7 +6282,7 @@ function openContractEdit(i){
   document.getElementById('ct-guide_file-cur').textContent=c.guide_file?('현재 첨부: '+c.guide_file):'';
   openModal('modal-contract');
 }
-function saveContractModal(){
+async function saveContractModal(){
   var insSel=document.getElementById('ct-insurer').value;
   var insurer=insSel==='직접입력'?document.getElementById('ct-insurer-custom').value.trim():insSel;
   if(!insurer){alert('보험사를 입력하세요.');return;}
@@ -6222,12 +6307,35 @@ function saveContractModal(){
     cov_summary:document.getElementById('ct-cov_summary').value.trim(),
     memo:document.getElementById('ct-memo').value.trim()
   };
-  var contracts=getContracts();
-  if(idx===''){rec.created=new Date().toISOString();contracts.push(rec);}
-  else{var old=contracts[parseInt(idx,10)]||{};rec.created=old.created||new Date().toISOString();rec.updated=new Date().toISOString();contracts[parseInt(idx,10)]=rec;}
-  saveContracts(contracts); closeModal('modal-contract'); renderContractsList(); toast();
+  var contracts=getContracts().slice();
+  if(idx===''){
+    rec.id=Date.now();
+    rec.created=new Date().toISOString();
+    contracts=contracts.concat([rec]);
+  }else{
+    var old=contracts[parseInt(idx,10)]||{};
+    rec.id=(old.id!=null)?old.id:Date.now(); // id 없는 기존 레코드는 이 시점에 id 발급
+    rec.created=old.created||new Date().toISOString();
+    rec.updated=new Date().toISOString();
+    contracts[parseInt(idx,10)]=rec;
+  }
+  var result=await saveContracts(contracts);
+  if(!result.ok)return; // 저장 실패 시 모달 유지, 화면 갱신 안 함
+  closeModal('modal-contract'); renderContractsList(); toast();
 }
-function deleteContract(i){if(!confirm('이 가입보험 기록을 삭제할까요?'))return;var c=getContracts();c.splice(i,1);saveContracts(c);renderContractsList();}
+async function deleteContract(i){
+  if(!confirm('이 가입보험 기록을 삭제할까요?'))return;
+  var c=getContracts();
+  var target=c[i];
+  if(!target)return;
+  if(target.id==null){
+    alert('이 레코드는 고유 ID가 없어 삭제할 수 없습니다. 한 번 수정 후 다시 삭제해주세요.');
+    return;
+  }
+  var ok=await _contractDeleteFromSupa(target.id);
+  if(!ok)return; // 실패 시 화면 갱신하지 않음(삭제된 것처럼 보이지 않게)
+  renderContractsList();
+}
 var _contractDetailIdx=null;
 function openContractDetail(i){
   var c=getContracts()[i];if(!c)return;
@@ -6255,10 +6363,18 @@ function contractDetailEdit(){
   closeModal('modal-contract-detail');
   openContractEdit(_contractDetailIdx);
 }
-function contractDetailDelete(){
+async function contractDetailDelete(){
   if(_contractDetailIdx===null)return;
   if(!confirm('이 가입보험 기록을 삭제하시겠습니까?'))return;
-  var c=getContracts();c.splice(_contractDetailIdx,1);saveContracts(c);
+  var c=getContracts();
+  var target=c[_contractDetailIdx];
+  if(!target)return;
+  if(target.id==null){
+    alert('이 레코드는 고유 ID가 없어 삭제할 수 없습니다. 한 번 수정 후 다시 삭제해주세요.');
+    return;
+  }
+  var ok=await _contractDeleteFromSupa(target.id);
+  if(!ok)return; // 실패 시 모달 유지(삭제된 것처럼 보이지 않게)
   closeModal('modal-contract-detail');
   _contractDetailIdx=null;
   renderContractsList();
