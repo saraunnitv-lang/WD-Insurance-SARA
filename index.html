@@ -2451,7 +2451,7 @@ WD WAVE 은퇴 준비 점검 서비스 소개 포함
 <script>
 /* ══ 앱 버전 체크 (배포 후 캐시 대응) ══
    ※ 다음 버전 작업 시 Claude는 이 APP_VERSION 값을 출력 파일 버전에 맞춰 함께 변경할 것 */
-var APP_VERSION='WD_PARTNERS_260630_V75';
+var APP_VERSION='WD_PARTNERS_260630_V77';
 (function checkAppVersionRefresh(){
   try{
     var key='WD_PARTNERS_APP_VERSION';
@@ -2470,21 +2470,56 @@ var APP_VERSION='WD_PARTNERS_260630_V75';
 })();
 
 
-/* ══ 빠른 메모 ══ */
+/* ══ 빠른 메모 (개인메모) — Supabase 연결 (V77) ══ */
+// uid당 1행. 메모리 캐시(QUICKMEMO_CACHE)에서 동기 반환, 실제 조회는 loadQuickMemoFromSupa()(비동기).
+// localStorage는 더 이상 쓰지 않음(기존 키는 삭제하지 않음).
 function qmKey(){return 'WD_PARTNERS_QUICK_MEMO_'+(_UID||'guest');}
-function qmGetData(){
-  var raw=localStorage.getItem(qmKey());
-  if(!raw)return{date:'',content:''};
+var QUICKMEMO_CACHE={date:'',content:''};
+var _qmLoadError=false;
+function qmGetData(){return QUICKMEMO_CACHE;}
+async function loadQuickMemoFromSupa(){
+  var sb=getSbClient();
+  if(!sb){
+    _qmLoadError=true;
+    console.error('[quickmemo load] Supabase client 없음');
+    return {ok:false,reason:'NO_SUPABASE_CLIENT'};
+  }
   try{
-    var obj=JSON.parse(raw);
-    if(obj&&typeof obj==='object'&&'content' in obj)return obj;
-    return{date:today(),content:String(raw)};
+    var res=await sb.from('wd_partners_quickmemo').select('date,content').eq('uid',_UID).maybeSingle();
+    if(res.error){
+      _qmLoadError=true;
+      console.error('[quickmemo load]',res.error.message);
+      return {ok:false,reason:'LOAD_ERROR'};
+    }
+    QUICKMEMO_CACHE=res.data?{date:res.data.date||'',content:res.data.content||''}:{date:'',content:''};
+    _qmLoadError=false;
+    return {ok:true};
   }catch(e){
-    return{date:today(),content:raw};
+    _qmLoadError=true;
+    console.error('[quickmemo load]',e&&e.message);
+    return {ok:false,reason:'LOAD_EXCEPTION'};
   }
 }
-function qmSetData(data){
-  try{localStorage.setItem(qmKey(),JSON.stringify(data));}catch(e){}
+async function qmSetData(data){
+  var sb=getSbClient();
+  if(!sb){
+    alert('개인메모 저장 실패: Supabase 연결을 확인해주세요.');
+    return {ok:false,reason:'NO_SUPABASE_CLIENT'};
+  }
+  try{
+    var res=await sb.from('wd_partners_quickmemo').upsert({uid:_UID,date:data.date||'',content:data.content||'',updated_at:new Date().toISOString()},{onConflict:'uid'});
+    if(res.error){
+      console.error('[quickmemo save]',res.error.message);
+      alert('개인메모 저장 실패: '+res.error.message);
+      return {ok:false,reason:'SAVE_ERROR'};
+    }
+    QUICKMEMO_CACHE={date:data.date||'',content:data.content||''};
+    return {ok:true};
+  }catch(e){
+    console.error('[quickmemo save]',e&&e.message);
+    alert('개인메모 저장 실패: '+(e&&e.message?e.message:'네트워크 오류'));
+    return {ok:false,reason:'SAVE_EXCEPTION'};
+  }
 }
 function loadQuickMemo(){
   var ta=document.getElementById('quick-memo-text');
@@ -2507,9 +2542,10 @@ function toggleQuickMemo(){
   if(panel.classList.contains('qm-open')){closeQuickMemo();}
   else{openQuickMemo();}
 }
-function saveQuickMemo(){
+async function saveQuickMemo(){
   var val=document.getElementById('quick-memo-text').value;
-  qmSetData({date:today(),content:val});
+  var result=await qmSetData({date:today(),content:val});
+  if(!result.ok)return; // 실패 시 "저장됨" 표시하지 않음(성공처럼 보이지 않게)
   var st=document.getElementById('quick-memo-status');
   if(st){st.textContent='저장됨';clearTimeout(st._t);st._t=setTimeout(function(){st.textContent='';},1200);}
   renderMypageMemo();
@@ -2517,6 +2553,7 @@ function saveQuickMemo(){
 function renderMypageMemo(){
   var el=document.getElementById('mypage-memo-list');
   if(!el)return;
+  if(_qmLoadError){el.innerHTML='<div style="font-size:13px;color:var(--rd700);padding:8px 0;">개인메모를 불러오지 못했습니다. 네트워크 상태를 확인 후 다시 시도해주세요.</div>';return;}
   var d=qmGetData();
   if(!d.content){el.innerHTML='<div style="font-size:13px;color:var(--s400);padding:8px 0;">기록 없음</div>';return;}
   el.innerHTML='<div class="my-row">'
@@ -2533,18 +2570,20 @@ function openQmemoEdit(){
   document.getElementById('qmemo-edit-content').value=d.content||'';
   openModal('modal-qmemo-edit');
 }
-function saveQmemoEdit(){
+async function saveQmemoEdit(){
   var dt=document.getElementById('qmemo-edit-date').value||today();
   var ct=document.getElementById('qmemo-edit-content').value.trim();
-  qmSetData({date:dt,content:ct});
+  var result=await qmSetData({date:dt,content:ct});
+  if(!result.ok)return; // 실패 시 모달 유지
   closeModal('modal-qmemo-edit');
   renderMypageMemo();
   var ta=document.getElementById('quick-memo-text');
   if(ta)ta.value=ct;
 }
-function deleteQmemo(){
+async function deleteQmemo(){
   if(!confirm('이 개인메모를 삭제하시겠습니까?'))return;
-  qmSetData({date:'',content:''});
+  var result=await qmSetData({date:'',content:''});
+  if(!result.ok)return; // 실패 시 화면 갱신하지 않음
   renderMypageMemo();
   var ta=document.getElementById('quick-memo-text');
   if(ta)ta.value='';
@@ -2657,7 +2696,10 @@ function changePw(){
 
 // ══ 앱 초기화 ══
 function initApp(){
-  setHomeGreet();renderTodos();
+  setHomeGreet();
+  renderTodos(); // 캐시로 즉시 1회 표시
+  loadTodosFromSupa().then(function(){renderTodos();});
+  loadQuickMemoFromSupa().then(function(){renderMypageMemo();});
   renderCustList(); // 로딩 중 상태로 즉시 1회 표시
   loadCustomersFromSupa().then(function(){renderHomeCusts();renderCustList();});
   try{var el=document.getElementById('claim-doc');if(el&&CLAIM)el.textContent=CLAIM['외래'];}catch(e){console.warn('initApp claim-doc:',e);}
@@ -2717,9 +2759,89 @@ function setHomeGreet(){
 }
 
 // ══ 할 일 ══
+// ══ 오늘 할 일 — Supabase 연결 (V77) ══
+// uid 기준 메모리 캐시(TODO_CACHE)에서 동기 반환, 실제 조회는 loadTodosFromSupa()(비동기).
+// localStorage는 더 이상 쓰지 않음(기존 키는 삭제하지 않음).
 function lsT(){return 'wlp_todo_'+_UID;}
-function getTodos(){try{return JSON.parse(localStorage.getItem(lsT())||'[]');}catch(e){return[];}}
-function saveTodos(d){localStorage.setItem(lsT(),JSON.stringify(d));}
+var TODO_CACHE=[];
+var _todoLoadError=false;
+function getTodos(){return TODO_CACHE;}
+async function loadTodosFromSupa(){
+  var sb=getSbClient();
+  if(!sb){
+    _todoLoadError=true;
+    console.error('[todos load] Supabase client 없음');
+    return {ok:false,reason:'NO_SUPABASE_CLIENT'};
+  }
+  try{
+    var res=await sb.from('wd_partners_todos').select('data').eq('uid',_UID).order('created_at',{ascending:true});
+    if(res.error){
+      _todoLoadError=true;
+      console.error('[todos load]',res.error.message);
+      return {ok:false,reason:'LOAD_ERROR'};
+    }
+    TODO_CACHE=(res.data||[]).map(function(row){return row.data;});
+    _todoLoadError=false;
+    return {ok:true};
+  }catch(e){
+    _todoLoadError=true;
+    console.error('[todos load]',e&&e.message);
+    return {ok:false,reason:'LOAD_EXCEPTION'};
+  }
+}
+// 저장: uid 기준 전체 배열을 uid+id로 upsert. 실패 시 캐시 갱신 안 함.
+async function saveTodos(d){
+  var sb=getSbClient();
+  if(!sb){
+    alert('오늘 할 일 저장 실패: Supabase 연결을 확인해주세요.');
+    return {ok:false,reason:'NO_SUPABASE_CLIENT'};
+  }
+  var rows=d.map(function(r){
+    return {
+      id:r.id,
+      uid:_UID,
+      txt:r.txt||'',
+      date:r.date||'',
+      done:!!r.done,
+      data:r,
+      created_at:r.created||new Date().toISOString(),
+      updated_at:new Date().toISOString()
+    };
+  });
+  try{
+    var res=await sb.from('wd_partners_todos').upsert(rows,{onConflict:'uid,id'});
+    if(res.error){
+      console.error('[todos save]',res.error.message);
+      alert('오늘 할 일 저장 실패: '+res.error.message);
+      return {ok:false,reason:'SAVE_ERROR'};
+    }
+    TODO_CACHE=d;
+    return {ok:true};
+  }catch(e){
+    console.error('[todos save]',e&&e.message);
+    alert('오늘 할 일 저장 실패: '+(e&&e.message?e.message:'네트워크 오류'));
+    return {ok:false,reason:'SAVE_EXCEPTION'};
+  }
+}
+// 공용: Supabase에서 할 일 1건 삭제(성공 시에만 true 반환, 캐시는 호출부에서 갱신)
+async function _todoDeleteFromSupa(id){
+  var sb=getSbClient();
+  if(!sb){alert('오늘 할 일 삭제 실패: Supabase 연결을 확인해주세요.');return false;}
+  try{
+    var res=await sb.from('wd_partners_todos').delete().eq('uid',_UID).eq('id',id);
+    if(res.error){
+      console.error('[todos delete]',res.error.message);
+      alert('오늘 할 일 삭제 실패: '+res.error.message);
+      return false;
+    }
+  }catch(e){
+    console.error('[todos delete]',e&&e.message);
+    alert('오늘 할 일 삭제 실패: '+(e&&e.message?e.message:'네트워크 오류'));
+    return false;
+  }
+  TODO_CACHE=TODO_CACHE.filter(function(x){return x.id!==id;});
+  return true;
+}
 var _todoDateHome=today();
 var _todoDateMypage=today();
 function todoDateOf(x){return x.date||today();}
@@ -2740,14 +2862,31 @@ function updateTodoDateLabel(scope,sel){
   if(sel===today()){lbl.style.display='none';lbl.textContent='';}
   else{lbl.style.display='';lbl.textContent=sel;}
 }
-function saveTodo(){var v=document.getElementById('ti').value.trim();if(!v){alert('내용을 입력하세요.');return;}var t=getTodos();t.push({id:Date.now(),txt:v,done:false,date:_todoDateHome||today()});saveTodos(t);closeModal('modal-todo');document.getElementById('ti').value='';renderTodos();}
-function toggleTodo(id){var t=getTodos().map(function(x){return x.id===id?Object.assign({},x,{done:!x.done}):x;});saveTodos(t);renderTodos();}
-function deleteTodo(id){saveTodos(getTodos().filter(function(x){return x.id!==id;}));renderTodos();}
+async function saveTodo(){
+  var v=document.getElementById('ti').value.trim();
+  if(!v){alert('내용을 입력하세요.');return;}
+  var t=getTodos().concat([{id:Date.now(),txt:v,done:false,date:_todoDateHome||today()}]);
+  var result=await saveTodos(t);
+  if(!result.ok)return; // 저장 실패 시 모달 유지
+  closeModal('modal-todo');document.getElementById('ti').value='';renderTodos();
+}
+async function toggleTodo(id){
+  var t=getTodos().map(function(x){return x.id===id?Object.assign({},x,{done:!x.done}):x;});
+  var result=await saveTodos(t);
+  if(!result.ok)return; // 실패 시 체크 상태 반영 안 함
+  renderTodos();
+}
+async function deleteTodo(id){
+  var ok=await _todoDeleteFromSupa(id);
+  if(!ok)return;
+  renderTodos();
+}
 function renderMypageTodos(){
   var el=document.getElementById('mypage-todo-list');
   if(!el)return;
   var dMy=_todoDateMypage||today();
   updateTodoDateLabel('my',dMy);
+  if(_todoLoadError){el.innerHTML='<div style="font-size:13px;color:var(--rd700);padding:8px 0;">오늘 할 일을 불러오지 못했습니다. 네트워크 상태를 확인 후 다시 시도해주세요.</div>';return;}
   var t=getTodos().filter(function(x){return todoDateOf(x)===dMy;});
   if(!t.length){el.innerHTML='<div style="font-size:13px;color:var(--s400);padding:8px 0;">기록 없음</div>';return;}
   el.innerHTML=t.map(function(x){
@@ -2769,24 +2908,32 @@ function openTodoEdit(id){
   document.getElementById('todo-edit-txt').value=t.txt||'';
   openModal('modal-todo-edit');
 }
-function saveTodoEdit(){
+async function saveTodoEdit(){
   var id=Number(document.getElementById('todo-edit-id').value);
   var dt=document.getElementById('todo-edit-date').value||today();
   var txt=document.getElementById('todo-edit-txt').value.trim();
   if(!txt){alert('내용을 입력하세요.');return;}
   var list=getTodos().map(function(x){return x.id===id?Object.assign({},x,{date:dt,txt:txt}):x;});
-  saveTodos(list);
+  var result=await saveTodos(list);
+  if(!result.ok)return; // 저장 실패 시 모달 유지
   closeModal('modal-todo-edit');
   renderTodos();
 }
-function deleteTodoMypage(id){
+async function deleteTodoMypage(id){
   if(!confirm('이 오늘할일을 삭제하시겠습니까?'))return;
-  saveTodos(getTodos().filter(function(x){return x.id!==id;}));
+  var ok=await _todoDeleteFromSupa(id);
+  if(!ok)return;
   renderTodos();
 }
 function renderTodos(){
   var dHome=_todoDateHome||today();
   updateTodoDateLabel('home',dHome);
+  if(_todoLoadError){
+    var elErr=document.getElementById('home-todos');
+    if(elErr)elErr.innerHTML='<div style="text-align:center;padding:14px 0;font-size:12px;color:var(--rd700);">오늘 할 일을 불러오지 못했습니다.</div>';
+    renderMypageTodos();
+    return;
+  }
   var t=getTodos().filter(function(x){return todoDateOf(x)===dHome;});
   var el=document.getElementById('home-todos');
   if(el){
@@ -3237,6 +3384,17 @@ async function uploadMatAttachment(recordId,file){
     if(res.error){console.error('[mat attachment upload]',res.error.message);return {ok:false,reason:'UPLOAD_ERROR'};}
     return {ok:true,path:path};
   }catch(e){console.error('[mat attachment upload]',e&&e.message);return {ok:false,reason:'UPLOAD_EXCEPTION'};}
+}
+async function uploadContractAttachment(recordId,file){
+  var sb=getSbClient();
+  if(!sb){console.error('[contract attachment upload] Supabase client 없음');return {ok:false,reason:'NO_SUPABASE_CLIENT'};}
+  var ext=_attachExt(file);
+  var path=_UID+'/'+_vid+'/contracts/'+recordId+'/file.'+ext;
+  try{
+    var res=await sb.storage.from('wd-partners-attachments').upload(path,file,{upsert:true});
+    if(res.error){console.error('[contract attachment upload]',res.error.message);return {ok:false,reason:'UPLOAD_ERROR'};}
+    return {ok:true,path:path};
+  }catch(e){console.error('[contract attachment upload]',e&&e.message);return {ok:false,reason:'UPLOAD_EXCEPTION'};}
 }
 async function getAttachmentSignedUrl(filePath){
   var sb=getSbClient();
@@ -6289,7 +6447,31 @@ async function saveContractModal(){
   var insPeriodSel=document.getElementById('ct-ins_period').value;
   var insPeriod=insPeriodSel==='그외 직접입력'?document.getElementById('ct-ins_period-custom').value.trim():insPeriodSel;
   var idx=document.getElementById('ct-idx').value;
-  var rec={
+  var contracts=getContracts().slice();
+  var old=idx!==''?(contracts[parseInt(idx,10)]||{}):{};
+  var recId=(idx!==''&&old.id!=null)?old.id:Date.now();
+  var fi=document.getElementById('ct-guide_file');
+  var newFile=(fi&&fi.files&&fi.files[0])?fi.files[0]:null;
+  // 첨부 메타데이터: 기본은 기존 값 유지(텍스트만 수정하는 경우 첨부가 사라지지 않게)
+  var guideFile=document.getElementById('ct-guide_file-name').value.trim()||(newFile?newFile.name:(old.guide_file||''));
+  var meta={file_name:old.file_name,file_path:old.file_path,file_size:old.file_size,file_type:old.file_type,uploaded_at:old.uploaded_at};
+  if(newFile){
+    var check=validateAttachFile(newFile);
+    if(!check.ok){
+      alert(check.message);
+      guideFile=old.file_path?(old.guide_file||''):'';
+    }else{
+      var up=await uploadContractAttachment(recId,newFile);
+      if(up.ok){
+        guideFile=newFile.name;
+        meta={file_name:newFile.name,file_path:up.path,file_size:newFile.size,file_type:newFile.type,uploaded_at:new Date().toISOString()};
+      }else{
+        alert('첨부파일 업로드에 실패했습니다. 기록은 파일 없이 저장됩니다.');
+        guideFile=old.file_path?(old.guide_file||''):'';
+      }
+    }
+  }
+  var rec=Object.assign({
     ins_type:document.getElementById('ct-ins_type').value,
     insurer:insurer,
     product:document.getElementById('ct-product').value.trim(),
@@ -6303,18 +6485,16 @@ async function saveContractModal(){
     cert_no:document.getElementById('ct-cert_no').value.trim(),
     debit_date:document.getElementById('ct-debit_date').value,
     guide_sent:document.getElementById('ct-guide_sent-val').value==='true',
-    guide_file:document.getElementById('ct-guide_file-name').value.trim(),
+    guide_file:guideFile,
     cov_summary:document.getElementById('ct-cov_summary').value.trim(),
     memo:document.getElementById('ct-memo').value.trim()
-  };
-  var contracts=getContracts().slice();
+  },meta);
   if(idx===''){
-    rec.id=Date.now();
+    rec.id=recId;
     rec.created=new Date().toISOString();
     contracts=contracts.concat([rec]);
   }else{
-    var old=contracts[parseInt(idx,10)]||{};
-    rec.id=(old.id!=null)?old.id:Date.now(); // id 없는 기존 레코드는 이 시점에 id 발급
+    rec.id=recId;
     rec.created=old.created||new Date().toISOString();
     rec.updated=new Date().toISOString();
     contracts[parseInt(idx,10)]=rec;
@@ -6354,7 +6534,9 @@ function openContractDetail(i){
   document.getElementById('ctd-agent').textContent=c.agent||'-';
   document.getElementById('ctd-cov_summary').textContent=c.cov_summary||'-';
   document.getElementById('ctd-guide_sent').textContent=c.guide_sent?'전달완료':'미전달';
-  document.getElementById('ctd-guide_file').textContent=c.guide_file?('📎 '+c.guide_file):'첨부 없음';
+  document.getElementById('ctd-guide_file').innerHTML=c.file_path
+    ?'<button class="btn-sm p" style="font-size:12px;" onclick="openStorageAttachment(\''+c.file_path+'\')">📎 '+esc(c.guide_file||c.file_name||'첨부파일')+' 열기</button>'
+    :(c.guide_file?('📎 '+esc(c.guide_file)):'첨부 없음');
   document.getElementById('ctd-memo').textContent=c.memo||'-';
   openModal('modal-contract-detail');
 }
